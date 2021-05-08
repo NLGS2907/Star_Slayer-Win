@@ -1,0 +1,24 @@
+Up = UP
+
+Down = DOWN
+
+Left = LEFT
+
+Right = RIGHT
+
+w = UP
+
+s = DOWN
+
+a = LEFT
+
+d = RIGHT
+
+space = SHOOT
+
+F3 = DEBUG
+
+BackSpace = UNDO
+
+Escape = EXIT
+

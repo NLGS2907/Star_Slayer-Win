@@ -1,0 +1,9 @@
+WIDTH = 750
+HEIGHT = 700
+# It is recommended to leave it with `750, 700` as its values
+
+GUI_SPACE = 250
+# How much space of WIDTH the GUI will use when in-game
+
+DEBUG_LINES = True
+# Adds additional information on DEBUG action in process_action function (main module).

@@ -11,10 +11,10 @@ class Game:
         self.level_timer = objects.Timer(self.level_dict['total_time'])
         self.level_dict.pop('total_time')
 
-        self.player = objects.Ship((width // 2) - 30, (height / 1.17) - 30, (width // 2) + 30, (height / 1.17) + 30, how_hard=1, speed=5, texture_path='sprites/player/star_player.gif')
+        self.player = objects.Ship((width // 2) - 30, (height / 1.17) - 30, (width // 2) + 30, (height / 1.17) + 30, how_hard=1, speed=5, texture_path=('sprites/player/star_player.gif','sprites/player/star_player_damaged.gif'))
         self.power_level = inital_power
         self.cool_cons = cooldown_constant
-        self.invulnerability = objects.Timer(30 + (self.power_level * 5))
+        self.invulnerability = objects.Timer(50 + (self.power_level * 5))
         self.shooting_cooldown = objects.Timer(self.cool_cons // self.power_level)
         self.enemies, self.bullets = list(), list()
 
@@ -163,6 +163,11 @@ class Game:
         for enem in self.enemies:
             if enem.has_no_health():
                 self.enemies.remove(enem)
+            
+            if enem.collides_with(self.player):
+                if self.invulnerability.is_zero_or_less():
+                    self.player.hp -= enem.hardness
+                    self.invulnerability.reset()
 
     def exec_lvl_script(self):
         """
@@ -195,6 +200,9 @@ class Game:
 
             if not self.debug_cooldown.is_zero_or_less():
                 self.debug_cooldown.deduct(1)
+
+            if not self.invulnerability.is_zero_or_less():
+                self.invulnerability.deduct(1)
 
         else:
             self.show_debug_info = False

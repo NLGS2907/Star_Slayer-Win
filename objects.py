@@ -205,15 +205,15 @@ class Ship(_Entity):
         self.hp = health
         self.hardness = how_hard
         self.speed = speed
-        self.sprite = texture_path
+        self.sprites = texture_path
 
     def __str__(self):
 
-        return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprite: {self.sprite}"
+        return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}"
 
     def __repr__(self):
 
-        return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprite: {self.sprite}"
+        return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}"
 
     def is_out_bounds(self, x1, y1, x2, y2):
         """

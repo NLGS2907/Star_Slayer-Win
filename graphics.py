@@ -35,15 +35,15 @@ def draw_menus(game):
             gamelib.draw_text(button.msg, center_x, center_y, size=16, fill='#ffffff', justify='c')
 
 
-def draw_ship(ship):
+def draw_ship(ship, which_one=0):
     """
-    Draws te sprite of a ship.
+    Draws the sprite of a ship.
     """
-    if ship.sprite == None:
+    if ship.sprites == None:
         gamelib.draw_rectangle(ship.x1, ship.y1, ship.x2, ship.y2, fill='red')
 
     else:
-        gamelib.draw_image(ship.sprite, ship.x1, ship.y1)
+        gamelib.draw_image(ship.sprites[which_one], ship.x1, ship.y1)
 
 def draw_bullets(game):
     """
@@ -65,7 +65,8 @@ def draw_debug_info(game):
 
         debug_text = f"""player_hitbox: ({player.x1}, {player.y1}), ({player.x2}, {player.y2})
 center_hitbox: {(cx, cy)}
-Shooting Cooldown: {'Ready!' if game.shooting_cooldown.current_time <= 0 else game.shooting_cooldown.current_time}
+Shooting Cooldown: {'Ready!' if game.shooting_cooldown.is_zero_or_less() else game.shooting_cooldown.current_time}
+Invulnerability Cooldown: {'Ready!' if game.invulnerability.is_zero_or_less() else game.invulnerability.current_time}
 
 Power: {game.power_level}:
 Health (Player): {game.player.hp}
@@ -139,7 +140,7 @@ def draw_screen(game):
     draw_debug_info(game)
 
     if game.is_in_game:
-        draw_ship(game.player)
+        draw_ship(game.player, (0 if game.invulnerability.is_zero_or_less() else 1))
         for enem in game.enemies:
             draw_ship(enem)
         draw_GUI(game)

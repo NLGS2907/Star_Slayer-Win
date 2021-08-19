@@ -7,3 +7,9 @@ GUI_SPACE = 250
 
 DEBUG_LINES = True
 # Adds additional information on DEBUG action in process_action function (main module).
+
+ENEMY_TYPES = common
+# Lists the types of possible enemies
+
+BULLET_TYPES = normal_acc - sinusoidal_simple
+# Lists the types of possible throwable bullets

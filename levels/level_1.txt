@@ -1,6 +1,17 @@
 #t 10000
 
+
 #l 9900
-#s x1-200 y1-100 x2-250 y2-150 health-1 hard-10 speed-1 texture-/
-#s x1-300 y1-100 x2-350 y2-150 health-1 hard-10 speed-1 texture-/
-#s x1-400 y1-100 x2-450 y2-150 health-1 hard-10 speed-1 texture-/
+#s x1-200 y1-100 x2-250 y2-150 type-common
+#s x1-300 y1-100 x2-350 y2-150 type-common
+#s x1-400 y1-100 x2-450 y2-150 type-common
+
+#l 9800
+#s x1-200 y1-300 x2-250 y2-350 type-common
+#s x1-300 y1-300 x2-350 y2-350 type-common
+#s x1-400 y1-300 x2-450 y2-350 type-common
+
+#l 9700
+#s x1-200 y1-500 x2-250 y2-550 type-common
+#s x1-300 y1-500 x2-350 y2-550 type-common
+#s x1-400 y1-500 x2-450 y2-550 type-common

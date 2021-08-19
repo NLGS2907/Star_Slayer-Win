@@ -1,24 +1,15 @@
-Up = UP
+w,Up = UP
 
-Down = DOWN
+a,Left = LEFT
 
-Left = LEFT
+d,Right = RIGHT
 
-Right = RIGHT
-
-w = UP
-
-s = DOWN
-
-a = LEFT
-
-d = RIGHT
+s,Down = DOWN
 
 space = SHOOT
 
+BackSpace = RETURN
+
 F3 = DEBUG
 
-BackSpace = UNDO
-
-Escape = EXIT
-
+Esc = EXIT

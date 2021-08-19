@@ -79,6 +79,9 @@ class _TkWindow(tk.Tk):
     def clear(self):
         self.canvas.delete("all")
 
+    def icon(self, path):
+        self.tk.call('wm', 'iconphoto', self._w, self.get_image(path))
+
     def draw_image(self, path, x, y):
         self.canvas.create_image(x, y, anchor='nw', image=self.get_image(path))
 
@@ -87,15 +90,21 @@ class _TkWindow(tk.Tk):
         options.update(kwargs)
         getattr(self.canvas, f'create_{type}')(*args, **options)
 
-    def draw_text(self, text, x, y, size, kwargs):
+    def draw_text(self, text, x, y, font, size, bold, italic, kwargs):
         options = {'fill': 'white'}
         options.update(kwargs)
-        self.canvas.create_text(x, y, text=text, font=self.get_font(size), **options)
+        self.canvas.create_text(x, y, text=text, font=self.get_font(font, size, bold, italic), **options)
 
-    def get_font(self, size):
-        name = f'font-{size}'
+    def get_font(self, family, size, bold, italic):
+        weight = 'normal'
+        if bold:
+            weight = 'bold'
+        slant = 'roman'
+        if italic:
+            slant = 'italic'
+        name = f'font-{family}-{size}-{weight}-{slant}'
         if name not in self.assets:
-            self.assets[name] = Font(size=size)
+            self.assets[name] = Font(family=family, size=size, weight=weight, slant=slant)
         return self.assets[name]
 
     def get_image(self, path):
@@ -325,6 +334,21 @@ class _GameThread(threading.Thread):
         """Set the window title to `s`."""
         self.send_command_to_tk('title', s)
 
+    def icon(self, path):
+        """
+        Set the window icon to the image located at `path`.
+
+        Example:
+            ```
+            gamelib.icon('images/icon.gif')
+            ```
+
+        Note:
+            The only image formats that are supported accross all platforms (Windows/Mac/Linux)
+            are GIF and PPM/PGM/PBM.
+        """
+        self.send_command_to_tk('icon', path)
+
     def draw_begin(self):
         """
         Clear the window.
@@ -356,27 +380,38 @@ class _GameThread(threading.Thread):
         """
         self.send_command_to_tk('draw_image', path, x, y)
 
-    def draw_text(self, text, x, y, size=12, **options):
+    def draw_text(self, text, x, y, font=None, size=12, bold=False, italic=False, **options):
         """
-        Draw some `text` at coordinates `x, y` with the given `size`.
+        Draw some `text` at coordinates `x, y` with the given properties.
 
-        Some of the supported options are:
+        Args:
+            text: The text to draw.
+            x:    The screen coordinates for the text.
+            y:    The screen coordinates for the text.
+            font: Font family name (eg: `'Helvetica'`). **Note:** the only font guaranteed to be
+                  available in all systems is the default font. If the selected font is not found,
+                  the default font will be used instead.
+            size: Size of the text.
+            bold: Whether or not to use bold weight.
+            italic: Whether or not to use italic slant.
+
+        Some of the supported extra options are:
 
         * `fill`: Fill color. It can be named colors like `'red'`, `'white'`, etc,
           or a specific color in `'#rrggbb'` hexadecimal format.
         * `anchor`: Where to place the text relative to the given position.
-          It be any combination of `n` (North), `s` (South), `e`
+          It may be any combination of `n` (North), `s` (South), `e`
           (East), `w` (West) and `c` (center). Default is `c`.
 
         To see all supported options, see the documentation for
-        [`Tkinter.Canvas.create_text`](https://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_text-method).
+        [`tkinter.Canvas.create_text`](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_text.html).
 
         Example:
             ```
             gamelib.draw_text('Hello world!', 10, 10, fill='red', anchor='nw')
             ```
         """
-        self.send_command_to_tk('draw_text', text, x, y, size, options)
+        self.send_command_to_tk('draw_text', text, x, y, font, size, bold, italic, options)
 
     def draw_arc(self, x1, y1, x2, y2, **options):
         """
@@ -384,7 +419,7 @@ class _GameThread(threading.Thread):
         `x2, y2`.
 
         To see all supported options, see the documentation for
-        [`Tkinter.Canvas.create_arc`](https://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_arc-method).
+        [`tkinter.Canvas.create_arc`](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_arc.html).
 
         Example:
             ```
@@ -398,7 +433,7 @@ class _GameThread(threading.Thread):
         Draw a straight line between points `x1, y1` and `x2, y2`.
 
         To see all supported options, see the documentation for
-        [`Tkinter.Canvas.create_line`](https://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_line-method).
+        [`tkinter.Canvas.create_line`](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_line.html).
 
         Example:
             ```
@@ -412,7 +447,7 @@ class _GameThread(threading.Thread):
         Draw an ellipse in the bounding box between points `x1, y1` and `x2, y2`.
 
         To see all supported options, see the documentation for
-        [`Tkinter.Canvas.create_oval`](https://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_oval-method).
+        [`tkinter.Canvas.create_oval`](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_oval.html).
 
         Example:
             ```
@@ -428,7 +463,7 @@ class _GameThread(threading.Thread):
         joined with the first one with a segment.
 
         To see all supported options, see the documentation for
-        [`Tkinter.Canvas.create_polygon`](https://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_polygon-method).
+        [`tkinter.Canvas.create_polygon`](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_polygon.html).
 
         Example:
             ```
@@ -442,7 +477,7 @@ class _GameThread(threading.Thread):
         Draw an rectangle in the bounding box between points `x1, y1` and `x2, y2`.
 
         To see all supported options, see the documentation for
-        [`Tkinter.Canvas.create_rectangle`](https://effbot.org/tkinterbook/canvas.htm#Tkinter.Canvas.create_rectangle-method).
+        [`tkinter.Canvas.create_rectangle`](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_rectangle.html).
 
         Example:
             ```
@@ -536,6 +571,7 @@ _GameThread.instance = _GameThread()
 wait = _GameThread.instance.wait
 get_events = _GameThread.instance.get_events
 title = _GameThread.instance.title
+icon = _GameThread.instance.icon
 draw_begin = _GameThread.instance.draw_begin
 draw_image = _GameThread.instance.draw_image
 draw_text = _GameThread.instance.draw_text
@@ -615,7 +651,7 @@ class Event:
         y: The current mouse vertical position, in pixels.
 
     This is actually a wrapper for the
-    [Tkinter Event class](https://effbot.org/tkinterbook/tkinter-events-and-bindings.htm#events).
+    [Tkinter Event class](https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/event-handlers.html).
     Any of the `tk.Event` attributes can be accessed through this object.
 
     ## See also

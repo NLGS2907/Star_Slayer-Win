@@ -1,4 +1,4 @@
-import gamelib, objects, files
+import objects, files
 
 class Game:
 
@@ -12,269 +12,108 @@ class Game:
         ---> None
         ______________________________________________________________________
 
-        Initalizes the 'Game' class.
+        Initalizes an instance of type 'Game'.
         """
 
         width, height = files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"]
 
+        # Menus
         self.main_menu = objects.Menu(["Play", "Options", "About", "Exit"],
                          (200, height // 2, width - 200, height - 50))
 
         self.options_menu = objects.Menu(["Configure Controls", "Change Color Profile (WIP)"],
-                                    (200, height // 2, width - 200, height - 50), max_buttons=4, parent_menu=self.main_menu)
+                                    (200, height // 2, width - 200, height - 50), max_rows=4, parent_menu=self.main_menu)
 
         self.controls_menu = objects.Menu(files.list_actions(),
-                                    (10, (height // 5), (width // 4) - 10, height - 10), max_buttons=8, parent_menu=self.options_menu)
+                                    (10, (height // 5), (width // 4) - 10, height - 10), max_rows=8, parent_menu=self.options_menu)
 
+        self._menu_in_display = self.main_menu
+
+        # Sub-menu related
+        self.action_to_show = files.list_actions()[0]
+        self.sub_menu = self.refresh_sub_menu()
+
+        # Level Parameters
         self.game_level = 1
         self.level_dict = files.map_level(1)
         self.level_timer = objects.Timer(self.level_dict["total_time"])
         self.level_dict.pop("total_time")
 
-        self.player = objects.Ship((width // 2) - 30, int(height / 1.17) - 30, (width // 2) + 30, int(height / 1.17) + 30, how_hard=1, speed=5, texture_path=('sprites/player/star_player.gif','sprites/player/star_player_damaged.gif'))
+        # Player Parameters
+        self.player = objects.Ship((width // 2) - 30, int(height / 1.17) - 30, (width // 2) + 30, int(height / 1.17) + 30,
+                                    how_hard=1, speed=5, texture_path=('sprites/player/star_player.gif','sprites/player/star_player_damaged.gif'))
         self.power_level = inital_power
+        
+        # Timers
         self.cool_cons = cooldown_constant
         self.invulnerability = objects.Timer(50 + (self.power_level * 5))
         self.shooting_cooldown = objects.Timer(self.cool_cons // self.power_level)
+        self.debug_cooldown = objects.Timer(20)
+        
+        # Enemies, Misc
         self.enemies, self.bullets = list(), list()
 
-        self.debug_cooldown = objects.Timer(20)
+        # Control Booleans
+        self.is_in_game = False
         self.show_debug_info = False
 
-        self.menu_in_display = self.main_menu
-        self.action_to_show = files.list_actions()[0]
-        self.sub_menu = self.refresh_sub_menu()
-
-        self.is_in_game = False
-        self.show_about = False
-        self.exit = False
-
-    # ------------------------------ #
-    # User Control Functions : BEGIN #
-    # ------------------------------ #
-
-    def process_key(self, key):
+    @property
+    def current_menu(self):
         """
         ______________________________________________________________________
 
-        key: <str>
-
-
-        ---> <str>
+        ---> <Menu>
         ______________________________________________________________________
-        
-        Reads which key was released, and returns its corresponding action.
-        """
-        return files.map_keys().get(key)
 
-    def process_action(self, action):
+        Returns the current menu in display.
+        """
+        return self._menu_in_display
+
+    @current_menu.setter
+    def current_menu(self, new_menu=None):
         """
         ______________________________________________________________________
 
-        action: <str>
+        new_menu: <Menu> / None
 
 
         ---> None
         ______________________________________________________________________
 
-        Receives an action and process it into its rightful instructions.
+        Changes the current menu in display for the one passed as an argument.
         """
-        player = self.player
+        self._menu_in_display = new_menu
 
-        if not self.is_in_game:
+        self.sub_menu = (None if new_menu is not self.controls_menu else self.refresh_sub_menu())
 
-            if action == "RETURN":
-
-                if self.show_about:
-
-                    self.show_about = False
-
-                elif self.menu_in_display.parent and self.menu_in_display.press_cooldown.is_zero_or_less():
-
-                    self.menu_in_display.press_cooldown.reset() # First we reset the current menu
-                    self.menu_in_display = self.menu_in_display.parent
-                    self.menu_in_display.press_cooldown.reset() # Then the parent
-
-            elif action == "EXIT":
-
-                self.exit_game()
-
-        else:
-
-            if action == "UP":
-
-                player.move(0, -player.speed)
-
-            elif action == "DOWN":
-
-                player.move(0, player.speed)
-
-            elif action == "LEFT":
-
-                player.move(-player.speed, 0)
-
-            elif action == "RIGHT":
-
-                player.move(player.speed, 0)
-
-            elif action == "SHOOT":
-
-                if self.shooting_cooldown.is_zero_or_less():
-
-                    self.shoot_bullets()
-                    self.shooting_cooldown.reset()
-
-            elif action == "DEBUG":
-
-                if self.debug_cooldown.is_zero_or_less():
-
-                    self.show_debug_info = not self.show_debug_info
-                    self.debug_cooldown.reset()
-
-            elif action == "RETURN":
-
-                if self.show_about:
-
-                    self.show_about = False
-                
-                else:
-
-                    self.menu_in_display = self.main_menu
-                    self.change_is_in_game()
-                    self.clear_assets()
-
-    def process_click(self, x, y):
-        """
-        ______________________________________________________________________
-
-        x, y: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
-        Receives the coordinates of a click and process it into its rightful instructions.
-        """
-        if all((not self.is_in_game, not self.show_about)):
-
-            menu = self.menu_in_display
-
-            for button in (menu.buttons_on_screen + self.sub_menu.buttons_on_screen):
-
-                if button.x1 <= x <= button.x2 and button.y1 <= y <= button.y2:
-
-                    if all((self.menu_in_display == self.controls_menu, button.msg in files.list_actions(), not self.action_to_show == button.msg)):
-
-                        self.action_to_show = button.msg
-                        self.sub_menu = self.refresh_sub_menu()
-
-                    else:
-
-                        if button.msg == "Play":
-
-                            self.change_is_in_game()
-
-                        elif button.msg == "Options":
-
-                            self.menu_in_display = self.options_menu
-
-                        elif button.msg == "About":
-
-                            self.show_about = True
-
-                        elif button.msg == "Exit":
-
-                            self.exit_game()
-
-                        elif button.msg == '←':
-
-                            self.process_action("RETURN")
-                        
-                        elif button.msg == '↑':
-
-                            self.menu_in_display.change_page(False)
-
-                        elif button.msg == '↓':
-
-                            self.menu_in_display.change_page(True)
-
-                        elif button.msg == '🠕':
-
-                            self.sub_menu.change_page(False)
-
-                        elif button.msg == '🠗':
-
-                            self.sub_menu.change_page(True)
-
-                        elif button.msg == "Configure Controls":
-
-                            self.menu_in_display = self.controls_menu
-
-                        elif button.msg in (f"Change {key}" for key in files.map_keys().keys()):
-                            
-                            print(f"'Change Key' was pressed!")
-                            pass
-
-                        elif button.msg == "Add Key":
-
-                            new_dict, success = self.add_key(self.action_to_show)
-
-                            if success:
-
-                                files.print_keys(new_dict)
-                                self.sub_menu = self.refresh_sub_menu()
-
-                    break
-
-    def add_key(self, action):
-        """
-        ______________________________________________________________________
-
-        action: <str>
-
-
-        ---> <tuple> --> (<dict>, <bool>)
-        ______________________________________________________________________
-
-        If valid, adds a key to a designed action.
-        Return the dictionary of the keys, plus 'True' if the function
-        succeeded, else 'False' if something happened.
-        """
-        event = gamelib.wait(gamelib.EventType.KeyRelease)
-
-        keys_dict = files.map_keys()
-
-        if event.key in keys_dict:
-
-            return keys_dict, False
-
-        keys_dict[event.key] = action
-
-        return keys_dict, True
-
-    # ------------------------------ #
-    # User Control Functions : END   #
-    # ------------------------------ #
-
-    def refresh_sub_menu(self, x1=(files.EXT_CONST["WIDTH"] // 4) + 30,
-                               y1=(files.EXT_CONST["HEIGHT"] // 2),
-                               x2=(files.EXT_CONST["WIDTH"] * (5 / 8)),
-                               y2=(files.EXT_CONST["HEIGHT"] - 10)):
+    def refresh_sub_menu(self, x1=(files.EXT_CONST["WIDTH"] * 0.29),
+                            y1=(files.EXT_CONST["HEIGHT"] // 2),
+                            x2=(files.EXT_CONST["WIDTH"] * 0.96),
+                            y2=(files.EXT_CONST["HEIGHT"] - 10)):
         """
         ______________________________________________________________________
 
         x1, y2, x2, y2: <int>
 
 
-        ---> <Menu>
+        ---> <Menu> / None
         ______________________________________________________________________
 
         Refreshes a mini menu made of buttons of the keys of the action to show.
         It then returns it, to be assigned elsewhere.
         """
-        changeable_keys = [f"Change {key}" for key in files.list_repeated_keys(self.action_to_show, files.map_keys())] + ["Add Key"]
+        repeated_keys = files.list_repeated_keys(self.action_to_show, files.map_keys())
+        changeable_keys = list()
 
-        return objects.Menu(changeable_keys, (x1, y1, x2, y2), is_sub=True)
+        for key in repeated_keys:
+
+            if not key == '/':
+
+                changeable_keys.append(f"Delete {key}")
+
+        changeable_keys.append("Add Key")
+
+        return objects.Menu.sub_menu(changeable_keys, (x1, y1, x2, y2), how_many_cols=2, space=20)
 
     def level_up(self, how_much=1):
         """
@@ -325,7 +164,15 @@ class Game:
         elif self.power_level == 2:
 
             self.bullets.append(objects.Bullet(player_center_x - 5, self.player.y1 + 30, player_center_x + 5, self.player.y1 + 20,
-                                how_hard=self.player.hardness, speed=3, bullet_type='sinusoidal_simple', first_to_right=True))
+                                how_hard=self.player.hardness, speed=3, bullet_type="sinusoidal_simple", first_to_right=True))
+
+        elif self.power_level == 3:
+
+            self.bullets.append(objects.Bullet(player_center_x - 15, self.player.y1 + 30, player_center_x -5, self.player.y1 + 20,
+                                how_hard=self.player.hardness, speed=3, bullet_type="sinusoidal_simple", first_to_right=True))
+
+            self.bullets.append(objects.Bullet(player_center_x + 5, self.player.y1 + 30, player_center_x + 15, self.player.y1 + 20,
+                                how_hard=self.player.hardness, speed=3, bullet_type="sinusoidal_simple", first_to_right=False))
 
     def exec_bul_trajectory(self):
         """
@@ -426,7 +273,7 @@ class Game:
         """
         if self.is_in_game:
 
-            self.menu_in_display = None
+            self.current_menu = None
 
             self.exec_bul_trajectory()
             self.exec_enem_trajectory()
@@ -438,9 +285,9 @@ class Game:
 
             self.show_debug_info = False
 
-            if not self.menu_in_display.press_cooldown.is_zero_or_less():
+            if not self._menu_in_display.press_cooldown.is_zero_or_less():
 
-                self.menu_in_display.press_cooldown.deduct(1)
+                self._menu_in_display.press_cooldown.deduct(1)
 
     def refresh_timers(self):
         """
@@ -477,14 +324,3 @@ class Game:
         Changes 'self.is_in_game' to its opposite.
         """
         self.is_in_game = not self.is_in_game
-
-    def exit_game(self):
-        """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
-        Sets the control variable 'self.exit' to 'True' to exit the game.
-        """
-        self.exit = True

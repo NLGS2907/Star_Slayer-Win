@@ -1,21 +1,25 @@
-import gamelib, graphics, game_state, files
+import gamelib, graphics, game_state, game_controls, files
 
 def main():
 
     gamelib.title(f"Star Slayer (Pre)")
     gamelib.resize(files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"])
+    gamelib.icon("sprites/player/star_player.gif")
 
-    game = game_state.Game(inital_power=1)
+    game = game_state.Game(inital_power=3)
+    controls = game_controls.GameControls()
 
     keys_pressed = dict()
 
+    is_first_lap = True # So that some actions take place in the next iteration of the loop
+
     while gamelib.loop(fps=60):
 
-        if game.exit:
+        if controls.exit:
             break
 
         gamelib.draw_begin()
-        graphics.draw_screen(game)
+        graphics.draw_screen(game, controls)
         gamelib.draw_end()
 
         for event in gamelib.get_events():
@@ -35,13 +39,25 @@ def main():
 
                 if event.mouse_button == 1:
 
-                    game.process_click(event.x, event.y)
+                    controls.process_click(event.x, event.y, game)
 
         for key in keys_pressed:
 
-            if keys_pressed.get(key, False): game.process_action(game.process_key(key))
+            if keys_pressed.get(key, False): controls.process_action(controls.process_key(key), game)
+
+        if controls.is_changing_key:
+
+            if is_first_lap:
+
+                is_first_lap = False
+            
+            else:
+
+                is_first_lap = True
+                controls.add_key(game.action_to_show, game)
 
         game.advance_game()
+        controls.refresh(keys_pressed)
 
 if __name__ == "__main__":
 

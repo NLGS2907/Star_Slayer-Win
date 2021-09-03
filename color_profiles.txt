@@ -1,0 +1,31 @@
+# !t are for 'themes', !v are for the 'key, value' pairs for that theme
+
+# -=-=-=-=-=-=-=-=-=-=-
+
+!t AZURE
+
+!v BG_COLOR = #00102b
+
+!v MENU_COLOR_1 = #00173d
+!v MENU_OUTLINE_1 = #001d4d
+
+!v BUTTON_COLOR_1 = #474747
+!v BUTTON_COLOR_2 = #7a7a7a
+
+!v TEXT_COLOR_1 = #ffffff
+
+!v GUI_COLOR_1 = #333333
+!v GUI_OUTLINE_1 = /
+
+!v GUI_COLOR_2 = #4a4a4a
+!v GUI_OUTLINE_2 = #424242
+
+!v GUI_COLOR_3 = #4f4f4f
+
+!v DEBUG_LINES_1 = #ff0000
+!v DEBUG_LINES_2 = #ff00ff
+
+!v ABOUT_COLOR_1 = #041f4d
+!v ABOUT_OUTLINE_1 = #00286b
+
+# -=-=-=-=-=-=-=-=-=-=-

@@ -2,7 +2,7 @@ from files import EXT_CONST
 
 class Menu:
 
-    def __init__(self, button_titles, area_corners, max_buttons=4, space_between=10, parent_menu=None, force_button_resize=False, is_sub=False):
+    def __init__(self, button_titles, area_corners, max_rows=4, how_many_columns=1, space_between=10, parent_menu=None, force_button_resize=False):
         """
         ______________________________________________________________________
 
@@ -10,11 +10,11 @@ class Menu:
 
         area_corners: <tuple> --> (<int>, <int>, <int>, <int>)
 
-        max_buttons, space_between: <int>
+        max_rows, space_between: <int>
 
         parent_menu: <Menu>
 
-        force_button_resize, is_sub = <bool>
+        force_button_resize = <bool>
 
 
         ---> None
@@ -24,55 +24,92 @@ class Menu:
 
         'button_titles' must be a non-empty tuple.
 
-        'max_buttons' cannot be an integer lower than 1.
+        'max_rows' cannot be an integer lower than 1.
 
         'area_corners' must be a tuple of exactly 4 integers as its values.
         """
 
         if button_titles == ():
 
-            raise Exception("'button_titles' cannot be empty. Must be an iteration with names (strings) and must have a length of at least 1")
+            raise Exception("'button_titles' cannot be empty. Must be an iteration with names (strings) and must have a length of at least 1.")
 
-        if max_buttons < 1:
+        if max_rows < 1:
 
-            raise Exception("'max_buttons' must be an integer of 1 or higher")
+            raise Exception("'max_rows' must be an integer of 1 or higher.")
 
         if not len(area_corners) == 4:
 
-            raise Exception(f"'area_corners has {len(area_corners)}. It must have exactly 4 integers as values'")
+            raise Exception(f"area_corners has {len(area_corners)}. It must have exactly 4 integers as values.")
 
         button_titles = (button_titles.split("-=trash_value=-") if isinstance(button_titles, str) else list(button_titles))
 
         buttons_len = len(button_titles)
 
-        if force_button_resize and buttons_len < max_buttons:
+        how_many_rows = ((buttons_len // how_many_columns) if any((how_many_columns == 1, buttons_len % how_many_columns == 0)) else (buttons_len // how_many_columns) + 1)
 
-            max_buttons = buttons_len
+        if force_button_resize and how_many_rows < max_rows:
 
+            max_rows = how_many_rows
+
+        # Measures
         self.area_x1, self.area_y1, self.area_x2, self.area_y2 = area_corners
+        self.max_columns = how_many_columns
+        self.max_rows = max_rows
 
-        self.max_buttons = max_buttons
-        self.button_space = (self.area_y2 - self.area_y1) // self.max_buttons
-        self.max_pages = (((buttons_len // self.max_buttons) + 1) if all((buttons_len != self.max_buttons, buttons_len % self.max_buttons != 0)) else buttons_len // self.max_buttons)
+        x_space = (self.area_x2 - self.area_x1) // self.max_columns
+        y_space = (self.area_y2 - self.area_y1) // self.max_rows
+
+        # Pages-related calculations
+        self.max_pages = (((how_many_rows // self.max_rows) + 1) if all((not how_many_rows == self.max_rows, not how_many_rows % self.max_rows == 0)) else how_many_rows // self.max_rows)
         self.current_page = 1
+
+        # Menu-related
         self.parent = parent_menu
 
-        self.pgup_button = Button((self.area_x2 + space_between), self.area_y1, self.area_x2 + (self.button_space // 2), (self.area_y1 + (self.button_space // 2)), ('🠕' if is_sub else '↑'))
-        self.pgdn_button = Button((self.area_x2 + space_between), (self.area_y2 - (self.button_space // 2)), self.area_x2 + (self.button_space // 2), self.area_y2, ('🠗' if is_sub else '↓'))
-        self.return_button = Button(self.area_x1, self.area_y1 - (EXT_CONST["HEIGHT"] // 20), self.area_x1 + (EXT_CONST["WIDTH"] // 20), self.area_y1 - space_between, '←')
+        # Special Buttons
+        self.pgup_button = Button((self.area_x2 + space_between), self.area_y1, self.area_x2 + (y_space // 2), (self.area_y1 + (y_space // 2)), "/\\")
+        self.pgdn_button = Button((self.area_x2 + space_between), (self.area_y2 - (y_space // 2)), self.area_x2 + (y_space // 2), self.area_y2, "\/")
+        self.return_button = Button(self.area_x1, self.area_y1 - (EXT_CONST["HEIGHT"] // 20), self.area_x1 + (EXT_CONST["WIDTH"] // 20), self.area_y1 - space_between, '<')
 
-        self.buttons = self.generate_buttons(button_titles, space_between)
+        # Button Lists
+        self.buttons = self.generate_buttons(button_titles, x_space, y_space, space_between)
         self.buttons_on_screen = self.update_buttons()
 
+        # Timers
         self.press_cooldown = Timer(20)
 
-    def generate_buttons(self, titles_list, space_between=0):
+    @classmethod
+    def sub_menu(cls, button_titles, corners, how_many_cols=1, space=10):
+        """
+        ______________________________________________________________________
+
+        button_titles: <list> --> [<str>, <str>, ... , <str>]
+
+        area_corners: <tuple> --> (<int>, <int>, <int>, <int>)
+
+        how_many_columns: <int>
+
+
+        ---> <Menu>
+        ______________________________________________________________________
+
+        It creates an instance of type 'Menu', but with the symbols for some buttons
+        changed.
+        """
+        sub = cls(button_titles, corners, how_many_columns=how_many_cols, space_between=space)
+
+        sub.pgup_button.msg = '^'
+        sub.pgdn_button.msg = 'v'
+
+        return sub
+
+    def generate_buttons(self, titles_list, x_space, y_space, space_between=0):
         """
         ______________________________________________________________________
 
         titles_list: <list> -->  [<str>, <str>, ... , <str>]
 
-        space_between: <int>
+        x_space, y_space, space_between: <int>
 
 
         ---> <list> --> [<Button>, <Button>, ... , <Button>]
@@ -82,18 +119,26 @@ class Menu:
         'space_between' determines how much dead space there is between each button in said area.
         """
         buttons_list = list()
-        counter = 0
+        cols_counter = 0
+        rows_counter = 0
 
         for title in titles_list:
 
-            counter %= self.max_buttons
-            x1, x2 = self.area_x1, self.area_x2
-            y1 = (counter * self.button_space) + self.area_y1 + (0 if counter == 0 else space_between // 2)
-            y2 = ((counter + 1) * self.button_space) + self.area_y1 - (0 if counter == (self.max_buttons - 1) else space_between // 2)
+            cols_counter %= self.max_columns
+            rows_counter %= self.max_rows
+
+            x1 = (cols_counter * x_space) + self.area_x1 + (0 if cols_counter == 0 else space_between // 2)
+            x2 = ((cols_counter + 1) * x_space) + self.area_x1 - (0 if cols_counter == (self.max_columns - 1) else space_between // 2)
+            y1 = (rows_counter * y_space) + self.area_y1 + (0 if rows_counter == 0 else space_between // 2)
+            y2 = ((rows_counter + 1) * y_space) + self.area_y1 - (0 if rows_counter == (self.max_rows - 1) else space_between // 2)
 
             buttons_list.append(Button(x1, y1, x2, y2, title))
 
-            counter += 1
+            cols_counter += 1
+
+            if cols_counter % self.max_columns == 0: # Go to next row only if the currnet column is filled first
+
+                rows_counter += 1
 
         return buttons_list
 
@@ -117,7 +162,7 @@ class Menu:
 
         buttons_list = list()
 
-        for i in range((page - 1) * self.max_buttons, page * self.max_buttons):
+        for i in range((page - 1) * self.max_columns * self.max_rows, page * self.max_columns * self.max_rows):
 
             if i < len(self.buttons):
 
@@ -416,7 +461,7 @@ class Button(_Entity):
 
 class Ship(_Entity):
 
-    def __init__(self, x1, y1, x2, y2, health=500, how_hard=0, speed=1, texture_path=None):
+    def __init__(self, x1, y1, x2, y2, health=100, how_hard=0, speed=1, texture_path=None):
         """
         ______________________________________________________________________
 
@@ -436,6 +481,7 @@ class Ship(_Entity):
 
             raise Exception(f"Coordinates ({x1}, {y1}), ({x2}, {y2}) are not valid, as they are outside of the boundaries of the screen")
 
+        self.max_hp = health
         self.hp = health
         self.hardness = how_hard
         self.speed = speed
@@ -597,13 +643,13 @@ class Enemy(Ship):
 
         Generates an enemy with predefined stats, based on which type it is.
         """
-        if self.type == "common":
+        if self.type in ("common1", "common2"):
 
             self.hp = 3
             self.hardness = 10
             self.speed = 3
 
-            self.internal_timer = Timer(30)
+            self.internal_timer = (SpringTimer(0, 30, 30) if self.type == "common2" else Timer(30))
             self.direction = 0 # 0 for "LEFT", 1 for "DOWN" and 2 for "RIGHT"
 
             self.sprites = None # for now
@@ -617,7 +663,7 @@ class Enemy(Ship):
 
         Defines the movement of an enemy base on its type.
         """
-        if self.type == "common":
+        if self.type == "common1":
 
             if self.internal_timer.is_zero_or_less():
 
@@ -627,6 +673,31 @@ class Enemy(Ship):
             else:
 
                 self.internal_timer.deduct(1)
+
+            self.transfer((-self.speed if self.direction == 0 else (self.speed if self.direction == 2 else 0)),
+                          ((self.speed // 2) if self.direction == 1 else 0))
+
+        elif self.type == "common2":
+
+            if self.internal_timer.current == self.internal_timer.floor:
+
+                    self.direction += 1
+
+            elif self.internal_timer.current == self.internal_timer.ceil:
+
+                    self.direction -= 1
+
+            elif self.internal_timer.current == self.internal_timer.ceil // 2:
+
+                if self.internal_timer.adding:
+
+                    self.direction = (self.direction + 1) % 3
+
+                else:
+
+                    self.direction = (self.direction + 2) % 3
+            
+            self.internal_timer.count()
 
             self.transfer((-self.speed if self.direction == 0 else (self.speed if self.direction == 2 else 0)),
                           ((self.speed // 2) if self.direction == 1 else 0))

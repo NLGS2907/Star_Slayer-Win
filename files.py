@@ -1,4 +1,4 @@
-def map_keys(file_name='keys.txt'):
+def map_keys(file_name="keys.txt"):
     """
     ______________________________________________________________________
 
@@ -13,9 +13,9 @@ def map_keys(file_name='keys.txt'):
     """
     keys_dict = dict()
 
-    with open(file_name) as f:
+    with open(file_name) as file:
 
-        for line in f:
+        for line in file:
 
             if line == '\n':
                 continue
@@ -67,6 +67,46 @@ def list_repeated_keys(value, keys_dict=map_keys()):
     """
     return [key for (key, val) in keys_dict.items() if val == value]
 
+def map_profiles(file_name="color_profiles.txt"):
+    """
+    ______________________________________________________________________
+
+    file_name: <str>
+
+
+    ---> <dict> --> {<str> : <dict>, <str> : <dict>, ... , <str> : <dict>}
+    
+        --> <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
+    ______________________________________________________________________
+
+    Opens 'file_name' and creates a dictionary where every key is assigned
+    to a dictionary filled with color values.
+    """
+    profiles_dict = dict()
+    current_name = ''
+
+    with open(file_name) as file:
+
+        for line in file:
+
+            if line == '\n' or line[0] == '#': # is a comment
+
+                continue
+
+            type, key, *value = ''.join(line.split('=')).split()
+
+            if type == "!t": # is a new Profile
+
+                profiles_dict[key] = dict()
+                current_name = key
+
+            elif type == "!v": # is a 'key-value' pair
+
+                value = ''.join(value)
+                profiles_dict[current_name][key] = (value if not value == '/' else '')
+
+    return profiles_dict
+
 def map_level(game_level):
     """
     ______________________________________________________________________
@@ -84,9 +124,9 @@ def map_level(game_level):
     level_dict = dict()
     current_time = -1
 
-    with open(f"levels/level_{game_level}.txt") as f:
+    with open(f"levels/level_{game_level}.txt") as file:
 
-        for line in f:
+        for line in file:
 
             if line == '\n' or not line.split():
 
@@ -116,7 +156,26 @@ def map_level(game_level):
 
     return level_dict
 
-def print_keys(keys_dict, file_name='keys.txt'):
+def print_profiles(profiles_dict, file_name="test.txt"):
+    """
+    ______________________________________________________________________
+
+    keys_dict: <dict> --> {<str> : <dict>, <str> : <dict>, ... , <str> : <dict>}
+
+                --> <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
+
+    file_name: <str>
+
+
+    ---> None
+    ______________________________________________________________________
+
+    Opens 'file_name' and, if existent, edits within the information of the dictionary
+    of the keys. If not, it creates one instead.
+    """
+    pass
+
+def print_keys(keys_dict, file_name="keys.txt"):
     """
     ______________________________________________________________________
 
@@ -141,9 +200,13 @@ def print_keys(keys_dict, file_name='keys.txt'):
 
                 f.write("\n\n")
 
-            repeated_keys = ','.join(list_repeated_keys(value, keys_dict))
+            repeated_keys = list_repeated_keys(value, keys_dict)
 
-            f.write(f"{repeated_keys} = {value}")
+            if len(repeated_keys) > 1 and '/' in repeated_keys:
+
+                repeated_keys.remove('/')
+
+            f.write(f"{','.join(repeated_keys)} = {value}")
 
 
 
@@ -170,27 +233,17 @@ def ext_constants(file_name='ext_cons.txt'):
 
                 continue
 
-            fragmented_line = ''.join(line.split('=')).split()
+            type, constant, *value = ''.join(''.join(line.split('=')).split('-')).split()
 
-            if fragmented_line[0] in ("ENEMY_TYPES", "BULLET_TYPES"):
+            if type == "!i":
 
-                cons_dict[fragmented_line[0]] = fragmented_line[1:]
-                continue
+                value = int(''.join(value))
 
-            constant, value = fragmented_line
+            elif type == "!b":
+            
+                value = eval(''.join(value)) # Convert "True" to True
 
-            if value.isnumeric():
-
-                value = int(value)
-
-            elif value == 'True' or value == 'true':
-
-                value = True
-
-            elif value == 'False' or value == 'false':
-
-                value = False
-
+            # if type == "!s" or any other
             cons_dict[constant] = value
 
     return cons_dict

@@ -1,16 +1,21 @@
-def map_keys(file_name="keys.txt"):
+"""
+Files Module. It reads (and writes) in files to define persistent
+variables in the behaviour of the game.
+"""
+
+from typing import Union
+
+StrDict = dict[str, str]
+ProfilesDict = dict[str, StrDict]
+LevelList = list[Union[str, int]]
+LevelDict = dict[str, Union[int, LevelList]]
+
+def map_keys(file_name: str="keys.txt") -> StrDict:
     """
-    ______________________________________________________________________
-
-    file_name: <str>
-
-
-    ---> <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
-    ______________________________________________________________________
-
     Opens 'file_name' and creates a dictionary where every key is assigned
     to an action.
     """
+
     keys_dict = dict()
 
     with open(file_name) as file:
@@ -28,18 +33,11 @@ def map_keys(file_name="keys.txt"):
 
     return keys_dict
 
-def list_actions(keys_dict=map_keys()):
+def list_actions(keys_dict: StrDict=map_keys()) -> list[str]:
     """
-    ______________________________________________________________________
-
-    keys_dict: <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
-
-
-    ---> <list> --> [<str>, <str>, ... , <str>]
-    ______________________________________________________________________
-
     Returns a list of all the actions in the keys file, without repetitions.
     """
+
     actions_list = list()
 
     for action in keys_dict.values():
@@ -50,38 +48,20 @@ def list_actions(keys_dict=map_keys()):
 
     return actions_list
 
-def list_repeated_keys(value, keys_dict=map_keys()):
+def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
     """
-    ______________________________________________________________________
-
-    value: <str>
-
-    keys_dict: <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
-
-
-    ---> <list> --> [<str>, <str>, ... , <str>]
-    ______________________________________________________________________
-
     Given a value to search for and a dictionary (by default the one that 'map_keys' returns),
     it returns a list of all the keys that have such value.
     """
+
     return [key for (key, val) in keys_dict.items() if val == value]
 
-def map_profiles(file_name="color_profiles.txt"):
+def map_profiles(file_name: str="color_profiles.txt") -> ProfilesDict:
     """
-    ______________________________________________________________________
-
-    file_name: <str>
-
-
-    ---> <dict> --> {<str> : <dict>, <str> : <dict>, ... , <str> : <dict>}
-    
-        --> <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
-    ______________________________________________________________________
-
     Opens 'file_name' and creates a dictionary where every key is assigned
     to a dictionary filled with color values.
     """
+
     profiles_dict = dict()
     current_name = ''
 
@@ -107,20 +87,11 @@ def map_profiles(file_name="color_profiles.txt"):
 
     return profiles_dict
 
-def map_level(game_level):
+def map_level(game_level: int) -> LevelDict:
     """
-    ______________________________________________________________________
-
-    game_level: <int>
-
-
-    ---> <dict> --> {<str> : <int>, <str> : <list>*, <str> : <list>, ... , <str> : <list>}
-
-        *<list> --> [<dict>, <dict>, ... , <dict>]
-    ______________________________________________________________________
-
     Defines a dictionary with all the variables a level should have.
     """
+
     level_dict = dict()
     current_time = -1
 
@@ -156,40 +127,20 @@ def map_level(game_level):
 
     return level_dict
 
-def print_profiles(profiles_dict, file_name="test.txt"):
+def print_profiles(profiles_dict: ProfilesDict, file_name: str="test.txt") -> None:
     """
-    ______________________________________________________________________
-
-    keys_dict: <dict> --> {<str> : <dict>, <str> : <dict>, ... , <str> : <dict>}
-
-                --> <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
-
-    file_name: <str>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Opens 'file_name' and, if existent, edits within the information of the dictionary
     of the keys. If not, it creates one instead.
     """
+
     pass
 
-def print_keys(keys_dict, file_name="keys.txt"):
+def print_keys(keys_dict: StrDict, file_name: str="keys.txt") -> None:
     """
-    ______________________________________________________________________
-
-    keys_dict: <dict> --> {<str> : <str>, <str> : <str>, ... , <str> : <str>}
-
-    file_name: <str>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Opens 'file_name' and, if existent, edits within the information of the dictionary
     of the keys. If not, it creates one instead.
     """
+
     with open(file_name, mode='w') as f:
 
         dict_values = list_actions(keys_dict)
@@ -210,19 +161,12 @@ def print_keys(keys_dict, file_name="keys.txt"):
 
 
 
-def ext_constants(file_name='ext_cons.txt'):
+def ext_constants(file_name: str='ext_cons.txt') -> dict[str, Union[int, bool, str]]:
     """
-    ______________________________________________________________________
-
-    file_name: <str>
-
-
-    ---> <dict> --> {<str> : <int>, <str> : <bool>, ... , <str> : <str>}
-    ______________________________________________________________________
-
     Maps the external constants that are in a designated file ('ext_cons.txt' by default),
     and creates a dictionary with the information within.
     """
+
     cons_dict = dict()
 
     with open(file_name) as f:

@@ -1,17 +1,19 @@
+"""
+Logics Module. Its purpose is to control the logic behaviour
+of the game.
+"""
+
+from typing import Optional, Union
+
 import objects, files
 
 class Game:
+    """
+    Class for the Game itself.
+    """
 
-    def __init__(self, inital_power=1, cooldown_constant=30):
+    def __init__(self, inital_power: int=1, cooldown_constant: int=30) -> None:
         """
-        ______________________________________________________________________
-
-        initial_power, cooldown_constant: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Initalizes an instance of type 'Game'.
         """
 
@@ -58,50 +60,32 @@ class Game:
         self.show_debug_info = False
 
     @property
-    def current_menu(self):
+    def current_menu(self) -> Optional[objects.Menu]:
         """
-        ______________________________________________________________________
-
-        ---> <Menu>
-        ______________________________________________________________________
-
         Returns the current menu in display.
         """
+
         return self._menu_in_display
 
     @current_menu.setter
-    def current_menu(self, new_menu=None):
+    def current_menu(self, new_menu: Optional[objects.Menu]=None) -> None:
         """
-        ______________________________________________________________________
-
-        new_menu: <Menu> / None
-
-
-        ---> None
-        ______________________________________________________________________
-
         Changes the current menu in display for the one passed as an argument.
         """
+
         self._menu_in_display = new_menu
 
         self.sub_menu = (None if new_menu is not self.controls_menu else self.refresh_sub_menu())
 
-    def refresh_sub_menu(self, x1=(files.EXT_CONST["WIDTH"] * 0.29),
-                            y1=(files.EXT_CONST["HEIGHT"] // 2),
-                            x2=(files.EXT_CONST["WIDTH"] * 0.96),
-                            y2=(files.EXT_CONST["HEIGHT"] - 10)):
+    def refresh_sub_menu(self, x1: Union[int, float]=(files.EXT_CONST["WIDTH"] * 0.29),
+                            y1: Union[int, float]=(files.EXT_CONST["HEIGHT"] // 2),
+                            x2: Union[int, float]=(files.EXT_CONST["WIDTH"] * 0.96),
+                            y2: Union[int, float]=(files.EXT_CONST["HEIGHT"] - 10)) -> objects.Menu:
         """
-        ______________________________________________________________________
-
-        x1, y2, x2, y2: <int>
-
-
-        ---> <Menu> / None
-        ______________________________________________________________________
-
         Refreshes a mini menu made of buttons of the keys of the action to show.
         It then returns it, to be assigned elsewhere.
         """
+
         repeated_keys = files.list_repeated_keys(self.action_to_show, files.map_keys())
         changeable_keys = list()
 
@@ -115,45 +99,27 @@ class Game:
 
         return objects.Menu.sub_menu(changeable_keys, (x1, y1, x2, y2), how_many_cols=2, space=20)
 
-    def level_up(self, how_much=1):
+    def level_up(self, how_much: int=1) -> None:
         """
-        ______________________________________________________________________
-
-        how_much: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Increments by 'how_much' the level of the game.
         """
+
         self.game_level += how_much
         self.level_dict = files.map_level(self.game_level)
 
-    def power_up(self, how_much=1):
+    def power_up(self, how_much: int=1) -> None:
         """
-        ______________________________________________________________________
-
-        how_much: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Increments by 'how_much' the power of the player.
         """
+
         self.power_level += how_much
         self.shooting_cooldown.initial_time = self.cool_cons // self.power_level
 
-    def shoot_bullets(self):
+    def shoot_bullets(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Shoots bullets from player.
         """
+
         player_center_x = self.player.center()[0]
 
         if self.power_level  == 1:
@@ -174,15 +140,11 @@ class Game:
             self.bullets.append(objects.Bullet(player_center_x + 5, self.player.y1 + 30, player_center_x + 15, self.player.y1 + 20,
                                 how_hard=self.player.hardness, speed=3, bullet_type="sinusoidal_simple", first_to_right=False))
 
-    def exec_bul_trajectory(self):
+    def exec_bul_trajectory(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Moves each bullet according to their trajectory.
         """
+
         for bullet in self.bullets:
 
             if self.player.collides_with(bullet):
@@ -206,15 +168,11 @@ class Game:
 
             bullet.trajectory()
 
-    def exec_enem_trajectory(self):
+    def exec_enem_trajectory(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Moves each enemy according to its defined behaviour.
         """
+
         for enem in self.enemies:
             
             if enem.collides_with(self.player):
@@ -230,15 +188,11 @@ class Game:
 
             enem.trajectory()
 
-    def exec_lvl_script(self):
+    def exec_lvl_script(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Reads the level dictionary timeline and executes the instructions detailed within.
         """
+
         for instant in self.level_dict:
 
             if int(instant) == self.level_timer.current_time:
@@ -250,27 +204,19 @@ class Game:
                 self.level_dict.pop(instant)
                 break
 
-    def clear_assets(self):
+    def clear_assets(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Clears all enemies and bullets in their lists once returned to the main menu.
         """
+
         self.enemies = list()
         self.bullets = list()
 
-    def advance_game(self):
+    def advance_game(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         This function is that one of a wrapper, and advances the state of the game.
         """
+
         if self.is_in_game:
 
             self.current_menu = None
@@ -289,15 +235,11 @@ class Game:
 
                 self._menu_in_display.press_cooldown.deduct(1)
 
-    def refresh_timers(self):
+    def refresh_timers(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Refreshes all the timers of the game, so that it updates theirs values.
         """
+
         if not self.level_timer.is_zero_or_less():
 
             self.level_timer.deduct(1)
@@ -314,13 +256,9 @@ class Game:
 
             self.invulnerability.deduct(1)
 
-    def change_is_in_game(self):
+    def change_is_in_game(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Changes 'self.is_in_game' to its opposite.
         """
+
         self.is_in_game = not self.is_in_game

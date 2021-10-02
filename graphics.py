@@ -1,38 +1,30 @@
+"""
+Graphics Module. Draws anything that the player
+sees on screen.
+"""
+
 import gamelib, files
+from game_state import Game
+from game_controls import GameControls as Controls
+from objects import Menu, Ship
 
 WIDTH, HEIGHT = files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"]
 GUI_SPACE = files.EXT_CONST["GUI_SPACE"]
 DEBUG_LINES = files.EXT_CONST["DEBUG_LINES"] # Additional information on DEBUG action.
 SPECIAL_CHARS = files.EXT_CONST["SPECIAL_CHARS"]
 
-def draw_background(controls):
+def draw_background(controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws the background of the game (duh).
     """
+
     gamelib.draw_rectangle(0, 0, WIDTH, HEIGHT, fill=controls.color_profile["BG_COLOR"])
 
-def draw_GUI(game, controls):
+def draw_GUI(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws the User Interface.
     """
+
     aux_cons = (HEIGHT // 70)
 
     gamelib.draw_rectangle(WIDTH - GUI_SPACE, 0, WIDTH, HEIGHT, outline=controls.color_profile["GUI_OUTLINE_1"], fill=controls.color_profile["GUI_COLOR_1"])
@@ -71,20 +63,11 @@ def draw_GUI(game, controls):
 
         gamelib.draw_rectangle(bar_start, HEIGHT * 0.945, bar_start + augment, HEIGHT - (2 * aux_cons), outline=controls.color_profile["GUI_OUTLINE_1"], fill=controls.color_profile["GUI_COLOR_3"])
 
-def draw_menus(game, controls):
+def draw_menus(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-    
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws in the screen the current selected menu.
     """
+
     menu = game.current_menu
 
     draw_menu_buttons(menu, controls)
@@ -102,21 +85,12 @@ def draw_menus(game, controls):
         draw_changeable_buttons(game, controls)
 
 
-def draw_changeable_buttons(game, controls):
+def draw_changeable_buttons(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-    
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws the information of the action and its assigned keys.
     If possible, it also allows it to edit said information.
     """
+
     aux_cons = (HEIGHT // 70)
 
     gamelib.draw_text("CONTROLS", (WIDTH // 8) + 5, (HEIGHT // 15), size=(HEIGHT // 32), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
@@ -144,40 +118,22 @@ def draw_changeable_buttons(game, controls):
 
         draw_changing_prompt(game, controls)
 
-def draw_changing_prompt(game, controls):
+def draw_changing_prompt(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     It draws a prompt in the screen that warns the player that a key is
     being changed and they need to press any key to try to bind it.
     """
+
     aux_cons = (HEIGHT // 10)
 
     gamelib.draw_rectangle(aux_cons, (HEIGHT // 2) - aux_cons, WIDTH - aux_cons, (HEIGHT // 2) + aux_cons, width=(HEIGHT // 90), outline=controls.color_profile["MENU_OUTLINE_1"], fill=controls.color_profile["MENU_COLOR_1"])
     gamelib.draw_text(f"Press any key to bind it to '{game.action_to_show}'", (WIDTH // 2), (HEIGHT // 2), fill=controls.color_profile["TEXT_COLOR_1"], size=(HEIGHT // 30), justify='c')
 
-def draw_menu_buttons(menu, controls):
+def draw_menu_buttons(menu: Menu, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    menu: <Menu>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws all the buttons of a given menu.
     """
+
     for button in menu.buttons_on_screen:
 
         gamelib.draw_rectangle(button.x1, button.y1, button.x2, button.y2, width=((button.y2 - button.y1) // 25), outline=controls.color_profile["TEXT_COLOR_1"],  fill=controls.color_profile["BUTTON_COLOR_1"], activefill=controls.color_profile["BUTTON_COLOR_2"])
@@ -187,24 +143,13 @@ def draw_menu_buttons(menu, controls):
             center_x, center_y = button.center()
             gamelib.draw_text(button.msg, center_x, center_y, size=((button.y2 - button.y1) // (2 if button.msg in SPECIAL_CHARS else 4)), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
 
-def draw_ship(controls, ship, which_one=0):
+def draw_ship(controls: Controls, ship: Ship, which_one: int=0) -> None:
     """
-    ______________________________________________________________________
-
-    controls: <GameControls>
-
-    ship: <Ship>
-
-    which_one: <int>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws the sprite of a ship.
 
     'which_one' refers to which frame to draw.
     """
+
     if ship.sprites == None:
 
         gamelib.draw_rectangle(ship.x1, ship.y1, ship.x2, ship.y2, fill=controls.color_profile["DEBUG_LINES_1"])
@@ -213,40 +158,22 @@ def draw_ship(controls, ship, which_one=0):
 
         gamelib.draw_image(ship.sprites[which_one], ship.x1, ship.y1)
 
-def draw_bullets(game, controls):
+def draw_bullets(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws every single bullet currently on screen.
     """
+
     bullets = game.bullets
     
     for bullet in bullets:
 
         gamelib.draw_oval(bullet.x1, bullet.y1, bullet.x2, bullet.y2, outline=controls.color_profile["GUI_OUTLINE_1"], fill=controls.color_profile["TEXT_COLOR_1"])
 
-def draw_debug_info(game, controls):
+def draw_debug_info(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws debug information about the current game.
     """
+
     if game.show_debug_info:
 
         player = game.player
@@ -286,20 +213,11 @@ bullets_in_screen: {len(game.bullets)}"""
                 gamelib.draw_line(x, y - 50, x, y + 50, fill=controls.color_profile["DEBUG_LINES_2"])
                 gamelib.draw_line(x - 50, y, x + 50, y, fill=controls.color_profile["DEBUG_LINES_2"])
 
-def draw_debug_lines(game, controls):
+def draw_debug_lines(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Marks the limit of hitboxes and additional debug info through lines.
     """
+
     player = game.player
     cx, cy = player.center()
 
@@ -336,18 +254,11 @@ def draw_debug_lines(game, controls):
     gamelib.draw_line(player.x2, player.y2, player.x2 - 10, player.y2, fill=controls.color_profile["DEBUG_LINES_1"])
     gamelib.draw_line(player.x2, player.y2, player.x2, player.y2 - 10, fill=controls.color_profile["DEBUG_LINES_1"])
 
-def draw_about(controls):
+def draw_about(controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Shows the information about the people involved in this game.
     """
+
     aux_cons = (WIDTH // 10)
 
     gamelib.draw_rectangle(0, 0, WIDTH, HEIGHT, width=(HEIGHT // 87), outline=controls.color_profile["ABOUT_OUTLINE_1"], fill=controls.color_profile["ABOUT_COLOR_1"])
@@ -372,18 +283,8 @@ def draw_about(controls):
 
     gamelib.draw_text("Press 'RETURN' to return", (WIDTH // 2), HEIGHT - 20, size=(HEIGHT // 50), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
 
-def draw_exiting_bar(controls):
+def draw_exiting_bar(controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws a mini-bar that shows how much time is left until it exits the game.
     """
     aux_cons = (HEIGHT // 60)
@@ -401,7 +302,7 @@ def draw_exiting_bar(controls):
 
     gamelib.draw_text("Exiting Game...", (5.5 * aux_cons), (4.5 * aux_cons), size=aux_cons, anchor='c')
 
-def draw_screen(game, controls):
+def draw_screen(game: Game, controls: Controls) -> None:
     """
     ______________________________________________________________________
 

@@ -1,37 +1,154 @@
+"""
+Objects Module. Contains various datatypes utilized
+in the game.
+"""
+
+from typing import Union
+
 from files import EXT_CONST
 
-class Menu:
+StrList = list[str]
+IntTuple = tuple[int]
 
-    def __init__(self, button_titles, area_corners, max_rows=4, how_many_columns=1, space_between=10, parent_menu=None, force_button_resize=False):
+MenuVariables = Union[int, bool, None]
+MenuDict = dict[str, MenuVariables]
+
+ShipVariables = Union[int, str, None]
+ShipDict = dict[str, ShipVariables]
+
+class _Entity:
+    """
+    Generic class for defining a bounding box.
+
+    This is a basic class that is not used by itself.
+    It serves as superclass of many others.
+    """
+
+    def __init__(self, x1: int, y1: int, x2: int, y2: int) -> None:
         """
-        ______________________________________________________________________
+        Initializes an instance of type '_Entity'.
 
-        button_titles: <list> --> [<str>, <str>, ... , <str>]
+        It should always be true that 'x1 <= x2 && y1 <= y2'. If
+        it is not the case, those variables are inverted.
+        """
 
-        area_corners: <tuple> --> (<int>, <int>, <int>, <int>)
+        if x1 > x2:
 
-        max_rows, space_between: <int>
+            x1, x2 = x2, x1
 
-        parent_menu: <Menu>
+        if y1 > y2:
 
-        force_button_resize = <bool>
+            y1, y2 = y2, y1
 
+        self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
 
-        ---> None
-        ______________________________________________________________________
+    def all_coord(self) -> IntTuple:
+        """
+        Returns a tuple with all the coordiantes of its hitbox.
+        """
 
+        return self.x1, self.y1, self.x2, self.y2
+
+    def upper_left(self) -> IntTuple:
+        """
+        Returns the UPPER LEFT coordinates of its hitbox.
+        """
+
+        return self.x1, self.y1
+
+    def upper_right(self) -> IntTuple:
+        """
+        Returns the UPPER RIGHT coordinates of its hitbox.
+        """
+
+        return self.x1, self.y1
+
+    def bottom_left(self):
+        """
+        Returns the BOTTOM LEFT coordinates of its hitbox.
+        """
+
+        return self.x1, self.y2
+
+    def bottom_right(self) -> IntTuple:
+        """
+        Returns the BOTTOM RIGHT coordinates of its hitbox.
+        """
+
+        return self.x2, self.y2
+
+    def center(self) -> IntTuple:
+        """
+        Return the CENTER coordinates of its hitbox.
+        """
+
+        return ((self.x2 + self.x1) // 2), ((self.y2 + self.y1) // 2)
+
+class Button(_Entity):
+    """
+    Class for defining a hitbox of a button and
+    a message it can carry.
+    """
+
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, message: str='') -> None:
+        """
+        Initializes an instance of type 'Button'.
+        """
+
+        super().__init__(x1, y1, x2, y2)
+        self.msg = message
+
+    def __str__(self) -> str:
+        """
+        Returns a string with class information so it can be printed later.
+        """
+
+        return self.msg
+
+    def is_inside(self, x: int, y: int) -> bool:
+        """
+        Returns 'True' if some given coordinates are inside the hitbox
+        of this button.
+        """
+
+        return (self.x1 <= x <= self.x2) and (self.y1 <= y <= self.y2)
+
+ButtonsList = list[Button]
+
+class Menu:
+    """
+    Class for defining a game menu.
+    """
+
+    def __init__(self, button_titles: StrList, area_corners: IntTuple, **kwargs: MenuDict) -> None:
+        """
         Initializes an instance of type 'Menu'.
+
+        The following kwargs are the only valid:
 
         'button_titles' must be a non-empty tuple.
 
         'max_rows' cannot be an integer lower than 1.
 
         'area_corners' must be a tuple of exactly 4 integers as its values.
+
+        'parent_menu' is another instance of type 'Menu' that has this instance
+        as its child.
+
+        'force_button_resize' means if the menu must use all the space in the area
+        it is specified, which can resize the buttons.
         """
 
         if button_titles == ():
 
             raise Exception("'button_titles' cannot be empty. Must be an iteration with names (strings) and must have a length of at least 1.")
+
+        # Define default values
+        max_rows = kwargs.get("max_rows", 4)
+        how_many_columns = kwargs.get("how_many_columns", 1)
+        space_between = kwargs.get("space_between", 10)
+        parent_menu = kwargs.get("parent_menu", None)
+        force_button_resize = kwargs.get("force_button_resize", False)
 
         if max_rows < 1:
 
@@ -79,23 +196,12 @@ class Menu:
         self.press_cooldown = Timer(20)
 
     @classmethod
-    def sub_menu(cls, button_titles, corners, how_many_cols=1, space=10):
+    def sub_menu(cls, button_titles: StrList, corners: IntTuple, how_many_cols: int=1, space: int=10) -> "Menu":
         """
-        ______________________________________________________________________
-
-        button_titles: <list> --> [<str>, <str>, ... , <str>]
-
-        area_corners: <tuple> --> (<int>, <int>, <int>, <int>)
-
-        how_many_columns: <int>
-
-
-        ---> <Menu>
-        ______________________________________________________________________
-
         It creates an instance of type 'Menu', but with the symbols for some buttons
         changed.
         """
+
         sub = cls(button_titles, corners, how_many_columns=how_many_cols, space_between=space)
 
         sub.pgup_button.msg = '^'
@@ -103,21 +209,12 @@ class Menu:
 
         return sub
 
-    def generate_buttons(self, titles_list, x_space, y_space, space_between=0):
+    def generate_buttons(self, titles_list: StrList, x_space: int, y_space: int, space_between: int=0) -> ButtonsList:
         """
-        ______________________________________________________________________
-
-        titles_list: <list> -->  [<str>, <str>, ... , <str>]
-
-        x_space, y_space, space_between: <int>
-
-
-        ---> <list> --> [<Button>, <Button>, ... , <Button>]
-        ______________________________________________________________________
-
         Generate buttons based on the effective area of the menu and the 'self.button_titles' list.
         'space_between' determines how much dead space there is between each button in said area.
         """
+
         buttons_list = list()
         cols_counter = 0
         rows_counter = 0
@@ -142,20 +239,13 @@ class Menu:
 
         return buttons_list
 
-    def update_buttons(self, page=1):
+    def update_buttons(self, page: int=1) -> ButtonsList:
         """
-        ______________________________________________________________________
-
-        page: <int>
-
-
-        ---> <list> --> [<Button>, <Button>, ... , <Button>]
-        ______________________________________________________________________
-
         Updates the buttons list if the menu changes pages.
 
         The page number must be between 1 and the max values for the pages.
         """
+
         if 1 > page or self.max_pages < page:
 
             raise Exception(f"Page number is {page}. It must be between 1 and {self.max_pages} inclusive.") 
@@ -182,16 +272,8 @@ class Menu:
 
         return buttons_list
 
-    def change_page(self, to_next=True, forced=False):
+    def change_page(self, to_next: bool=True, forced: bool=False) -> None:
         """
-        ______________________________________________________________________
-
-        to_next, forced: <bool>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Changes the current page to the previous or next one, depending of the parameter 'to_next'.
         If the new page is outside of the number of pages, does nothing if 'forced' is False, otherwise it rotates between the pages.
         """
@@ -209,101 +291,64 @@ class Menu:
             self.buttons_on_screen = self.update_buttons(new_page)
 
 class Timer:
+    """
+    Class for a simple timer that counts
+    from a certain number to 0.
+    """
 
-    def __init__(self, init_time, message=''):
+    def __init__(self, init_time: int, message: str='') -> None:
         """
-        ______________________________________________________________________
-
-        init_time: <int>
-
-        message: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Initializes an instance of type 'Timer'.
         """
+
         self.initial_time = init_time
         self.current_time = init_time
         self.msg = message
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        ______________________________________________________________________
-
-        ---> <str>
-        ______________________________________________________________________
-
         Returns a string with class information so it can be printed later.
         """
+
         return f"Initital Time: {self.initial_time} - Current Time: {self.current_time}{f'Message: {self.msg}' if self.msg != '' else ''}"
 
-    def deduct(self, how_much):
+    def deduct(self, how_much: int) -> None:
         """
-        ______________________________________________________________________
-
-        how_much: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Descends the countdown subtracting 'how_much' time from 'self.current_time'.
         """
+
         self.current_time -= how_much
 
-    def reset(self):
+    def reset(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Resets the timer to its original value ('self.initial_value').
         """
+
         self.current_time = self.initial_time
         self.msg = ''
 
-    def is_zero_or_less(self):
+    def is_zero_or_less(self) -> bool:
         """
-        ______________________________________________________________________
-
-        ---> <bool>
-        ______________________________________________________________________
-
         Returns 'True' if the current time of the Timer reaches zero (0) or further, and 'False' otherwise.
         """
+
         return self.current_time <= 0
 
-    def change_message(self, new_message):
+    def change_message(self, new_message: str) -> None:
         """
-        ______________________________________________________________________
-
-        new_message: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Changes the current message to a given new one.
         """
+
         self.msg = new_message
 
 class SpringTimer:
+    """
+    Simple timer that oscillates between
+    given 'floor' and 'ceiling' values.
+    """
 
-    def __init__(self, floor, ceiling, where_to_start, is_it_adding=True):
+    def __init__(self, floor: int, ceiling: int, where_to_start: int, is_it_adding: bool=True) -> None:
         """
-        ______________________________________________________________________
-
-        floor, ceiling: <int>
-
-        where_to_start, is_it_adding: <bool>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Initializes an instance of type 'SpringTimer'.
         """
         
@@ -320,29 +365,18 @@ class SpringTimer:
         self.current = where_to_start
         self.adding = is_it_adding
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        ______________________________________________________________________
-
-        ---> <str>
-        ______________________________________________________________________
-
         Returns a string with class information so it can be printed later.
         """
+
         return f"Current: {self.current} - Floor: {self.floor} - Ceiling: {self.ceil} - Is it adding: {self.adding}"
 
-    def count(self, how_much=1):
+    def count(self, how_much: int=1) -> None:
         """
-        ______________________________________________________________________
-
-        how_much: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Advances the counting of the Timer, deducting if 'self.adding' is False, otherwise adding.
         """
+
         if self.adding:
 
             if self.current < self.ceil:
@@ -358,200 +392,68 @@ class SpringTimer:
 
             self.adding = not self.adding
 
-class _Entity:
-
-    def __init__(self, x1, y1, x2, y2):
-        """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
-        Initializes an instance of type '_Entity'.
-
-        This is a basic class that is not used by itself. It serves as superclass
-        of many others.
-        """
-        self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
-
-    def upper_left(self):
-        """
-        ______________________________________________________________________
-
-        ---> <tuple> --> (<int>, <int>)
-        ______________________________________________________________________
-
-        Returns the UPPER LEFT coordinates of its hitbox.
-        """
-        return self.x1, self.y1
-
-    def upper_right(self):
-        """
-        ______________________________________________________________________
-
-        ---> <tuple> --> (<int>, <int>)
-        ______________________________________________________________________
-
-        Returns the UPPER RIGHT coordinates of its hitbox.
-        """
-        return self.x1, self.y1
-
-    def bottom_left(self):
-        """
-        ______________________________________________________________________
-
-        ---> <tuple> --> (<int>, <int>)
-        ______________________________________________________________________
-
-        Returns the BOTTOM LEFT coordinates of its hitbox.
-        """
-        return self.x1, self.y2
-
-    def bottom_right(self):
-        """
-        ______________________________________________________________________
-
-        ---> <tuple> --> (<int>, <int>)
-        ______________________________________________________________________
-
-        Returns the BOTTOM RIGHT coordinates of its hitbox.
-        """
-        return self.x2, self.y2
-
-    def center(self):
-        """
-        ______________________________________________________________________
-
-        ---> <tuple> --> (<int>, <int>)
-        ______________________________________________________________________
-
-        Return the CENTER coordinates of its hitbox.
-        """
-        return ((self.x2 + self.x1) // 2), ((self.y2 + self.y1) // 2)
-
-class Button(_Entity):
-
-    def __init__(self, x1, y1, x2, y2, message=''):
-        """
-        ______________________________________________________________________
-
-        x1, y1, x2, y2: <int>
-
-        message: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
-        Initializes an instance of type 'Button'.
-        """
-        super().__init__(x1, y1, x2, y2)
-        self.msg = message
-
-    def __str__(self):
-        """
-        ______________________________________________________________________
-
-        ---> <str>
-        ______________________________________________________________________
-
-        Returns a string with class information so it can be printed later.
-        """
-        return self.msg
-
 class Ship(_Entity):
+    """
+    Class for defining a ship that
+    moves on the screen.
+    """
 
-    def __init__(self, x1, y1, x2, y2, health=100, how_hard=0, speed=1, texture_path=None):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: ShipDict) -> None:
         """
-        ______________________________________________________________________
-
-        x1, y2, x2, y2, health, how_hard, speed: <int>
-
-        texture_path: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Initializes an instance of type 'Ship'.
         """
+
         super().__init__(x1, y1, x2, y2)
 
         if self.is_out_bounds(x1, y1, x2, y2):
 
             raise Exception(f"Coordinates ({x1}, {y1}), ({x2}, {y2}) are not valid, as they are outside of the boundaries of the screen")
 
-        self.max_hp = health
-        self.hp = health
-        self.hardness = how_hard
-        self.speed = speed
-        self.sprites = texture_path
+        self.max_hp = kwargs.get("health", 100)
+        self.hp = self.max_hp
+        self.hardness = kwargs.get("how_hard", 0)
+        self.speed = kwargs.get("speed", 1)
+        self.sprites = kwargs.get("texture_path", None)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        ______________________________________________________________________
-
-        ---> <str>
-        ______________________________________________________________________
-
         Returns a string with class information so it can be printed later.
         """
+
         return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
-        ______________________________________________________________________
-
-        ---> <str>
-        ______________________________________________________________________
-
         Returns a string with class information so it can be parsed 'as is' later.
         """
+
         return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}"
 
-    def is_out_bounds(self, x1, y1, x2, y2):
+    def is_out_bounds(self, x1: int, y1: int, x2: int, y2: int) -> bool:
         """
-        ______________________________________________________________________
-
-        x1, y1, x2, y2: <int>
-
-
-        ---> <bool>
-        ______________________________________________________________________
-
         Checks if an _Entity is out of the bounds of the screen.
 
         Return 'True' if so. Else returns 'False'.
         """
+
         width, height = EXT_CONST['WIDTH'] - EXT_CONST['GUI_SPACE'], EXT_CONST['HEIGHT']
 
         return any((x1 < 0, y1 < 0, x2 > width, y2 > height))
 
-    def has_no_health(self):
+    def has_no_health(self) -> bool:
         """
-        ______________________________________________________________________
-
-        ---> <bool>
-        ______________________________________________________________________
-
         Returns 'True' if if the ship has 0 health points or less, and 'False' otherwise.
         """
+
         return self.hp <= 0
 
-    def collides_with(self, other):
+    def collides_with(self, other: "Ship") -> bool:
         """
-        ______________________________________________________________________
-
-        other: <Ship>
-
-
-        ---> <bool>
-        ______________________________________________________________________
-
         Tests if the hitbox of the ship is colliding with another given one. Returns a boolean.
 
         Although it is intended for other 'Ship' instances, it works with any subclass of '_Entity'.
         """
+
         # Test Upper Side
         if other.y1 < self.y1 < other.y2:
 
@@ -580,69 +482,53 @@ class Ship(_Entity):
 
         return False
 
-    def transfer(self, dx, dy):
+    def transfer(self, dx: int, dy: int) -> None:
         """
-        ______________________________________________________________________
-
-        dx, dy: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Changes ship coordinates from '(x1, y1), (x2, y2)' to '(x1 + dx, y1 + dy), (x2 + dx, y2 + dy)'.
         """
+
         self.x1 += dx
         self.y1 += dy
         self.x2 += dx
         self.y2 += dy
 
-    def move(self, dx, dy):
+    def move(self, dx: int, dy: int) -> bool:
         """
-        ______________________________________________________________________
-
-        dx, dy: <int>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Moves the player around inside the boundaries of the screen.
-        """
-        if not self.is_out_bounds(self.x1 + dx, self.y1 + dy, self.x2 + dx, self.y2 + dy):
 
-            self.transfer(dx, dy)
+        Returns 'False' if the atempted move is invalid, or 'True' if it is
+        valid. Either way, invalid moves are ignored.
+        """
+
+        if self.is_out_bounds(self.x1 + dx, self.y1 + dy, self.x2 + dx, self.y2 + dy):
+
+            return False
+
+        self.transfer(dx, dy)
+
+        return True
 
 class Enemy(Ship):
+    """
+    Class for defining a NPC ship that attacks
+    the player.
+    """
 
-    def __init__(self, x1, y1, x2, y2, enemy_type):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, enemy_type: str) -> None:
         """
-        ______________________________________________________________________
-
-        x1, y1, x2, y2: <int>
-
-        enemy_type: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Initializes an instance of type 'Enemy'.
         """
+
         self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
         self.type = enemy_type if enemy_type in EXT_CONST["ENEMY_TYPES"] else EXT_CONST["ENEMY_TYPES"][0]
 
         self.generate_enemy()
 
-    def generate_enemy(self):
+    def generate_enemy(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Generates an enemy with predefined stats, based on which type it is.
         """
+
         if self.type in ("common1", "common2"):
 
             self.hp = 3
@@ -654,15 +540,11 @@ class Enemy(Ship):
 
             self.sprites = None # for now
 
-    def trajectory(self):
+    def trajectory(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Defines the movement of an enemy base on its type.
         """
+
         if self.type == "common1":
 
             if self.internal_timer.is_zero_or_less():
@@ -703,23 +585,25 @@ class Enemy(Ship):
                           ((self.speed // 2) if self.direction == 1 else 0))
 
 class Bullet(Ship):
+    """
+    Class for defining a bullet that is shot
+    from a ship, enemy or not.
+    """
 
-    def __init__(self, x1, y1, x2, y2, health=10, how_hard=0, speed=1, texture_path=None, acceleration=1, oscillation_time=30, bullet_type=EXT_CONST["BULLET_TYPES"][0], first_to_right=True):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: dict[str, Union[int, None, str, bool]]) -> None:
         """
-        ______________________________________________________________________
-
-        x1, y1, x2, y2, health, how_hard, speed, acceleration, oscillation_time: <int>
-
-        texture_path, bullet_type: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Initializes an instance of type 'Bullet'.
         """
-        super().__init__(x1, y1, x2, y2, health, how_hard, speed, texture_path)
-        self.accel = acceleration
+
+        # Defining default types
+
+        if kwargs.get("health", None) == None: kwargs["health"] = 10            
+
+        oscillation_time = kwargs.get("oscillation_time", 30)
+        bullet_type = kwargs.get("bullet_type", EXT_CONST["BULLET_TYPES"][0])
+
+        super().__init__(x1, y1, x2, y2, **kwargs)
+        self.accel = kwargs.get("acceleration", 1)
         self.type = bullet_type if bullet_type in EXT_CONST["BULLET_TYPES"] else EXT_CONST["BULLET_TYPES"][0]
 
         if self.type == "normal_acc":
@@ -728,17 +612,13 @@ class Bullet(Ship):
 
         elif self.type == "sinusoidal_simple":
 
-            self.oscillatation = SpringTimer(-oscillation_time, oscillation_time, (oscillation_time if first_to_right else -oscillation_time))
+            self.oscillatation = SpringTimer(-oscillation_time, oscillation_time, (oscillation_time if kwargs.get("first_to_right", True) else -oscillation_time))
 
-    def trajectory(self):
+    def trajectory(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Defines the movement of the bullet based on its type.
         """
+
         if self.type == "normal_acc":
 
             if self.accel_timer.current_time > 0:

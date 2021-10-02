@@ -1,6 +1,13 @@
+"""
+Main Module. It encases all the other modules to start the game.
+"""
+
 import gamelib, graphics, game_state, game_controls, files
 
-def main():
+def main() -> None:
+    """
+    Main function. Initializes the game.
+    """
 
     gamelib.title(f"Star Slayer (Pre)")
     gamelib.resize(files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"])

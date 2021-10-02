@@ -1,16 +1,22 @@
+"""
+Controls Module. Processes the interactions of the player
+with the game.
+"""
+
 import gamelib, objects, files
+from game_state import Game # Just for type hinting
 
 class GameControls:
+    """
+    Class for controlling the interactions with
+    the game.
+    """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Initalizes an instance of type 'GameControls'.
         """
+
         # Control Attributes
         self.show_about = False
         self.is_changing_key = False
@@ -24,34 +30,18 @@ class GameControls:
         # Timers
         self.exiting_cooldown = objects.Timer(files.EXT_CONST["EXITING_DELAY"])
 
-    def process_key(self, key):
+    def process_key(self, key: str) -> str:
         """
-        ______________________________________________________________________
-
-        key: <str>
-
-
-        ---> <str>
-        ______________________________________________________________________
-        
         Reads which key was pressed, and returns its corresponding action.
         """
+
         return files.map_keys().get(key)
 
-    def process_action(self, action, game):
+    def process_action(self, action: str, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        action: <str>
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Receives an action and process it into its rightful instructions.
         """
+
         if action:
 
             command = getattr(self, "execute_" + '_'.join(action.lower().split()), None)
@@ -59,79 +49,51 @@ class GameControls:
             # The action has a method assigned in this class
             if command: command(game)
 
-    def execute_up(self, game):
+    def execute_up(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'UP' action.
 
         If in-game, moves the player upwards.
         """
+
         if game.is_in_game:
 
             game.player.move(0, -game.player.speed)
 
-    def execute_left(self, game):
+    def execute_left(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'LEFT' action.
 
         If in-game, moves the player to the left.
         """
+
         if game.is_in_game:
 
             game.player.move(-game.player.speed, 0)
 
-    def execute_right(self, game):
+    def execute_right(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'RIGHT' action.
 
         If in-game, moves the player to the right.
         """
+
         if game.is_in_game:
 
             game.player.move(game.player.speed, 0)
 
-    def execute_down(self, game):
+    def execute_down(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'DOWN' action.
 
         If in-game, moves the player downwards.
         """
+
         if game.is_in_game:
 
             game.player.move(0, game.player.speed)
 
-    def execute_shoot(self, game):
+    def execute_shoot(self, game: Game) -> None:
         """
         ______________________________________________________________________
 
@@ -145,26 +107,20 @@ class GameControls:
 
         If in-game, shoots the corresponding bullets from the player.
         """
+
         if game.is_in_game and game.shooting_cooldown.is_zero_or_less():
 
             game.shoot_bullets()
             game.shooting_cooldown.reset()
 
-    def execute_return(self, game):
+    def execute_return(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'RETURN' action.
 
         If in-game, it goes back to the main menu. If not, changes the current menu
         in display for its parent, if it has one.
         """
+
         if self.show_about:
 
             self.show_about = False
@@ -181,58 +137,37 @@ class GameControls:
             game.current_menu = game.current_menu.parent
             game.current_menu.press_cooldown.reset() # Then the parent
 
-    def execute_debug(self, game):
+    def execute_debug(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'DEBUG' action.
 
         If in-game, it shows debug information about the player attributes and other
         additional features.
         """
+
         if game.is_in_game and game.debug_cooldown.is_zero_or_less():
 
             game.show_debug_info = not game.show_debug_info
             game.debug_cooldown.reset()
 
-    def execute_exit(self, game):
+    def execute_exit(self,game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'EXIT' action.
 
         Changes an attribute of the game state so it exits the game.
         If it is in-game, it returns to the main menu instead.
         """
+
         if self.exiting_cooldown.is_zero_or_less():
 
             self.exit_game(game)
 
-    def _translate_msg(self, message):
+    def _translate_msg(self, message: str) -> str:
         """
-        ______________________________________________________________________
-
-        message: <str>
-
-
-        ---> <str>
-        ______________________________________________________________________
-
         Kind of an internal function with the sole purpose of translating the rare characters
         some buttons have as their messages for a string with something more bearable. 
         """
+
         if message == '<':
 
             return "return"
@@ -253,20 +188,11 @@ class GameControls:
 
             return "sub_page_down"
 
-    def process_click(self, x, y, game):
+    def process_click(self, x: int, y: int, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        x, y: <int>
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Receives the coordinates of a click and process it into its rightful instructions.
         """
+
         if not game.is_in_game and not self.show_about:
 
             menu = game.current_menu
@@ -294,82 +220,46 @@ class GameControls:
 
                     break
 
-    def click_on_play(self, game):
+    def click_on_play(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Play' button.
 
         Changes the attribute 'is_in_game' of the game so it starts the game.
         """
+
         game.change_is_in_game()
 
-    def click_on_options(self, game):
+    def click_on_options(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Options' button.
 
         Changes the current menu in display for the Options Menu.
         """
+
         game.current_menu = game.options_menu
 
-    def click_on_about(self, game):
+    def click_on_about(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'About' button.
 
         It overrides anything drawn on the screen to show a window with information
         about the people involved in the development of this project.        
         """
+
         self.show_about = True
 
-    def click_on_exit(self, game):
+    def click_on_exit(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Exit' button.
 
         Just as the 'EXIT' action, it changes an attribute of the game so it
         tests if it exits the program.
         """
+
         self.exit_game(game)
 
-    def click_on_return(self, game):
+    def click_on_return(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Return' button.
 
         Just as the 'RETURN' action, it changes the current menu in display for its
@@ -379,18 +269,11 @@ class GameControls:
         It is probably not the exact message that appears on the actual button, but
         something to understand its functions better. 
         """
+
         self.process_action("return", game)
 
-    def click_on_page_up(self, game):
+    def click_on_page_up(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Page Up' button.
 
         If able, changes the page of the current menu in display for the previous one.
@@ -398,18 +281,11 @@ class GameControls:
         It is probably not the exact message that appears on the actual button, but
         something to understand its functions better. 
         """
+
         game.current_menu.change_page(False)
 
-    def click_on_page_down(self, game):
+    def click_on_page_down(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Page Down' button.
 
         If able, changes the page of the current menu in display for the next one.
@@ -417,18 +293,11 @@ class GameControls:
         It is probably not the exact message that appears on the actual button, but
         something to understand its functions better. 
         """
+
         game.current_menu.change_page(True)
 
-    def click_on_sub_page_up(self, game):
+    def click_on_sub_page_up(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the (sub) 'Page Up' button.
 
         If able, changes the page of the current sub-menu for the previous one.
@@ -436,18 +305,11 @@ class GameControls:
         It is probably not the exact message that appears on the actual button, but
         something to understand its functions better. 
         """
+
         game.sub_menu.change_page(False)
 
-    def click_on_sub_page_down(self, game):
+    def click_on_sub_page_down(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the (sub) 'Page Down' button.
 
         If able, changes the page of the current sub-menu for the next one.
@@ -455,54 +317,35 @@ class GameControls:
         It is probably not the exact message that appears on the actual button, but
         something to understand its functions better. 
         """
+
         game.sub_menu.change_page(True)
 
-    def click_on_configure_controls(self, game):
+    def click_on_configure_controls(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Configure Controls' button.
 
         Changes the current menu in display for the Controls Menu
         """
+
         game.current_menu = game.controls_menu
 
-    def click_on_add_key(self, game):
+    def click_on_add_key(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'Add Key' button.
 
         Changes the 'is_changing_key' attribute to 'True' so it adds a new key.
         """
+
         self.is_changing_key = True
 
-    def add_key(self, action, game):
+    def add_key(self, action: str, game: Game) -> tuple[files.StrDict, bool]:
         """
-        ______________________________________________________________________
-
-        action: <str>
-
-
-        ---> <tuple> --> (<dict>, <bool>)
-        ______________________________________________________________________
-
         If valid, adds a key to a designed action.
+
         Return the dictionary of the keys, plus 'True' if the function
         succeeded, else 'False' if something happened.
         """
+
         event = gamelib.wait(gamelib.EventType.KeyPress)
         keys_dict = files.map_keys()
         success = False
@@ -519,16 +362,8 @@ class GameControls:
 
         self.is_changing_key = False
 
-    def remove_key(self, key, game):
+    def remove_key(self, key: str, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        key: <str>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Removes the key passed as an argument from the keys dictionary.
         """
         keys_dict = files.map_keys()
@@ -545,18 +380,11 @@ class GameControls:
             files.print_keys(keys_dict)
             game.sub_menu = game.refresh_sub_menu()
 
-    def refresh(self, keys_dict):
+    def refresh(self, keys_dict: dict[str, bool]) -> None:
         """
-        ______________________________________________________________________
-
-        keys_dict: <dict> --> {<str> : <bool>, <str> : <bool>, ... , <str> : <bool>}
-
-
-        ---> None
-        ______________________________________________________________________
-
         Takes the actions that must be done in each iteration of a loop, like
         refreshing or counting timers.
+
         It takes a dictionary of the keys pressed to decide if it counts some timers.
         """
         correct_keys = files.list_repeated_keys("EXIT", files.map_keys())
@@ -571,13 +399,8 @@ class GameControls:
             self.exiting = False
             self.exiting_cooldown.reset()
 
-    def exit_game(self, game):
+    def exit_game(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        ---> None
-        ______________________________________________________________________
-
         Sets the control variable 'self.exiting' to 'True' to see if it exits
         the game.
         """

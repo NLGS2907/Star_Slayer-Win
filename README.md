@@ -209,11 +209,11 @@ class Menu:
 
 **Example call:**
 ```Python
-main_menu = Menu(['Play', 'Options', 'About', 'Exit'],
+main_menu = Menu(["Play", "Options", "About", "Exit"],
                  (200,
-                 EXT_CONST['HEIGHT'] // 2,
-                 EXT_CONST['WIDTH'] - 200,
-                 EXT_CONST['HEIGHT'] - 50))
+                 EXT_CONST["HEIGHT"] // 2,
+                 EXT_CONST["WIDTH"] - 200,
+                 EXT_CONST["HEIGHT"] - 50))
 ```
 <br/>
 

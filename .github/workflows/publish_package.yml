@@ -33,4 +33,4 @@ jobs:
 
     - name: Publish package
       run: |
-        python -m twine upload -u ${{ secrets.PyPI_USER }} -p ${{ secrets.PyPI_PASS }} dist/*
+        python -m twine upload -u "${{ secrets.PyPI_USER }}" -p "${{ secrets.PyPI_PASS }}" dist/*

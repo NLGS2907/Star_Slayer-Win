@@ -1,24 +1,17 @@
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
 
     name="star-slayer",
 
-    packages=find_packages(),
+    packages=["starslayer",],
 
     package_data={
 
-        "starslayer" : ["*.txt"],
-
-        "starslayer.levels" : ["*.txt"],
-
-        "starslayer.sprites.player" : ["*.gif"]
+        "starslayer" : ["*.txt", "levels/*.txt", "sprites/player/*.gif"]
     },
 
-    include_package_data=True,
-
-    version="0.0.12.1-alpha",
+    version="0.0.13-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

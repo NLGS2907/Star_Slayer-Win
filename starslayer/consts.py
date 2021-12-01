@@ -1,4 +1,14 @@
-import os.path
+from importlib.resources import path as fpath
+from typing import Optional
+
+def file_path(filename: str, subpackage: Optional[str]=None) -> str:
+    """
+    Returns the absolute path of a file associated with a package or subpackage.
+    """
+
+    subpackage_path = f"{__package__}{f'.{subpackage}' if subpackage else ''}"
+
+    return str(fpath(subpackage_path, filename))
 
 WIDTH = 750
 """
@@ -86,12 +96,12 @@ CONTROLS_TITLE = """
 ░╚════╝░░╚════╝░╚═╝░░╚══╝░░░╚═╝░░░╚═╝░░╚═╝░╚════╝░╚══════╝╚═════╝░
 """
 
-PLAYER_SPRITE = "sprites/player/star_player.gif"
+PLAYER_SPRITE = file_path("star_player.gif", "sprites.player")
 
-PLAYER_DAMAGED_SPRITE = "sprites/player/star_player_damaged.gif"
+PLAYER_DAMAGED_SPRITE = file_path("star_player_damaged.gif", "sprites.player")
 
-KEYS_PATH = "keys.txt"
+KEYS_PATH = file_path("keys.txt")
 
-PROFILES_PATH = "color_profiles.txt"
+PROFILES_PATH = file_path("color_profiles.txt")
 
-LEVEL_PATH = "levels/level_{level}.txt"
+LEVEL_PATH = file_path("level_{level}.txt", "levels")

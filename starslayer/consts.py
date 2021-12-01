@@ -1,14 +1,5 @@
 import os.path
 
-def file_path(filename: str) -> str:
-    """
-    Returns the absolute path of a file.
-    """
-
-    directory = os.path.dirname(__file__)
-
-    return os.path.join(directory, os.path.realpath(filename))
-
 WIDTH = 750
 """
 It is recommended to leave it with '750' as its value
@@ -96,12 +87,10 @@ CONTROLS_TITLE = """
 """
 
 PLAYER_SPRITE = "sprites/player/star_player.gif"
-print(PLAYER_SPRITE)
 
 PLAYER_DAMAGED_SPRITE = "sprites/player/star_player_damaged.gif"
 
 KEYS_PATH = "keys.txt"
-print(KEYS_PATH)
 
 PROFILES_PATH = "color_profiles.txt"
 

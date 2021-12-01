@@ -1,10 +1,11 @@
 from distutils.core import setup
+from setuptools import find_packages
 
 setup(
 
     name="star-slayer",
 
-    packages=["starslayer",],
+    packages=find_packages(),
 
     package_data={
 

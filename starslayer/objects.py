@@ -5,7 +5,7 @@ in the game.
 
 from typing import Optional
 
-from consts import WIDTH, HEIGHT, GUI_SPACE, ENEMY_TYPES, BULLET_TYPES
+from .consts import WIDTH, HEIGHT, GUI_SPACE, ENEMY_TYPES, BULLET_TYPES
 
 StrList = list[str]
 IntTuple = tuple[int]

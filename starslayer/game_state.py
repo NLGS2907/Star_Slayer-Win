@@ -5,9 +5,8 @@ of the game.
 
 from typing import Optional
 
-import objects
-import files
-from consts import WIDTH, HEIGHT
+from . import objects, files
+from .consts import PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, WIDTH, HEIGHT
 
 
 class Game:
@@ -46,7 +45,7 @@ class Game:
 
         # Player Parameters
         self.player = objects.Ship((width // 2) - 30, int(height / 1.17) - 30, (width // 2) + 30, int(height / 1.17) + 30,
-                                    how_hard=1, speed=5, texture_path=('sprites/player/star_player.gif','sprites/player/star_player_damaged.gif'))
+                                    how_hard=1, speed=5, texture_path=(PLAYER_SPRITE, PLAYER_DAMAGED_SPRITE))
         self.power_level = inital_power
         
         # Timers

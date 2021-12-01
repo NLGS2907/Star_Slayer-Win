@@ -3,9 +3,9 @@ Controls Module. Processes the interactions of the player
 with the game.
 """
 
-import gamelib, objects, files
-from game_state import Game # Just for type hinting
-from consts import EXITING_DELAY, SPECIAL_CHARS
+from . import gamelib, objects, files
+from .game_state import Game # Just for type hinting
+from .consts import EXITING_DELAY, SPECIAL_CHARS
 
 class GameControls:
     """
@@ -45,7 +45,7 @@ class GameControls:
 
         if action:
 
-            command = getattr(self, "execute_" + '_'.join(action.lower().split()), None)
+            command = getattr(self, f"execute_{'_'.join(action.lower().split())}", None)
 
             # The action has a method assigned in this class
             if command: command(game)

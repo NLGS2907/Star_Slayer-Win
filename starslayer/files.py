@@ -3,7 +3,9 @@ Files Module. It reads (and writes) in files to define persistent
 variables in the behaviour of the game.
 """
 
-from consts import KEYS_PATH, PROFILES_PATH
+import pkgutil
+
+from .consts import KEYS_PATH, LEVEL_PATH, PROFILES_PATH
 
 StrDict = dict[str, str]
 ProfilesDict = dict[str, StrDict]
@@ -95,7 +97,7 @@ def map_level(game_level: int) -> LevelDict:
     level_dict = dict()
     current_time = -1
 
-    with open(f"levels/level_{game_level}.txt") as file:
+    with open(LEVEL_PATH.format(level=game_level)) as file:
 
         for line in file:
 

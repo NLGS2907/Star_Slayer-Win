@@ -3,11 +3,11 @@ Graphics Module. Draws anything that the player
 sees on screen.
 """
 
-import gamelib, files
-from game_state import Game
-from game_controls import GameControls as Controls
-from objects import Menu, Ship
-from consts import DEBUG_TEXT, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
+from . import gamelib, files
+from .game_state import Game
+from .game_controls import GameControls as Controls
+from .objects import Menu, Ship
+from .consts import DEBUG_TEXT, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
 
 
 def draw_background(controls: Controls) -> None:

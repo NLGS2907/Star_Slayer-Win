@@ -3,17 +3,17 @@ Objects Module. Contains various datatypes utilized
 in the game.
 """
 
-from typing import Union
+from typing import Optional
 
-from files import EXT_CONST
+from consts import WIDTH, HEIGHT, GUI_SPACE, ENEMY_TYPES, BULLET_TYPES
 
 StrList = list[str]
 IntTuple = tuple[int]
 
-MenuVariables = Union[int, bool, None]
+MenuVariables = Optional[int | bool]
 MenuDict = dict[str, MenuVariables]
 
-ShipVariables = Union[int, str, None]
+ShipVariables = Optional[int | str]
 ShipDict = dict[str, ShipVariables]
 
 class _Entity:
@@ -186,7 +186,7 @@ class Menu:
         # Special Buttons
         self.pgup_button = Button((self.area_x2 + space_between), self.area_y1, self.area_x2 + (y_space // 2), (self.area_y1 + (y_space // 2)), "/\\")
         self.pgdn_button = Button((self.area_x2 + space_between), (self.area_y2 - (y_space // 2)), self.area_x2 + (y_space // 2), self.area_y2, "\/")
-        self.return_button = Button(self.area_x1, self.area_y1 - (EXT_CONST["HEIGHT"] // 20), self.area_x1 + (EXT_CONST["WIDTH"] // 20), self.area_y1 - space_between, '<')
+        self.return_button = Button(self.area_x1, self.area_y1 - (HEIGHT // 20), self.area_x1 + (WIDTH // 20), self.area_y1 - space_between, '<')
 
         # Button Lists
         self.buttons = self.generate_buttons(button_titles, x_space, y_space, space_between)
@@ -233,7 +233,7 @@ class Menu:
 
             cols_counter += 1
 
-            if cols_counter % self.max_columns == 0: # Go to next row only if the currnet column is filled first
+            if cols_counter % self.max_columns == 0: # Go to next row only if the current column is filled first
 
                 rows_counter += 1
 
@@ -310,7 +310,7 @@ class Timer:
         Returns a string with class information so it can be printed later.
         """
 
-        return f"Initital Time: {self.initial_time} - Current Time: {self.current_time}{f'Message: {self.msg}' if self.msg != '' else ''}"
+        return f"Initial Time: {self.initial_time} - Current Time: {self.current_time}{f'Message: {self.msg}' if self.msg != '' else ''}"
 
     def deduct(self, how_much: int) -> None:
         """
@@ -436,7 +436,7 @@ class Ship(_Entity):
         Return 'True' if so. Else returns 'False'.
         """
 
-        width, height = EXT_CONST['WIDTH'] - EXT_CONST['GUI_SPACE'], EXT_CONST['HEIGHT']
+        width, height = WIDTH - GUI_SPACE, HEIGHT
 
         return any((x1 < 0, y1 < 0, x2 > width, y2 > height))
 
@@ -520,7 +520,7 @@ class Enemy(Ship):
         """
 
         self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
-        self.type = enemy_type if enemy_type in EXT_CONST["ENEMY_TYPES"] else EXT_CONST["ENEMY_TYPES"][0]
+        self.type = enemy_type if enemy_type in ENEMY_TYPES else ENEMY_TYPES[0]
 
         self.generate_enemy()
 
@@ -563,11 +563,11 @@ class Enemy(Ship):
 
             if self.internal_timer.current == self.internal_timer.floor:
 
-                    self.direction += 1
+                self.direction += 1
 
             elif self.internal_timer.current == self.internal_timer.ceil:
 
-                    self.direction -= 1
+                self.direction -= 1
 
             elif self.internal_timer.current == self.internal_timer.ceil // 2:
 
@@ -590,7 +590,7 @@ class Bullet(Ship):
     from a ship, enemy or not.
     """
 
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: dict[str, Union[int, None, str, bool]]) -> None:
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: dict[str, Optional[int | str | bool]]) -> None:
         """
         Initializes an instance of type 'Bullet'.
         """
@@ -600,11 +600,11 @@ class Bullet(Ship):
         if kwargs.get("health", None) == None: kwargs["health"] = 10            
 
         oscillation_time = kwargs.get("oscillation_time", 30)
-        bullet_type = kwargs.get("bullet_type", EXT_CONST["BULLET_TYPES"][0])
+        bullet_type = kwargs.get("bullet_type", BULLET_TYPES[0])
 
         super().__init__(x1, y1, x2, y2, **kwargs)
         self.accel = kwargs.get("acceleration", 1)
-        self.type = bullet_type if bullet_type in EXT_CONST["BULLET_TYPES"] else EXT_CONST["BULLET_TYPES"][0]
+        self.type = bullet_type if bullet_type in BULLET_TYPES else BULLET_TYPES[0]
 
         if self.type == "normal_acc":
 

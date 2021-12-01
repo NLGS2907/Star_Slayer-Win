@@ -3,9 +3,12 @@ Logics Module. Its purpose is to control the logic behaviour
 of the game.
 """
 
-from typing import Optional, Union
+from typing import Optional
 
-import objects, files
+import objects
+import files
+from consts import WIDTH, HEIGHT
+
 
 class Game:
     """
@@ -17,7 +20,7 @@ class Game:
         Initalizes an instance of type 'Game'.
         """
 
-        width, height = files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"]
+        width, height = WIDTH, HEIGHT
 
         # Menus
         self.main_menu = objects.Menu(["Play", "Options", "About", "Exit"],
@@ -77,10 +80,10 @@ class Game:
 
         self.sub_menu = (None if new_menu is not self.controls_menu else self.refresh_sub_menu())
 
-    def refresh_sub_menu(self, x1: Union[int, float]=(files.EXT_CONST["WIDTH"] * 0.29),
-                            y1: Union[int, float]=(files.EXT_CONST["HEIGHT"] // 2),
-                            x2: Union[int, float]=(files.EXT_CONST["WIDTH"] * 0.96),
-                            y2: Union[int, float]=(files.EXT_CONST["HEIGHT"] - 10)) -> objects.Menu:
+    def refresh_sub_menu(self, x1: int | float=(WIDTH * 0.29),
+                            y1: int | float=(HEIGHT // 2),
+                            x2: int | float=(WIDTH * 0.96),
+                            y2: int | float=(HEIGHT - 10)) -> objects.Menu:
         """
         Refreshes a mini menu made of buttons of the keys of the action to show.
         It then returns it, to be assigned elsewhere.
@@ -182,7 +185,7 @@ class Game:
                     self.player.hp -= enem.hardness
                     self.invulnerability.reset()
 
-            if enem.has_no_health() or enem.y1 > files.EXT_CONST["HEIGHT"] + 100:
+            if enem.has_no_health() or enem.y1 > HEIGHT + 100:
 
                 self.enemies.remove(enem)
 

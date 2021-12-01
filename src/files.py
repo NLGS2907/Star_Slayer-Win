@@ -3,14 +3,14 @@ Files Module. It reads (and writes) in files to define persistent
 variables in the behaviour of the game.
 """
 
-from typing import Union
+from consts import KEYS_PATH, PROFILES_PATH
 
 StrDict = dict[str, str]
 ProfilesDict = dict[str, StrDict]
-LevelList = list[Union[str, int]]
-LevelDict = dict[str, Union[int, LevelList]]
+LevelList = list[str | int]
+LevelDict = dict[str, int | LevelList]
 
-def map_keys(file_name: str="keys.txt") -> StrDict:
+def map_keys(file_name: str=KEYS_PATH) -> StrDict:
     """
     Opens 'file_name' and creates a dictionary where every key is assigned
     to an action.
@@ -56,7 +56,7 @@ def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
 
     return [key for (key, val) in keys_dict.items() if val == value]
 
-def map_profiles(file_name: str="color_profiles.txt") -> ProfilesDict:
+def map_profiles(file_name: str=PROFILES_PATH) -> ProfilesDict:
     """
     Opens 'file_name' and creates a dictionary where every key is assigned
     to a dictionary filled with color values.
@@ -135,7 +135,7 @@ def print_profiles(profiles_dict: ProfilesDict, file_name: str="test.txt") -> No
 
     pass
 
-def print_keys(keys_dict: StrDict, file_name: str="keys.txt") -> None:
+def print_keys(keys_dict: StrDict, file_name: str=KEYS_PATH) -> None:
     """
     Opens 'file_name' and, if existent, edits within the information of the dictionary
     of the keys. If not, it creates one instead.
@@ -158,38 +158,3 @@ def print_keys(keys_dict: StrDict, file_name: str="keys.txt") -> None:
                 repeated_keys.remove('/')
 
             f.write(f"{','.join(repeated_keys)} = {value}")
-
-
-
-def ext_constants(file_name: str='ext_cons.txt') -> dict[str, Union[int, bool, str]]:
-    """
-    Maps the external constants that are in a designated file ('ext_cons.txt' by default),
-    and creates a dictionary with the information within.
-    """
-
-    cons_dict = dict()
-
-    with open(file_name) as f:
-
-        for line in f:
-
-            if line == '\n' or line.split()[0] == '#':
-
-                continue
-
-            type, constant, *value = ''.join(''.join(line.split('=')).split('-')).split()
-
-            if type == "!i":
-
-                value = int(''.join(value))
-
-            elif type == "!b":
-            
-                value = eval(''.join(value)) # Convert "True" to True
-
-            # if type == "!s" or any other
-            cons_dict[constant] = value
-
-    return cons_dict
-
-EXT_CONST = ext_constants()

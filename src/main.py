@@ -2,7 +2,12 @@
 Main Module. It encases all the other modules to start the game.
 """
 
-import gamelib, graphics, game_state, game_controls, files
+import gamelib
+import graphics
+import game_state
+import game_controls
+from consts import ICON_PATH, WIDTH, HEIGHT
+
 
 def main() -> None:
     """
@@ -10,8 +15,8 @@ def main() -> None:
     """
 
     gamelib.title(f"Star Slayer (Pre)")
-    gamelib.resize(files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"])
-    gamelib.icon("sprites/player/star_player.gif")
+    gamelib.resize(WIDTH, HEIGHT)
+    gamelib.icon(ICON_PATH)
 
     game = game_state.Game(inital_power=3)
     controls = game_controls.GameControls()

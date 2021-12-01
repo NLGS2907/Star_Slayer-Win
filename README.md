@@ -4,7 +4,7 @@ A project initially thought as a hobby for testing the single-file game library 
 
 <hr style="height:30px"/>
 
-* [ Proyect is currently **ON HIATUS** ]
+* [ Project is currently **ON HIATUS** ]
 
 <hr style="height:30px"/>
 
@@ -24,7 +24,7 @@ As far as it was originally planned, *Star Slayer* is a "Shoot 'em all!" minigam
 
 Is very ~~_tasteless_~~ of minimalistic style, and you can interact with ease with its oversimplified options.
 
-<img alt="menus_exaple" src="readme/gifs/menus.gif" height=600 width=550>
+<img alt="menus_example" src="readme/gifs/menus.gif" height=600 width=550>
 
 Brought to you by customizable classes made with amateur skills but somewhat manageable! Found on [objects.py](objects.py) file.
 

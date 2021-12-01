@@ -5,6 +5,7 @@ with the game.
 
 import gamelib, objects, files
 from game_state import Game # Just for type hinting
+from consts import EXITING_DELAY, SPECIAL_CHARS
 
 class GameControls:
     """
@@ -28,7 +29,7 @@ class GameControls:
         self.color_profile = files.map_profiles()[self.selected_theme]
 
         # Timers
-        self.exiting_cooldown = objects.Timer(files.EXT_CONST["EXITING_DELAY"])
+        self.exiting_cooldown = objects.Timer(EXITING_DELAY)
 
     def process_key(self, key: str) -> str:
         """
@@ -95,14 +96,6 @@ class GameControls:
 
     def execute_shoot(self, game: Game) -> None:
         """
-        ______________________________________________________________________
-
-        game: <Game>
-
-
-        ---> None
-        ______________________________________________________________________
-
         Executes the 'SHOOT' action.
 
         If in-game, shoots the corresponding bullets from the player.
@@ -212,7 +205,7 @@ class GameControls:
 
                     elif not button.msg == "RETURN": # To avoid the button in the controls menu to overlap with the '<' ones
 
-                        message = (self._translate_msg(button.msg) if button.msg in files.EXT_CONST["SPECIAL_CHARS"] else button.msg)
+                        message = (self._translate_msg(button.msg) if button.msg in SPECIAL_CHARS else button.msg)
                         button_clicked = getattr(self, "click_on_" + '_'.join(message.lower().split()), None)
 
                         # The button has a method assigned in this class

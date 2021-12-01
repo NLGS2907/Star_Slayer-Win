@@ -7,11 +7,8 @@ import gamelib, files
 from game_state import Game
 from game_controls import GameControls as Controls
 from objects import Menu, Ship
+from consts import DEBUG_TEXT, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
 
-WIDTH, HEIGHT = files.EXT_CONST["WIDTH"], files.EXT_CONST["HEIGHT"]
-GUI_SPACE = files.EXT_CONST["GUI_SPACE"]
-DEBUG_LINES = files.EXT_CONST["DEBUG_LINES"] # Additional information on DEBUG action.
-SPECIAL_CHARS = files.EXT_CONST["SPECIAL_CHARS"]
 
 def draw_background(controls: Controls) -> None:
     """
@@ -19,6 +16,7 @@ def draw_background(controls: Controls) -> None:
     """
 
     gamelib.draw_rectangle(0, 0, WIDTH, HEIGHT, fill=controls.color_profile["BG_COLOR"])
+
 
 def draw_GUI(game: Game, controls: Controls) -> None:
     """
@@ -37,7 +35,7 @@ def draw_GUI(game: Game, controls: Controls) -> None:
 
     gamelib.draw_line(WIDTH - GUI_SPACE + aux_cons, HEIGHT * 0.765, WIDTH - aux_cons, HEIGHT * 0.765, width=(aux_cons // 2), fill=controls.color_profile["GUI_COLOR_2"])
 
-    #Hardness
+    # Hardness
     gamelib.draw_text("Current Hardness:", WIDTH - GUI_SPACE + aux_cons, HEIGHT * 0.8, size=(WIDTH // 62), fill=controls.color_profile["TEXT_COLOR_1"], anchor='w')
     gamelib.draw_text(f"{game.player.hardness}", WIDTH - aux_cons, HEIGHT * 0.8, size=(WIDTH // 62), fill=controls.color_profile["TEXT_COLOR_1"], anchor='e')
 
@@ -63,6 +61,7 @@ def draw_GUI(game: Game, controls: Controls) -> None:
 
         gamelib.draw_rectangle(bar_start, HEIGHT * 0.945, bar_start + augment, HEIGHT - (2 * aux_cons), outline=controls.color_profile["GUI_OUTLINE_1"], fill=controls.color_profile["GUI_COLOR_3"])
 
+
 def draw_menus(game: Game, controls: Controls) -> None:
     """
     Draws in the screen the current selected menu.
@@ -74,14 +73,15 @@ def draw_menus(game: Game, controls: Controls) -> None:
 
     if menu is game.main_menu:
 
-        gamelib.draw_text("STAR\nSLAYER", WIDTH // 2, HEIGHT // 4, size=(WIDTH // 10), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
+        gamelib.draw_text(GAME_TITLE, WIDTH // 2, HEIGHT // 4, size=(WIDTH // 90), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
 
     elif menu is game.options_menu:
 
-        gamelib.draw_text("OPTIONS", WIDTH // 2, HEIGHT // 4, size=(WIDTH // 10), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
+        gamelib.draw_text(OPTIONS_TITLE, WIDTH // 2, HEIGHT // 4, size=(WIDTH // 90), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
 
     elif menu is game.controls_menu:
 
+        gamelib.draw_text(CONTROLS_TITLE, (WIDTH // 8) + 5, (HEIGHT // 15), size=(HEIGHT // 235), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
         draw_changeable_buttons(game, controls)
 
 
@@ -93,7 +93,6 @@ def draw_changeable_buttons(game: Game, controls: Controls) -> None:
 
     aux_cons = (HEIGHT // 70)
 
-    gamelib.draw_text("CONTROLS", (WIDTH // 8) + 5, (HEIGHT // 15), size=(HEIGHT // 32), fill=controls.color_profile["TEXT_COLOR_1"], justify='c')
     gamelib.draw_rectangle((WIDTH // 4) + aux_cons, aux_cons, WIDTH - aux_cons, HEIGHT - aux_cons, width=(HEIGHT // 87), outline=controls.color_profile["MENU_OUTLINE_1"], fill=controls.color_profile["MENU_COLOR_1"])
     gamelib.draw_text(f"{game.action_to_show}", (WIDTH * (5 / 8)), (HEIGHT // 8), fill=controls.color_profile["TEXT_COLOR_1"], size=(WIDTH // 10), justify='c')
 
@@ -137,7 +136,7 @@ def draw_menu_buttons(menu: Menu, controls: Controls) -> None:
     for button in menu.buttons_on_screen:
 
         gamelib.draw_rectangle(button.x1, button.y1, button.x2, button.y2, width=((button.y2 - button.y1) // 25), outline=controls.color_profile["TEXT_COLOR_1"],  fill=controls.color_profile["BUTTON_COLOR_1"], activefill=controls.color_profile["BUTTON_COLOR_2"])
-    
+
         if button.msg:
 
             center_x, center_y = button.center()
@@ -164,7 +163,7 @@ def draw_bullets(game: Game, controls: Controls) -> None:
     """
 
     bullets = game.bullets
-    
+
     for bullet in bullets:
 
         gamelib.draw_oval(bullet.x1, bullet.y1, bullet.x2, bullet.y2, outline=controls.color_profile["GUI_OUTLINE_1"], fill=controls.color_profile["TEXT_COLOR_1"])
@@ -180,20 +179,23 @@ def draw_debug_info(game: Game, controls: Controls) -> None:
         cx, cy = player.center()
         debug_cons = (HEIGHT // 70)
 
-        debug_text = f"""player_hitbox: ({player.x1}, {player.y1}), ({player.x2}, {player.y2})
-center_hitbox: {(cx, cy)}
-Shooting Cooldown: {'Ready!' if game.shooting_cooldown.is_zero_or_less() else game.shooting_cooldown.current_time}
-Invulnerability Cooldown: {'Ready!' if game.invulnerability.is_zero_or_less() else game.invulnerability.current_time}
+        debug_text = DEBUG_TEXT.format(player_x1=player.x1,
+                                       player_y1=player.y1,
+                                       player_x2=player.x2,
+                                       player_y2=player.y2,
 
-Power: {game.power_level}
+                                       hitbox_center=f"({cx}, {cy})",
+                                       shooting_cooldown=("Ready!" if game.shooting_cooldown.is_zero_or_less() else game.shooting_cooldown.current_time),
+                                       inv_cooldown=("Ready!" if game.invulnerability.is_zero_or_less() else game.invulnerability.current_time),
 
-Player Stats:
-Health: {game.player.hp}
-Hardness: {game.player.hardness}
-Speed: {game.player.speed}
+                                       power_level=game.power_level,
 
-enemies_in_screen: {len(game.enemies)}
-bullets_in_screen: {len(game.bullets)}"""
+                                       health=game.player.hp,
+                                       hardness=game.player.hardness,
+                                       speed=game.player.speed,
+
+                                       enemies=len(game.enemies),
+                                       bullets=len(game.bullets))
 
         gamelib.draw_text(debug_text, debug_cons, debug_cons, size=debug_cons, fill=controls.color_profile["TEXT_COLOR_1"], anchor="nw")
 
@@ -235,7 +237,7 @@ def draw_debug_lines(game: Game, controls: Controls) -> None:
 
     # Right Lines
     gamelib.draw_line(player.x2, cy, WIDTH, cy, fill=controls.color_profile["DEBUG_LINES_1"])
-    gamelib.draw_line(player.x2, cy - 5, player.x2, cy + 5, fill=controls.color_profile["DEBUG_LINES_1"])    
+    gamelib.draw_line(player.x2, cy - 5, player.x2, cy + 5, fill=controls.color_profile["DEBUG_LINES_1"])
 
 
     # Upper-Left Corner
@@ -304,16 +306,6 @@ def draw_exiting_bar(controls: Controls) -> None:
 
 def draw_screen(game: Game, controls: Controls) -> None:
     """
-    ______________________________________________________________________
-
-    game: <Game>
-
-    controls: <GameControls>
-
-
-    ---> None
-    ______________________________________________________________________
-
     Draws the entirety of the elements on the screen.
     """
     draw_background(controls)

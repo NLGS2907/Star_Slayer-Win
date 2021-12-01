@@ -18,7 +18,7 @@ setup(
 
     include_package_data=True,
 
-    version="0.0.12-alpha",
+    version="0.0.12.1-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

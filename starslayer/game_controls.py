@@ -3,15 +3,17 @@ Controls Module. Processes the interactions of the player
 with the game.
 """
 
-from . import gamelib, objects, files
+from . import gamelib, files
+from .utils import Timer
 from .game_state import Game # Just for type hinting
-from .consts import EXITING_DELAY, SPECIAL_CHARS
+from .consts import EXITING_DELAY, SPECIAL_CHARS, SUB_MENU_RIGHT
 
 class GameControls:
     """
     Class for controlling the interactions with
     the game.
     """
+
 
     def __init__(self) -> None:
         """
@@ -20,16 +22,13 @@ class GameControls:
 
         # Control Attributes
         self.show_about = False
-        self.is_changing_key = False
+        self.is_on_prompt = False
         self.exiting = False
         self.exit = False
 
-        # Color Profiles
-        self.selected_theme = "AZURE"
-        self.color_profile = files.map_profiles()[self.selected_theme]
-
         # Timers
-        self.exiting_cooldown = objects.Timer(EXITING_DELAY)
+        self.exiting_cooldown = Timer(EXITING_DELAY)
+
 
     def process_key(self, key: str) -> str:
         """
@@ -37,6 +36,7 @@ class GameControls:
         """
 
         return files.map_keys().get(key)
+
 
     def process_action(self, action: str, game: Game) -> None:
         """
@@ -50,6 +50,7 @@ class GameControls:
             # The action has a method assigned in this class
             if command: command(game)
 
+
     def execute_up(self, game: Game) -> None:
         """
         Executes the 'UP' action.
@@ -60,6 +61,7 @@ class GameControls:
         if game.is_in_game:
 
             game.player.move(0, -game.player.speed)
+
 
     def execute_left(self, game: Game) -> None:
         """
@@ -72,6 +74,7 @@ class GameControls:
 
             game.player.move(-game.player.speed, 0)
 
+
     def execute_right(self, game: Game) -> None:
         """
         Executes the 'RIGHT' action.
@@ -82,6 +85,7 @@ class GameControls:
         if game.is_in_game:
 
             game.player.move(game.player.speed, 0)
+
 
     def execute_down(self, game: Game) -> None:
         """
@@ -94,6 +98,7 @@ class GameControls:
 
             game.player.move(0, game.player.speed)
 
+
     def execute_shoot(self, game: Game) -> None:
         """
         Executes the 'SHOOT' action.
@@ -105,6 +110,7 @@ class GameControls:
 
             game.shoot_bullets()
             game.shooting_cooldown.reset()
+
 
     def execute_return(self, game: Game) -> None:
         """
@@ -130,6 +136,7 @@ class GameControls:
             game.current_menu = game.current_menu.parent
             game.current_menu.press_cooldown.reset() # Then the parent
 
+
     def execute_debug(self, game: Game) -> None:
         """
         Executes the 'DEBUG' action.
@@ -143,6 +150,7 @@ class GameControls:
             game.show_debug_info = not game.show_debug_info
             game.debug_cooldown.reset()
 
+
     def execute_exit(self,game: Game) -> None:
         """
         Executes the 'EXIT' action.
@@ -154,6 +162,7 @@ class GameControls:
         if self.exiting_cooldown.is_zero_or_less():
 
             self.exit_game(game)
+
 
     def _translate_msg(self, message: str) -> str:
         """
@@ -181,6 +190,7 @@ class GameControls:
 
             return "sub_page_down"
 
+
     def process_click(self, x: int, y: int, game: Game) -> None:
         """
         Receives the coordinates of a click and process it into its rightful instructions.
@@ -194,10 +204,14 @@ class GameControls:
 
                 if button.x1 <= x <= button.x2 and button.y1 <= y <= button.y2:
 
-                    if all((menu == game.controls_menu, button.msg in files.list_actions(), not game.action_to_show == button.msg)):
+                    if all((menu is game.controls_menu, button.msg in files.list_actions(), not game.action_to_show == button.msg)):
 
                         game.action_to_show = button.msg
-                        game.sub_menu = game.refresh_sub_menu()
+                        game.sub_menu = game.refresh_controls_sub_menu()
+
+                    elif all((menu is game.profiles_menu, button.msg in files.list_profiles(), not game.theme_to_show == button.msg)):
+
+                        self.selected_theme = button.msg
 
                     elif button.msg in (f"Delete {key}" for key in files.map_keys().keys()):
 
@@ -213,6 +227,7 @@ class GameControls:
 
                     break
 
+
     def click_on_play(self, game: Game) -> None:
         """
         Executes the 'Play' button.
@@ -222,6 +237,7 @@ class GameControls:
 
         game.change_is_in_game()
 
+
     def click_on_options(self, game: Game) -> None:
         """
         Executes the 'Options' button.
@@ -230,6 +246,7 @@ class GameControls:
         """
 
         game.current_menu = game.options_menu
+
 
     def click_on_about(self, game: Game) -> None:
         """
@@ -241,6 +258,7 @@ class GameControls:
 
         self.show_about = True
 
+
     def click_on_exit(self, game: Game) -> None:
         """
         Executes the 'Exit' button.
@@ -250,6 +268,7 @@ class GameControls:
         """
 
         self.exit_game(game)
+
 
     def click_on_return(self, game: Game) -> None:
         """
@@ -265,6 +284,7 @@ class GameControls:
 
         self.process_action("return", game)
 
+
     def click_on_page_up(self, game: Game) -> None:
         """
         Executes the 'Page Up' button.
@@ -276,6 +296,7 @@ class GameControls:
         """
 
         game.current_menu.change_page(False)
+
 
     def click_on_page_down(self, game: Game) -> None:
         """
@@ -289,6 +310,7 @@ class GameControls:
 
         game.current_menu.change_page(True)
 
+
     def click_on_sub_page_up(self, game: Game) -> None:
         """
         Executes the (sub) 'Page Up' button.
@@ -300,6 +322,7 @@ class GameControls:
         """
 
         game.sub_menu.change_page(False)
+
 
     def click_on_sub_page_down(self, game: Game) -> None:
         """
@@ -313,6 +336,7 @@ class GameControls:
 
         game.sub_menu.change_page(True)
 
+
     def click_on_configure_controls(self, game: Game) -> None:
         """
         Executes the 'Configure Controls' button.
@@ -322,14 +346,16 @@ class GameControls:
 
         game.current_menu = game.controls_menu
 
+
     def click_on_add_key(self, game: Game) -> None:
         """
         Executes the 'Add Key' button.
 
-        Changes the 'is_changing_key' attribute to 'True' so it adds a new key.
+        Changes the 'is_on_prompt' attribute to 'True' so it adds a new key.
         """
 
-        self.is_changing_key = True
+        self.is_on_prompt = True
+
 
     def add_key(self, action: str, game: Game) -> tuple[files.StrDict, bool]:
         """
@@ -351,9 +377,10 @@ class GameControls:
 
             keys_dict[event.key] = action
             files.print_keys(keys_dict)
-            game.sub_menu = game.refresh_sub_menu()
+            game.sub_menu = game.refresh_controls_sub_menu()
 
-        self.is_changing_key = False
+        self.is_on_prompt = False
+
 
     def remove_key(self, key: str, game: Game) -> None:
         """
@@ -371,7 +398,30 @@ class GameControls:
                 keys_dict['/'] = value
 
             files.print_keys(keys_dict)
-            game.sub_menu = game.refresh_sub_menu()
+            game.sub_menu = game.refresh_controls_sub_menu()
+
+
+    def prompt(self, game: Game) -> None:
+        """
+        Processes the action to prompt the user.
+        """
+
+        if game.current_menu is game.controls_menu:
+
+            self.add_key(game.action_to_show, game)
+
+        elif game.current_menu is game.profiles_menu:
+
+            ...
+
+
+    def click_on_change_color_profile(self, game: Game) -> None:
+        """
+        Changes the color theme of the game.
+        """
+
+        game.current_menu = game.profiles_menu
+
 
     def refresh(self, keys_dict: dict[str, bool]) -> None:
         """
@@ -391,6 +441,7 @@ class GameControls:
 
             self.exiting = False
             self.exiting_cooldown.reset()
+
 
     def exit_game(self, game: Game) -> None:
         """

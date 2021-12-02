@@ -4,14 +4,16 @@ setup(
 
     name="star-slayer",
 
-    packages=["starslayer",],
+    packages=find_packages(),
 
     package_data={
 
-        "starslayer" : ["*.txt", "levels/*.txt", "sprites/player/*.gif"]
+        "starslayer" : ["*.txt",
+                        "levels/*.txt",
+                        "sprites/player/*.gif"]
     },
 
-    version="0.0.13-alpha",
+    version="0.0.14-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

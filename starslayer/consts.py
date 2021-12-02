@@ -25,6 +25,16 @@ GUI_SPACE = 250
 How much space of WIDTH the GUI will use when in-game
 """
 
+SUB_MENU_RIGHT = (WIDTH * 0.29), (HEIGHT // 2), (WIDTH * 0.96), (HEIGHT - 10)
+"""
+Dimensions for a Menu that has its sub-menu to its RIGHT.
+"""
+
+SUB_MENU_LEFT = (WIDTH * 0.29), (HEIGHT // 2), (WIDTH * 0.96), (HEIGHT - 10)
+"""
+Dimensions for a Menu that has its sub-menu to its LEFT.
+"""
+
 EXITING_DELAY = 30
 """
 How much time the game waits when the 'EXIT' action is left pressed.
@@ -33,16 +43,6 @@ How much time the game waits when the 'EXIT' action is left pressed.
 DEBUG_LINES = True
 """
 Adds additional information on DEBUG action in process_action function (main module).
-"""
-
-ENEMY_TYPES = "common1", "common2"
-"""
-Lists the types of possible enemies
-"""
-
-BULLET_TYPES = "normal_acc", "sinusoidal_simple"
-"""
-Lists the types of possible throwable bullets
 """
 
 SPECIAL_CHARS = '<', "/\\" "\/", '^', 'v'
@@ -94,6 +94,16 @@ CONTROLS_TITLE = """
 ██║░░██╗██║░░██║██║╚████║░░░██║░░░██╔══██╗██║░░██║██║░░░░░░╚═══██╗
 ╚█████╔╝╚█████╔╝██║░╚███║░░░██║░░░██║░░██║╚█████╔╝███████╗██████╔╝
 ░╚════╝░░╚════╝░╚═╝░░╚══╝░░░╚═╝░░░╚═╝░░╚═╝░╚════╝░╚══════╝╚═════╝░
+"""
+
+PROFILES_TITLE = """
+
+██████╗░██████╗░░█████╗░███████╗██╗██╗░░░░░███████╗░██████╗
+██╔══██╗██╔══██╗██╔══██╗██╔════╝██║██║░░░░░██╔════╝██╔════╝
+██████╔╝██████╔╝██║░░██║█████╗░░██║██║░░░░░█████╗░░╚█████╗░
+██╔═══╝░██╔══██╗██║░░██║██╔══╝░░██║██║░░░░░██╔══╝░░░╚═══██╗
+██║░░░░░██║░░██║╚█████╔╝██║░░░░░██║███████╗███████╗██████╔╝
+╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░╚═╝╚══════╝╚══════╝╚═════╝░
 """
 
 PLAYER_SPRITE = file_path("star_player.gif", "sprites.player")

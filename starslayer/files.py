@@ -3,14 +3,13 @@ Files Module. It reads (and writes) in files to define persistent
 variables in the behaviour of the game.
 """
 
-import pkgutil
-
 from .consts import KEYS_PATH, LEVEL_PATH, PROFILES_PATH
 
 StrDict = dict[str, str]
 ProfilesDict = dict[str, StrDict]
 LevelList = list[str | int]
 LevelDict = dict[str, int | LevelList]
+
 
 def map_keys(file_name: str=KEYS_PATH) -> StrDict:
     """
@@ -35,6 +34,7 @@ def map_keys(file_name: str=KEYS_PATH) -> StrDict:
 
     return keys_dict
 
+
 def list_actions(keys_dict: StrDict=map_keys()) -> list[str]:
     """
     Returns a list of all the actions in the keys file, without repetitions.
@@ -50,6 +50,7 @@ def list_actions(keys_dict: StrDict=map_keys()) -> list[str]:
 
     return actions_list
 
+
 def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
     """
     Given a value to search for and a dictionary (by default the one that 'map_keys' returns),
@@ -57,6 +58,7 @@ def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
     """
 
     return [key for (key, val) in keys_dict.items() if val == value]
+
 
 def map_profiles(file_name: str=PROFILES_PATH) -> ProfilesDict:
     """
@@ -88,6 +90,39 @@ def map_profiles(file_name: str=PROFILES_PATH) -> ProfilesDict:
                 profiles_dict[current_name][key] = (value if not value == '/' else '')
 
     return profiles_dict
+
+
+def list_profiles(profiles_dict: ProfilesDict=map_profiles()) -> list[str]:
+    """
+    Returns a list of all the available color profiles titles.
+    """
+
+    return [profile for profile in profiles_dict]
+
+
+def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH) -> None:
+    """
+    Opens 'file_name' and, if existent, edits within the information of the dictionary
+    of the keys. If not, it creates one instead.
+    """
+
+    intro = "# !t are for 'themes', !v are for the 'key, value' pairs for that theme\n\n"
+    bar = "# -=-=-=-=-=-=-=-=-=-=-"
+
+    with open(file_name, mode='w') as f:
+
+        f.write(intro)
+
+        for profile in profiles_dict:
+
+            f.write(f"{bar}\n\n!t {profile}\n\n")
+
+            for key, value in profiles_dict[profile].items():
+
+                f.write(f"!v {key} = {value}\n\n")
+
+        f.write(bar)
+
 
 def map_level(game_level: int) -> LevelDict:
     """
@@ -129,13 +164,6 @@ def map_level(game_level: int) -> LevelDict:
 
     return level_dict
 
-def print_profiles(profiles_dict: ProfilesDict, file_name: str="test.txt") -> None:
-    """
-    Opens 'file_name' and, if existent, edits within the information of the dictionary
-    of the keys. If not, it creates one instead.
-    """
-
-    pass
 
 def print_keys(keys_dict: StrDict, file_name: str=KEYS_PATH) -> None:
     """

@@ -54,7 +54,7 @@ def main() -> None:
 
             if keys_pressed.get(key, False): controls.process_action(controls.process_key(key), game)
 
-        if controls.is_changing_key:
+        if controls.is_on_prompt:
 
             if is_first_lap:
 
@@ -63,7 +63,7 @@ def main() -> None:
             else:
 
                 is_first_lap = True
-                controls.add_key(game.action_to_show, game)
+                controls.prompt(game)
 
         game.advance_game()
         controls.refresh(keys_pressed)

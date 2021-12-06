@@ -2,7 +2,7 @@
 Main Module. It encases all the other modules to start the game.
 """
 
-from . import gamelib, graphics, game_state, game_controls
+from . import gamelib, graphics, game_state, game_controls, files
 from .consts import PLAYER_SPRITE, WIDTH, HEIGHT
 
 
@@ -11,7 +11,7 @@ def main() -> None:
     Main function. Initializes the game.
     """
 
-    gamelib.title(f"Star Slayer (Pre)")
+    gamelib.title(f"Star Slayer - Alpha")
     gamelib.resize(WIDTH, HEIGHT)
     gamelib.icon(PLAYER_SPRITE)
 
@@ -19,6 +19,7 @@ def main() -> None:
     controls = game_controls.GameControls()
 
     keys_pressed = dict()
+    events_processed = dict()
 
     is_first_lap = True # So that some actions take place in the next iteration of the loop
 
@@ -40,11 +41,11 @@ def main() -> None:
 
                 keys_pressed[event.key] = True
 
-            if event.type == gamelib.EventType.KeyRelease:
+            elif event.type == gamelib.EventType.KeyRelease:
 
                 keys_pressed[event.key] = False
 
-            if event.type == gamelib.EventType.ButtonPress:
+            elif event.type == gamelib.EventType.ButtonPress:
 
                 if event.mouse_button == 1:
 
@@ -52,7 +53,19 @@ def main() -> None:
 
         for key in keys_pressed:
 
-            if keys_pressed.get(key, False): controls.process_action(controls.process_key(key), game)
+            action = controls.process_key(key)
+
+            if keys_pressed.get(key, False):
+
+                events_processed[action] = True
+
+            elif all((not keys_pressed.get(repeated_key, False) for repeated_key in files.list_repeated_keys(action))):
+
+                events_processed[action] = False
+
+        for game_action in events_processed:
+
+            if events_processed.get(game_action, False): controls.process_action(game_action, game)
 
         if controls.is_on_prompt:
 

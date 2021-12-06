@@ -1,5 +1,11 @@
 from setuptools import setup, find_packages
 
+project_description = ''
+
+with open("README.md", mode='r') as readme:
+
+    project_description = readme.read()
+
 setup(
 
     name="star-slayer",
@@ -13,7 +19,7 @@ setup(
                         "sprites/player/*.gif"]
     },
 
-    version="0.0.14-alpha",
+    version="0.0.15-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 
@@ -24,6 +30,10 @@ setup(
     license="MIT",
 
     description="Little game made with Gamelib",
+
+    long_description=project_description,
+
+    long_description_content_type="text/markdown",
 
     classifiers=[
 

@@ -43,7 +43,7 @@ class BulletNormalAcc(Bullet):
 
         super().__init__(x1, y1, x2, y2, **kwargs)
 
-        oscillation_time = kwargs.get("oscillation_time", 30)
+        oscillation_time: int = kwargs.get("oscillation_time", 30)
         self.accel_timer = Timer(oscillation_time)
 
 
@@ -71,8 +71,9 @@ class BulletSinusoidalSimple(Bullet):
 
         super().__init__(x1, y1, x2, y2, **kwargs)
 
-        oscillation_time = kwargs.get("oscillation_time", 30)
-        self.oscillatation = SpringTimer(-oscillation_time, oscillation_time, (oscillation_time if kwargs.get("first_to_right", True) else -oscillation_time))
+        oscillation_time: int = kwargs.get("oscillation_time", 30)
+        first_to_right: bool = kwargs.get("first_to_right", True)
+        self.oscillatation = SpringTimer(-oscillation_time, oscillation_time, (oscillation_time if first_to_right else -oscillation_time))
 
 
     def trajectory(self) -> None:

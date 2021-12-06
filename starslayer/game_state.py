@@ -6,7 +6,7 @@ of the game.
 from typing import Optional
 
 from . import utils, characters, bullets, enemies, files
-from .consts import PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
+from .consts import PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
 
 corners_tuple = tuple[int | float, int | float, int | float, int | float]
 
@@ -34,20 +34,22 @@ class Game:
                                       main_coords)
 
         self.options_menu = utils.Menu(["Configure Controls", "Change Color Profile"],
-                                         main_coords, max_rows=4, parent_menu=self.main_menu)
+                                         main_coords,
+                                         max_rows=4, parent_menu=self.main_menu)
 
         self.controls_menu = utils.Menu(files.list_actions(),
-                                    ((width // 75), (height // 5), int(width / 4.237288), int(height / 1.014492)), max_rows=8, parent_menu=self.options_menu)
+                                        ((width // 75), (height // 5), int(width / 4.237288), int(height / 1.014492)),
+                                        max_rows=8, parent_menu=self.options_menu)
 
-        self.profiles_menu = utils.Menu(files.list_profiles(),
-                                          main_coords, max_rows=6, parent_menu=self.options_menu)
+        self.profiles_menu = utils.Menu(files.list_profiles() + ["+"],
+                                        (int(width / 1.25), int(height / 5.185185), int(width / 1.013513), int(height / 1.076923)),
+                                        max_rows=10, special_btn_on_right=False, parent_menu=self.options_menu)
 
         self._menu_in_display = self.main_menu
 
         # Sub-menu related
         self.action_to_show = files.list_actions()[0]
-        self.theme_to_show = files.list_profiles()[0]
-        self.sub_menu = self.refresh_controls_sub_menu()
+        self.sub_menu = None
 
         # Level Parameters
         self.game_level = 1
@@ -61,8 +63,8 @@ class Game:
         self.power_level = inital_power
 
         # Color Profiles
-        self._color_theme = "AZURE"
         self.color_profiles = files.map_profiles()
+        self._color_theme = files.list_profiles()[0]
         self.color_profile = self.color_profiles[self._color_theme]
 
         # Timers
@@ -153,7 +155,8 @@ class Game:
 
         changeable_keys.append("Add Key")
 
-        return utils.Menu.sub_menu(changeable_keys, corners, how_many_cols=2, space=20)
+        return utils.Menu.sub_menu(changeable_keys, corners,
+                                   how_many_columns=2, space_between=20)
 
 
     def refresh_profiles_sub_menu(self, corners: corners_tuple=SUB_MENU_LEFT) -> utils.Menu:
@@ -161,9 +164,14 @@ class Game:
         Refreshes a mini menu where are stored the profiles of the game.
         """
 
-        profile_atts = [attribute for attribute in self.color_profile]
+        if not len(corners) == 4:
 
-        return utils.Menu.sub_menu(profile_atts, corners, how_many_cols=2, space=20)
+            raise Exception(f"corners has {len(corners)} values. It must be 4 integers or floats.")
+
+        profile_atts = [PROFILES_CHANGER, PROFILES_DELETER] + files.list_attributes(self.color_profile)
+
+        return utils.Menu.sub_menu(profile_atts, corners,
+                                   max_rows=7, how_many_columns=2, space_between_x=20, space_between_y=15, button_anchor='w', special_btn_on_right=False)
 
 
     def level_up(self, how_much: int=1) -> None:
@@ -189,7 +197,7 @@ class Game:
         Shoots bullets from player.
         """
 
-        player_center_x = self.player.center()[0]
+        player_center_x = self.player.center[0]
 
         match self.power_level:
 

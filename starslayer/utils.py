@@ -49,6 +49,7 @@ class _Entity:
         return self.x1, self.y1, self.x2, self.y2
 
 
+    @property
     def upper_left(self) -> IntTuple:
         """
         Returns the UPPER LEFT coordinates of its hitbox.
@@ -57,6 +58,7 @@ class _Entity:
         return self.x1, self.y1
 
 
+    @property
     def upper_right(self) -> IntTuple:
         """
         Returns the UPPER RIGHT coordinates of its hitbox.
@@ -65,6 +67,7 @@ class _Entity:
         return self.x1, self.y1
 
 
+    @property
     def bottom_left(self):
         """
         Returns the BOTTOM LEFT coordinates of its hitbox.
@@ -73,6 +76,7 @@ class _Entity:
         return self.x1, self.y2
 
 
+    @property
     def bottom_right(self) -> IntTuple:
         """
         Returns the BOTTOM RIGHT coordinates of its hitbox.
@@ -81,12 +85,31 @@ class _Entity:
         return self.x2, self.y2
 
 
+    @property
     def center(self) -> IntTuple:
         """
         Return the CENTER coordinates of its hitbox.
         """
 
         return ((self.x2 + self.x1) // 2), ((self.y2 + self.y1) // 2)
+
+
+    @property
+    def width(self) -> int:
+        """
+        Returns the WIDTH of its hitbox.
+        """
+
+        return self.x2 - self.x1
+
+
+    @property
+    def height(self) -> int:
+        """
+        Returns the HEIGHT of its hitbox.
+        """
+
+        return self.y2 - self.y1
 
 
 class Button(_Entity):
@@ -137,15 +160,40 @@ class Menu:
 
         'button_titles' must be a non-empty tuple.
 
+        'area_corners' must be a tuple of exactly 4 integers as its values.
+
+        -
+
+        And the kwargs:
+
         'max_rows' cannot be an integer lower than 1.
 
-        'area_corners' must be a tuple of exactly 4 integers as its values.
+        'how_many_columns' is the the number of columns to be used.
+
+        'space_between' is the default value for dead space between buttons.
+
+        'space_between_x' is the horizontal value for dead space between
+        buttons. If not provided, it defaults to 'space between'.
+
+        'space_between_y' is the vertical value for dead space between buttons.
+        If not provided, it defaults to 'space between'.
 
         'parent_menu' is another instance of type 'Menu' that has this instance
         as its child.
 
         'force_button_resize' means if the menu must use all the space in the area
         it is specified, which can resize the buttons.
+
+        'special_btn_on_right' means if the buttons for pages navigation should be
+        on the right or left of the menu.
+
+        'button_anchor' refers to the point from which the text of each button is
+        generated. It can be any combination of two chars from 'n' - 'w' - 'e' - 's';
+        otherwise it can also be 'c'.
+
+        'offset_x' is the offset to be used in the X coordinate, if 'button_anchor' is 'c'.
+
+        'offset_y' is the offset to be used in the Y coordinate, if 'button_anchor' is 'c'.
         """
 
         if button_titles == ():
@@ -155,9 +203,18 @@ class Menu:
         # Define default values
         max_rows: int = kwargs.get("max_rows", 4)
         how_many_columns: int = kwargs.get("how_many_columns", 1)
-        space_between: int = kwargs.get("space_between", 10)
+        self.space_between: int = kwargs.get("space_between", 10)
+        self.space_between_x: int = kwargs.get("space_between_x", self.space_between)
+        self.space_between_y: int = kwargs.get("space_between_y", self.space_between)
         parent_menu: Optional["Menu"] = kwargs.get("parent_menu", None)
         force_button_resize: bool = kwargs.get("force_button_resize", False)
+        special_btn_on_right: bool = kwargs.get("special_btn_on_right", True)
+
+        # Graphics-related
+        self.button_anchor: str = kwargs.get("button_anchor", 'c')
+
+        self.offset_x: int = kwargs.get("offset_x", 0)
+        self.offset_y: int = kwargs.get("offset_y", 0)
 
         if max_rows < 1:
 
@@ -182,8 +239,8 @@ class Menu:
         self.max_columns = how_many_columns
         self.max_rows = max_rows
 
-        x_space = (self.area_x2 - self.area_x1) // self.max_columns
-        y_space = (self.area_y2 - self.area_y1) // self.max_rows
+        self.x_space = (self.area_x2 - self.area_x1) // self.max_columns
+        self.y_space = (self.area_y2 - self.area_y1) // self.max_rows
 
         # Pages-related calculations
         self.max_pages = (((how_many_rows // self.max_rows) + 1) if all((not how_many_rows == self.max_rows, not how_many_rows % self.max_rows == 0)) else how_many_rows // self.max_rows)
@@ -193,26 +250,51 @@ class Menu:
         self.parent = parent_menu
 
         # Special Buttons
-        self.pgup_button = Button((self.area_x2 + space_between), self.area_y1, self.area_x2 + (y_space // 2), (self.area_y1 + (y_space // 2)), "/\\")
-        self.pgdn_button = Button((self.area_x2 + space_between), (self.area_y2 - (y_space // 2)), self.area_x2 + (y_space // 2), self.area_y2, "\/")
-        self.return_button = Button(self.area_x1, self.area_y1 - (HEIGHT // 20), self.area_x1 + (WIDTH // 20), self.area_y1 - space_between, '<')
+
+        special_x1 = ((self.area_x2 + self.space_between) if special_btn_on_right else (self.area_x1 - (self.y_space // 2)))
+        special_x2 = ((self.area_x2 + (self.y_space // 2)) if special_btn_on_right else (self.area_x1 - self.space_between_y))
+
+        self.pgup_button = Button(special_x1,
+                                  self.area_y1,
+                                  special_x2,
+                                  (self.area_y1 + (self.y_space // 2)), "/\\")
+        self.pgdn_button = Button(special_x1,
+                                  (self.area_y2 - (self.y_space // 2)),
+                                  special_x2,
+                                  self.area_y2, "\/")
+        self.return_button = Button(self.area_x1,
+                                    self.area_y1 - (HEIGHT // 20),
+                                    self.area_x1 + (WIDTH // 20),
+                                    self.area_y1 - self.space_between_y, '<')
 
         # Button Lists
-        self.buttons = self.generate_buttons(button_titles, x_space, y_space, space_between)
+        self._buttons = self.generate_buttons(button_titles)
         self.buttons_on_screen = self.update_buttons()
 
         # Timers
         self.press_cooldown = Timer(20)
 
 
+    @property
+    def buttons(self) -> ButtonsList:
+
+        return self._buttons
+
+    @buttons.setter
+    def buttons(self, new_buttons: ButtonsList) -> None:
+
+        self._buttons = new_buttons
+        self.buttons_on_screen = self.update_buttons()
+
+
     @classmethod
-    def sub_menu(cls, button_titles: StrList, corners: IntTuple, how_many_cols: int=1, space: int=10) -> "Menu":
+    def sub_menu(cls, button_titles: StrList, corners: IntTuple, **kwargs: MenuDict) -> "Menu":
         """
         It creates an instance of type 'Menu', but with the symbols for some buttons
         changed.
         """
 
-        sub = cls(button_titles, corners, how_many_columns=how_many_cols, space_between=space)
+        sub = cls(button_titles, corners, **kwargs)
 
         sub.pgup_button.msg = '^'
         sub.pgdn_button.msg = 'v'
@@ -220,7 +302,7 @@ class Menu:
         return sub
 
 
-    def generate_buttons(self, titles_list: StrList, x_space: int, y_space: int, space_between: int=0) -> ButtonsList:
+    def generate_buttons(self, titles_list: StrList) -> ButtonsList:
         """
         Generate buttons based on the effective area of the menu and the 'self.button_titles' list.
         'space_between' determines how much dead space there is between each button in said area.
@@ -235,10 +317,10 @@ class Menu:
             cols_counter %= self.max_columns
             rows_counter %= self.max_rows
 
-            x1 = (cols_counter * x_space) + self.area_x1 + (0 if cols_counter == 0 else space_between // 2)
-            x2 = ((cols_counter + 1) * x_space) + self.area_x1 - (0 if cols_counter == (self.max_columns - 1) else space_between // 2)
-            y1 = (rows_counter * y_space) + self.area_y1 + (0 if rows_counter == 0 else space_between // 2)
-            y2 = ((rows_counter + 1) * y_space) + self.area_y1 - (0 if rows_counter == (self.max_rows - 1) else space_between // 2)
+            x1 = (cols_counter * self.x_space) + self.area_x1 + (0 if cols_counter == 0 else self.space_between_x // 2)
+            x2 = ((cols_counter + 1) * self.x_space) + self.area_x1 - (0 if cols_counter == (self.max_columns - 1) else self.space_between_x // 2)
+            y1 = (rows_counter * self.y_space) + self.area_y1 + (0 if rows_counter == 0 else self.space_between_y // 2)
+            y2 = ((rows_counter + 1) * self.y_space) + self.area_y1 - (0 if rows_counter == (self.max_rows - 1) else self.space_between_y // 2)
 
             buttons_list.append(Button(x1, y1, x2, y2, title))
 
@@ -304,6 +386,14 @@ class Menu:
             self.buttons_on_screen = self.update_buttons(new_page)
 
 
+    def change_buttons(self, new_button_titles: StrList) -> None:
+        """
+        Changes all the buttons in the Menu.
+        """
+
+        self.buttons = self.generate_buttons(new_button_titles)
+
+
 class Timer:
     """
     Class for a simple timer that counts
@@ -325,7 +415,7 @@ class Timer:
         Returns a string with class information so it can be printed later.
         """
 
-        return f"Initial Time: {self.initial_time} - Current Time: {self.current_time}{f'Message: {self.msg}' if self.msg != '' else ''}"
+        return f"Initial Time: {self.initial_time} - Current Time: {self.current_time}{f' - Message: {self.msg}' if self.msg != '' else ''}"
 
 
     def deduct(self, how_much: int) -> None:

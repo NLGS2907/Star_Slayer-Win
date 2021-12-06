@@ -3,10 +3,12 @@ Controls Module. Processes the interactions of the player
 with the game.
 """
 
+from typing import Optional
+
 from . import gamelib, files
 from .utils import Timer
 from .game_state import Game # Just for type hinting
-from .consts import EXITING_DELAY, SPECIAL_CHARS, SUB_MENU_RIGHT
+from .consts import DEFAULT_THEME, EXITING_DELAY, NEW_THEME, SPECIAL_CHARS
 
 class GameControls:
     """
@@ -51,6 +53,15 @@ class GameControls:
             if command: command(game)
 
 
+    def go_prompt(self) -> None:
+        """
+        Sets the 'is_on_propmt' attribute to 'True' so that the
+        next iteration, the program prompts the user for interaction.
+        """
+
+        self.is_on_prompt = True
+
+
     def execute_up(self, game: Game) -> None:
         """
         Executes the 'UP' action.
@@ -61,6 +72,16 @@ class GameControls:
         if game.is_in_game:
 
             game.player.move(0, -game.player.speed)
+
+        else:
+
+            if game.sub_menu:
+
+                self.click_on_sub_page_up(game)
+
+            else:
+
+                self.click_on_page_up(game)
 
 
     def execute_left(self, game: Game) -> None:
@@ -97,6 +118,16 @@ class GameControls:
         if game.is_in_game:
 
             game.player.move(0, game.player.speed)
+
+        else:
+
+            if game.sub_menu:
+
+                self.click_on_sub_page_down(game)
+
+            else:
+
+                self.click_on_page_down(game)
 
 
     def execute_shoot(self, game: Game) -> None:
@@ -170,25 +201,31 @@ class GameControls:
         some buttons have as their messages for a string with something more bearable. 
         """
 
-        if message == '<':
+        match message:
 
-            return "return"
+            case '<':
 
-        if message == "/\\":
+                return "return"
 
-            return "page_up"
+            case "/\\":
 
-        if message == "\/":
+                return "page_up"
 
-            return "page_down"
+            case "\\/":
 
-        if message == '^':
+                return "page_down"
 
-            return "sub_page_up"
+            case '^':
 
-        if message == 'v':
+                return "sub_page_up"
 
-            return "sub_page_down"
+            case 'v':
+
+                return "sub_page_down"
+
+            case '+':
+
+                return "add_profile"
 
 
     def process_click(self, x: int, y: int, game: Game) -> None:
@@ -209,13 +246,18 @@ class GameControls:
                         game.action_to_show = button.msg
                         game.sub_menu = game.refresh_controls_sub_menu()
 
-                    elif all((menu is game.profiles_menu, button.msg in files.list_profiles(), not game.theme_to_show == button.msg)):
+                    elif all((menu is game.profiles_menu, button.msg in files.list_profiles(), not game.selected_theme == button.msg)):
 
-                        self.selected_theme = button.msg
+                        game.selected_theme = button.msg
+                        game.sub_menu = game.refresh_profiles_sub_menu()
 
-                    elif button.msg in (f"Delete {key}" for key in files.map_keys().keys()):
+                    elif all((menu is game.profiles_menu, button.msg in files.list_attributes(game.color_profile))):
 
-                        self.remove_key(button.msg.lstrip("Delete "), game)
+                        self.select_att_color(button.msg, game)
+
+                    elif button.msg in (f"Delete {key}" for key in files.map_keys()):
+
+                        self.remove_key(button.msg.removeprefix("Delete "), game)
 
                     elif not button.msg == "RETURN": # To avoid the button in the controls menu to overlap with the '<' ones
 
@@ -354,7 +396,9 @@ class GameControls:
         Changes the 'is_on_prompt' attribute to 'True' so it adds a new key.
         """
 
-        self.is_on_prompt = True
+        if game.current_menu is game.controls_menu:
+
+            self.go_prompt()
 
 
     def add_key(self, action: str, game: Game) -> tuple[files.StrDict, bool]:
@@ -382,16 +426,17 @@ class GameControls:
         self.is_on_prompt = False
 
 
-    def remove_key(self, key: str, game: Game) -> None:
+    def remove_key(self, key: str, game: Game) -> Optional[str]:
         """
         Removes the key passed as an argument from the keys dictionary.
+
+        Returns the removed key if available.
         """
         keys_dict = files.map_keys()
 
         if key in keys_dict:
 
-            value = keys_dict[key]
-            keys_dict.pop(key)
+            value = keys_dict.pop(key)
 
             if not files.list_repeated_keys(value, keys_dict):
 
@@ -399,6 +444,96 @@ class GameControls:
 
             files.print_keys(keys_dict)
             game.sub_menu = game.refresh_controls_sub_menu()
+
+            return key
+
+
+    def click_on_change_color_profile(self, game: Game) -> None:
+        """
+        Changes the color theme of the game.
+        """
+
+        game.current_menu = game.profiles_menu
+
+
+    def click_on_change_profile_name(self, game: Game) -> None:
+        """
+        Changes the name of the color profile.
+        """
+
+        new_name = '_'.join(gamelib.input("Please enter the new Profile Name").upper().split())
+
+        if new_name == '':
+
+            gamelib.say("Name not valid")
+            return
+
+        elif new_name in files.list_profiles(game.color_profiles):
+
+            gamelib.say("Name already used")
+            return
+
+        game.color_profiles[new_name] = game.color_profiles.pop(game.selected_theme)
+        files.print_profiles(game.color_profiles)
+
+        game.selected_theme = new_name
+        self.refresh_menu(game)
+
+
+    def click_on_add_profile(self, game: Game) -> None:
+        """
+        Adds a new color profile, and it is initally identical to the hidden
+        profile 'DEFAULT'.
+        """
+
+        repeated_new_ones = [profile for profile in files.list_profiles(game.color_profiles) if profile.startswith(NEW_THEME)]
+        new_theme_name = f"{NEW_THEME}_{len(repeated_new_ones) + 1}"
+
+        game.color_profiles[new_theme_name] = game.color_profiles[DEFAULT_THEME]
+        files.print_profiles(game.color_profiles)
+
+        game.selected_theme = new_theme_name
+        self.refresh_menu(game)
+
+
+    def click_on_delete_this_profile(self, game: Game) -> Optional[files.StrDict]:
+        """
+        Deletes the current profile, if it is not the last one.
+
+        Returns the deleted profile if available.
+        """
+
+        if len(game.color_profiles) == 2: # +1 for the hidden theme
+
+            gamelib.say("You cannot delete this color profile, as it is the only one remaining.")
+            return
+
+        old_theme_name = game.selected_theme
+        old_theme = game.color_profiles.pop(game.selected_theme)
+
+        files.print_profiles(game.color_profiles)
+
+        game.selected_theme = files.list_profiles(game.color_profiles)[0]
+        self.refresh_menu(game)
+
+        return {old_theme_name : old_theme}
+
+
+    def select_att_color(self, attribute: str, game: Game) -> None:
+        """
+        Prompts the user to select a new color.
+        """
+
+        print(f"\n{attribute = }\n")
+
+
+    def refresh_menu(self, game: Game) -> None:
+        """
+        Resfreshes the current menu buttons.
+        """
+
+        game.current_menu.change_buttons(files.list_profiles(game.color_profiles) + ["+"])
+        game.sub_menu = game.refresh_profiles_sub_menu()
 
 
     def prompt(self, game: Game) -> None:
@@ -413,14 +548,6 @@ class GameControls:
         elif game.current_menu is game.profiles_menu:
 
             ...
-
-
-    def click_on_change_color_profile(self, game: Game) -> None:
-        """
-        Changes the color theme of the game.
-        """
-
-        game.current_menu = game.profiles_menu
 
 
     def refresh(self, keys_dict: dict[str, bool]) -> None:

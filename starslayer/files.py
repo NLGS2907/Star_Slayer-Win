@@ -3,7 +3,7 @@ Files Module. It reads (and writes) in files to define persistent
 variables in the behaviour of the game.
 """
 
-from .consts import KEYS_PATH, LEVEL_PATH, PROFILES_PATH
+from .consts import DEFAULT_THEME, KEYS_PATH, LEVEL_PATH, PROFILES_PATH
 
 StrDict = dict[str, str]
 ProfilesDict = dict[str, StrDict]
@@ -97,7 +97,15 @@ def list_profiles(profiles_dict: ProfilesDict=map_profiles()) -> list[str]:
     Returns a list of all the available color profiles titles.
     """
 
-    return [profile for profile in profiles_dict]
+    return [profile for profile in profiles_dict if not profile == DEFAULT_THEME]
+
+
+def list_attributes(profile_dict: StrDict) -> list[str]:
+    """
+    Returns a list of all of the attributes of a given color profile.
+    """
+
+    return [attribute for attribute in profile_dict]
 
 
 def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH) -> None:
@@ -119,7 +127,7 @@ def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH) ->
 
             for key, value in profiles_dict[profile].items():
 
-                f.write(f"!v {key} = {value}\n\n")
+                f.write(f"!v {key} = {value if not value == '' else '/'}\n\n")
 
         f.write(bar)
 

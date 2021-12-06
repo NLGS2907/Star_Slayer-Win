@@ -10,10 +10,10 @@ name: Upload Package
 
 on:
   push:
-    branches: [ main ]
+    branches: [ pypi_releases ]
 
   pull_request:
-    branches: [ main ]
+    branches: [ pypi_releases ]
 
 jobs:
   uploading:
@@ -28,8 +28,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install twine
+        python -m pip install --upgrade pip twine
 
     - name: Setup Source Distribution
       run: python setup.py sdist

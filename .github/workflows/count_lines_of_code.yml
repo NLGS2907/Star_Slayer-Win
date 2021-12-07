@@ -3,7 +3,7 @@ name: Count Lines of Code
 on: [ push ]
 
 jobs:
-  Create Badge:
+  create badge:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,11 +13,11 @@ jobs:
         python-version: "3.10"
         
     - name: Make Code Badge
-        uses: shadowmoose/GHA-LoC-Badge@1.0.0
-        id: badge
-        with:
-          debug: true
-          directory: ./
-          badge: ./media/badges/loc.svg
-          patterns: '*.js'  # Patterns in the format of a '.gitignore' file, separated by pipes.
-          ignore: 'node_modules'
+      uses: shadowmoose/GHA-LoC-Badge@1.0.0
+      id: badge
+      with:
+        debug: true
+        directory: ./
+        badge: ./media/badges/loc.svg
+        patterns: '*.js'  # Patterns in the format of a '.gitignore' file, separated by pipes.
+        ignore: 'node_modules'

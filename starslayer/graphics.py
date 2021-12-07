@@ -7,6 +7,7 @@ from . import gamelib, files
 from .game_state import Game
 from .game_controls import GameControls as Controls
 from .utils import Menu
+from .selector import ColorSelector
 from .characters import Ship
 from .consts import DEBUG_TEXT, PROFILES_DELETER, PROFILES_TITLE, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, PROFILES_CHANGER, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
 
@@ -198,7 +199,39 @@ def draw_attribute_prompt(game: Game) -> None:
     for the attribute selected.
     """
 
-    ...
+    selector: ColorSelector = game.color_selector
+    x1, y1, x2, y2 = selector.palette_area
+
+    augment_x = (x2 - x1) / selector.cols
+    augment_y = (y2 - y1) / selector.rows
+
+    gamelib.draw_rectangle(x1, y1, x2, y2,
+                           width=2,
+                           outline=get_color(game, "MENU_OUTLINE_1"),
+                           fill=get_color(game, "MENU_COLOR_1"))
+
+    for row in range(selector.rows):
+
+        for col in range(selector.cols):
+
+            gamelib.draw_rectangle(x1 + (col * augment_x),
+                                   y1 + (row * augment_y),
+                                   x1 + ((col + 1) * augment_x),
+                                   y1 + ((row + 1) * augment_y),
+                                   outline='',
+                                   fill=selector.color_palette[(col, row)])
+
+    hue_augment = (x2 - x1) / len(selector.hue_bar)
+
+    for i, hue in enumerate(selector.hue_bar):
+
+        gamelib.draw_rectangle(x1 + (i * hue_augment),
+                               y2 + 50,
+                               x1 + ((i + 1) * hue_augment),
+                               y2 + 70,
+                               outline='',
+                               fill=hue)
+
 
 
 def draw_menu_buttons(game: Game, menu: Menu) -> None:

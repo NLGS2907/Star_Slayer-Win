@@ -26,7 +26,7 @@ class Ship(_Entity):
 
         if self.is_out_bounds(x1, y1, x2, y2):
 
-            raise Exception(f"Coordinates ({x1}, {y1}), ({x2}, {y2}) are not valid, as they are outside of the boundaries of the screen")
+            raise ValueError(f"Coordinates ({x1}, {y1}), ({x2}, {y2}) are not valid, as they are outside of the boundaries of the screen")
 
         self.max_hp = kwargs.get("health", 100)
         self.hp = self.max_hp

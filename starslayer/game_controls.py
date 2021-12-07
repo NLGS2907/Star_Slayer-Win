@@ -5,7 +5,7 @@ with the game.
 
 from typing import Optional
 
-from . import gamelib, files
+from . import gamelib, files, selector
 from .utils import Timer
 from .game_state import Game # Just for type hinting
 from .consts import DEFAULT_THEME, EXITING_DELAY, NEW_THEME, SPECIAL_CHARS
@@ -523,8 +523,12 @@ class GameControls:
         """
         Prompts the user to select a new color.
         """
+        WIDTH, HEIGHT = 750, 700
+        aux_cons = (HEIGHT // 10)
+        corners = (aux_cons, (HEIGHT // 2) - aux_cons, WIDTH - aux_cons, (HEIGHT // 2) + aux_cons)
+        game.color_selector = selector.ColorSelector(area=corners, rows=14, cols=20)
 
-        print(f"\n{attribute = }\n")
+        self.go_prompt()
 
 
     def refresh_menu(self, game: Game) -> None:
@@ -547,7 +551,8 @@ class GameControls:
 
         elif game.current_menu is game.profiles_menu:
 
-            ...
+            gamelib.wait(gamelib.EventType.ButtonPress)
+            self.is_on_prompt = False
 
 
     def refresh(self, keys_dict: dict[str, bool]) -> None:

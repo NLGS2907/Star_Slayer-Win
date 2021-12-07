@@ -80,6 +80,9 @@ class Game:
         self.is_in_game = False
         self.show_debug_info = False
 
+        # Selector
+        self.color_selector = None
+
 
     @property
     def selected_theme(self) -> str:
@@ -142,7 +145,7 @@ class Game:
 
         if not len(corners) == 4:
 
-            raise Exception(f"corners has {len(corners)} values. It must be 4 integers or floats.")
+            raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
 
         repeated_keys = files.list_repeated_keys(self.action_to_show, files.map_keys())
         changeable_keys = list()
@@ -166,7 +169,7 @@ class Game:
 
         if not len(corners) == 4:
 
-            raise Exception(f"corners has {len(corners)} values. It must be 4 integers or floats.")
+            raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
 
         profile_atts = [PROFILES_CHANGER, PROFILES_DELETER] + files.list_attributes(self.color_profile)
 

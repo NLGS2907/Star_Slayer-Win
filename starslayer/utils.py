@@ -198,7 +198,7 @@ class Menu:
 
         if button_titles == ():
 
-            raise Exception("'button_titles' cannot be empty. Must be an iteration with names (strings) and must have a length of at least 1.")
+            raise ValueError("'button_titles' cannot be empty. Must be an iteration with names (strings) and must have a length of at least 1.")
 
         # Define default values
         max_rows: int = kwargs.get("max_rows", 4)
@@ -218,11 +218,11 @@ class Menu:
 
         if max_rows < 1:
 
-            raise Exception("'max_rows' must be an integer of 1 or higher.")
+            raise ValueError("'max_rows' must be an integer of 1 or higher.")
 
         if not len(area_corners) == 4:
 
-            raise Exception(f"area_corners has {len(area_corners)} values. It must have exactly 4 integers as values.")
+            raise ValueError(f"area_corners has {len(area_corners)} values. It must have exactly 4 integers as values.")
 
         button_titles = (button_titles.split("-=trash_value=-") if isinstance(button_titles, str) else list(button_titles))
 
@@ -342,7 +342,7 @@ class Menu:
 
         if 1 > page or self.max_pages < page:
 
-            raise Exception(f"Page number is {page}. It must be between 1 and {self.max_pages} inclusive.") 
+            raise ValueError(f"Page number is {page}. It must be between 1 and {self.max_pages} inclusive.") 
 
         buttons_list = list()
 
@@ -463,11 +463,11 @@ class SpringTimer:
         
         if floor >= ceiling:
 
-            raise Exception("'floor' parameter must NOT be greater or equal than 'ceiling'")
+            raise ValueError("'floor' parameter must NOT be greater or equal than 'ceiling'")
 
         if where_to_start < floor or where_to_start > ceiling:
 
-            raise Exception(f"'where_to_start' parameter needs to be between {floor} and {ceiling} inclusive")
+            raise ValueError(f"'where_to_start' parameter needs to be between {floor} and {ceiling} inclusive")
 
         self.floor = floor
         self.ceil = ceiling

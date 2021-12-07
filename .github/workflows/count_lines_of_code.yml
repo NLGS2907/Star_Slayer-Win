@@ -3,7 +3,7 @@ name: Count Lines of Code
 on: [ push ]
 
 jobs:
-  create badge:
+  create_badge:
     runs-on: ubuntu-latest
 
     steps:

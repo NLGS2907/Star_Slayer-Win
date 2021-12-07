@@ -20,7 +20,7 @@ jobs:
         directory: ./starslayer
         badge: ./output/badge.svg
         patterns: "*.py"
-        ignore: "node_modules/|README"
+
     - name: Print the output
       run: |
         echo "Scanned: ${{ steps.badge.outputs.counted_files }}"

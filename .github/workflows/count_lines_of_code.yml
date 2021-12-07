@@ -20,7 +20,7 @@ jobs:
         directory: ./starslayer
         badge: ./output/badge.svg
         patterns: "*.py"
-        ignore: 'node_modules'
+        ignore: "node_modules/|READMEs"
 
     - name: Print the output
       run: |

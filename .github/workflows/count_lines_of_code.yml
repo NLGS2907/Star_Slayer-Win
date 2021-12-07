@@ -17,15 +17,15 @@ jobs:
       id: badge
       with:
         debug: true
-        directory: ./
+        directory: ./starslayer
         badge: ./output/badge.svg
-        patterns: '*.py'  # Patterns in the format of a '.gitignore' file, separated by pipes.
+        patterns: "*.py"
         ignore: 'node_modules'
 
     - name: Print the output
       run: |
-        echo "Scanned: ${{ steps.badge.outputs.counted_files }}";
-        echo "Line Count: ${{ steps.badge.outputs.total_lines }}";
+        echo "Scanned: ${{ steps.badge.outputs.counted_files }}"
+        echo "Line Count: ${{ steps.badge.outputs.total_lines }}"
 
       - name: Deploy to image-data branch
         uses: peaceiris/actions-gh-pages@v3

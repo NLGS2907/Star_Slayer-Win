@@ -1,17 +1,22 @@
-#t 10000
+# -= LEVEL 1 SCRIPT =-    
+#
+# !t sets the timer of the level (this should be done only once).
+# !l sets an list of events to ocurr at the specified time.
+# !s is an event (must be inside a !l flag)
 
+!t 10000
 
-#l 9900
-#s x1-200 y1-100 x2-250 y2-150 type-EnemyCommonB
-#s x1-300 y1-100 x2-350 y2-150 type-EnemyCommonB
-#s x1-400 y1-100 x2-450 y2-150 type-EnemyCommonB
+!l 9900
+!s x1-200 y1-100 x2-250 y2-150 type-EnemyCommonB
+!s x1-300 y1-100 x2-350 y2-150 type-EnemyCommonB
+!s x1-400 y1-100 x2-450 y2-150 type-EnemyCommonB
 
-#l 9800
-#s x1-200 y1-300 x2-250 y2-350 type-EnemyCommonA
-#s x1-300 y1-300 x2-350 y2-350 type-EnemyCommonA
-#s x1-400 y1-300 x2-450 y2-350 type-EnemyCommonA
+!l 9800
+!s x1-200 y1-300 x2-250 y2-350 type-EnemyCommonA
+!s x1-300 y1-300 x2-350 y2-350 type-EnemyCommonA
+!s x1-400 y1-300 x2-450 y2-350 type-EnemyCommonA
 
-#l 9700
-#s x1-200 y1-500 x2-250 y2-550 type-EnemyCommonB
-#s x1-300 y1-500 x2-350 y2-550 type-EnemyCommonB
-#s x1-400 y1-500 x2-450 y2-550 type-EnemyCommonB
+!l 9700
+!s x1-200 y1-500 x2-250 y2-550 type-EnemyCommonB
+!s x1-300 y1-500 x2-350 y2-550 type-EnemyCommonB
+!s x1-400 y1-500 x2-450 y2-550 type-EnemyCommonB

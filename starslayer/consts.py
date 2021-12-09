@@ -12,12 +12,16 @@ def file_path(filename: str, subpackage: Optional[str]=None) -> str:
 
 WIDTH = 750
 """
-It is recommended to leave it with '750' as its value
+The width of the game window.
+
+It is recommended to leave '750' as value.
 """
 
 HEIGHT = 700
 """
-It is recommended to leave it with '700' as its value
+The height of the game window.
+
+It is recommended to leave '700' as value.
 """
 
 GUI_SPACE = 250
@@ -50,6 +54,18 @@ DEFAULT_THEME = "DEFAULT"
 Default hidden theme that every new created theme uses as template.
 """
 
+DEFAULT_THEME_LINES = ["...you know, don't you?",
+"Nothing to see here, pal",
+"The default theme is hidden, you can't use it",
+"You can't use the default theme...\nYou shouldn't even know this exists",
+"Did you discover this by accident? I certainly hope so",
+"Waiting for a secret? Outta luck here",
+"Hmmmmmmmmmmmmmmmmmmmmmmmmmm",
+"(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧\n\n...happy?"]
+"""
+Lines to say if the user tries to switch to the default theme.
+"""
+
 NEW_THEME = "NEW_THEME"
 """
 Name template for newly created themes.
@@ -75,6 +91,7 @@ center_hitbox: {hitbox_center}
 Shooting Cooldown: {shooting_cooldown}
 Invulnerability Cooldown: {inv_cooldown}
 
+Level Timer: {level_timer}
 Power: {power_level}
 
 Player Stats:

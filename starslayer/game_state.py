@@ -6,7 +6,9 @@ of the game.
 from typing import Optional
 
 from . import utils, characters, bullets, enemies, files
-from .consts import PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
+from .selector import ColorSelector, CoordsTuple
+from .consts import HEIGHT, PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
+from starslayer import selector
 
 corners_tuple = tuple[int | float, int | float, int | float, int | float]
 
@@ -16,72 +18,86 @@ class Game:
     Class for the Game itself.
     """
 
-    def __init__(self, inital_power: int=1, cooldown_constant: int=30) -> None:
+    def __init__(self, initial_power: int=1, cooldown_constant: int=30) -> None:
         """
         Initalizes an instance of type 'Game'.
         """
 
-        width, height = WIDTH, HEIGHT
-
-        main_x1 = int(width / 3.75)
-        main_y1 = int(height / 2)
-        main_x2 = int(width / 1.363636)
-        main_y2 = int(height / 1.076923)
-        main_coords = (main_x1, main_y1, main_x2, main_y2)
-
-        # Menus
-        self.main_menu = utils.Menu(["Play", "Options", "About", "Exit"],
-                                      main_coords)
-
-        self.options_menu = utils.Menu(["Configure Controls", "Change Color Profile"],
-                                         main_coords,
-                                         max_rows=4, parent_menu=self.main_menu)
-
-        self.controls_menu = utils.Menu(files.list_actions(),
-                                        ((width // 75), (height // 5), int(width / 4.237288), int(height / 1.014492)),
-                                        max_rows=8, parent_menu=self.options_menu)
-
-        self.profiles_menu = utils.Menu(files.list_profiles() + ["+"],
-                                        (int(width / 1.25), int(height / 5.185185), int(width / 1.013513), int(height / 1.076923)),
-                                        max_rows=10, special_btn_on_right=False, parent_menu=self.options_menu)
-
-        self._menu_in_display = self.main_menu
-
-        # Sub-menu related
-        self.action_to_show = files.list_actions()[0]
-        self.sub_menu = None
-
         # Level Parameters
-        self.game_level = 1
-        self.level_dict = files.map_level(1)
-        self.level_timer = utils.Timer(self.level_dict["total_time"])
-        self.level_dict.pop("total_time")
+        self.game_level: int = 1
+        self.level_dict: files.LevelDict = files.map_level(1)
+        self.level_timer: utils.Timer = utils.Timer(self.level_dict.pop("total_time"))
 
         # Player Parameters
-        self.player = characters.Ship((width // 2) - 30, int(height / 1.17) - 30, (width // 2) + 30, int(height / 1.17) + 30,
+        self.player: characters.Ship = characters.Ship((WIDTH // 2) - 30, int(HEIGHT / 1.17) - 30, (WIDTH // 2) + 30, int(HEIGHT / 1.17) + 30,
                                     how_hard=1, speed=5, texture_path=(PLAYER_SPRITE, PLAYER_DAMAGED_SPRITE))
-        self.power_level = inital_power
+        self.power_level: int = initial_power
 
         # Color Profiles
-        self.color_profiles = files.map_profiles()
-        self._color_theme = files.list_profiles()[0]
-        self.color_profile = self.color_profiles[self._color_theme]
+        self.color_profiles: files.ProfilesDict = files.map_profiles()
+        self._color_theme: list[str] = files.list_profiles(self.color_profiles)[0]
+        self.color_profile: files.StrDict = self.color_profiles[self._color_theme]
+
+
+        # Menu Related
+        self.generate_menus()
+
+        self._menu_in_display: utils.Menu = self.main_menu
+
+        # Sub-menu related
+        self.action_to_show: str = files.list_actions()[0]
+        self.sub_menu: Optional[utils.Menu] = None
 
         # Timers
-        self.cool_cons = cooldown_constant
-        self.invulnerability = utils.Timer(50 + (self.power_level * 5))
-        self.shooting_cooldown = utils.Timer(self.cool_cons // self.power_level)
-        self.debug_cooldown = utils.Timer(20)
+        self.cool_cons: int = cooldown_constant
+        self.invulnerability: utils.Timer = utils.Timer(50 + (self.power_level * 5))
+        self.shooting_cooldown: utils.Timer = utils.Timer(self.cool_cons // self.power_level)
+        self.debug_cooldown: utils.Timer = utils.Timer(20)
         
         # Enemies, Misc
-        self.enemies, self.bullets = list(), list()
+        self.enemies: list[enemies._Enemy] = []
+        self.bullets: list[bullets._Bullet] = []
 
         # Control Booleans
-        self.is_in_game = False
-        self.show_debug_info = False
+        self.is_in_game: bool = False
+        self.show_debug_info: bool = False
 
         # Selector
-        self.color_selector = None
+        self.generate_color_selector()
+        self.attribute_to_edit: Optional[str] = None
+
+
+    def generate_menus(self) -> None:
+        """
+        Generates all of the Menus of the game.
+        """
+
+        main_x1: int = int(WIDTH / 3.75)
+        main_y1: int = int(HEIGHT / 2)
+        main_x2: int = int(WIDTH / 1.363636)
+        main_y2: int = int(HEIGHT / 1.076923)
+        main_coords: CoordsTuple = (main_x1, main_y1, main_x2, main_y2)
+
+        # Menus
+        main_menu: utils.Menu = utils.Menu(["Play", "Options", "About", "Exit"],
+                                      main_coords)
+
+        options_menu: utils.Menu = utils.Menu(["Configure Controls", "Edit Color Profiles"],
+                                         main_coords,
+                                         max_rows=4, parent_menu=main_menu)
+
+        controls_menu: utils.Menu = utils.Menu(files.list_actions(),
+                                        ((WIDTH // 75), (HEIGHT // 5), int(WIDTH / 4.237288), int(HEIGHT / 1.014492)),
+                                        max_rows=8, parent_menu=options_menu)
+
+        profiles_menu: utils.Menu = utils.Menu(files.list_profiles(self.color_profiles) + ["+"],
+                                        (int(WIDTH / 1.25), int(HEIGHT / 5.185185), int(WIDTH / 1.013513), int(HEIGHT / 1.076923)),
+                                        max_rows=10, special_btn_on_right=False, parent_menu=options_menu)
+
+        setattr(self, "main_menu", main_menu)
+        setattr(self, "options_menu", options_menu)
+        setattr(self, "controls_menu", controls_menu)
+        setattr(self, "profiles_menu", profiles_menu)
 
 
     @property
@@ -124,20 +140,16 @@ class Game:
 
         self._menu_in_display = new_menu
 
-        new_sub_menu = None
-
         if new_menu is self.controls_menu:
 
-            new_sub_menu = self.refresh_controls_sub_menu()
+            self.refresh_controls_sub_menu()
 
         elif new_menu is self.profiles_menu:
 
-            new_sub_menu = self.refresh_profiles_sub_menu()
-
-        self.sub_menu = new_sub_menu
+            self.refresh_profiles_sub_menu()
 
 
-    def refresh_controls_sub_menu(self, corners: corners_tuple=SUB_MENU_RIGHT) -> utils.Menu:
+    def refresh_controls_sub_menu(self, corners: corners_tuple=SUB_MENU_RIGHT) -> None:
         """
         Refreshes a mini menu made of buttons of the keys of the action to show.
         It then returns it, to be assigned elsewhere.
@@ -148,7 +160,7 @@ class Game:
             raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
 
         repeated_keys = files.list_repeated_keys(self.action_to_show, files.map_keys())
-        changeable_keys = list()
+        changeable_keys = []
 
         for key in repeated_keys:
 
@@ -158,11 +170,13 @@ class Game:
 
         changeable_keys.append("Add Key")
 
-        return utils.Menu.sub_menu(changeable_keys, corners,
+        sub_menu: utils.Menu = utils.Menu.sub_menu(changeable_keys, corners,
                                    how_many_columns=2, space_between=20)
 
+        setattr(self, "sub_menu", sub_menu)
 
-    def refresh_profiles_sub_menu(self, corners: corners_tuple=SUB_MENU_LEFT) -> utils.Menu:
+
+    def refresh_profiles_sub_menu(self, corners: corners_tuple=SUB_MENU_LEFT) -> None:
         """
         Refreshes a mini menu where are stored the profiles of the game.
         """
@@ -173,8 +187,27 @@ class Game:
 
         profile_atts = [PROFILES_CHANGER, PROFILES_DELETER] + files.list_attributes(self.color_profile)
 
-        return utils.Menu.sub_menu(profile_atts, corners,
+        sub_menu: utils.Menu = utils.Menu.sub_menu(profile_atts, corners,
                                    max_rows=7, how_many_columns=2, space_between_x=20, space_between_y=15, button_anchor='w', special_btn_on_right=False)
+
+        setattr(self, "sub_menu", sub_menu)
+
+
+    def generate_color_selector(self) -> None:
+        """
+        Generates and assigns the color selector of the game.
+        """
+
+        aux_x = (WIDTH // 75)
+        aux_y = (HEIGHT // 70) 
+
+        x1, y1, x2, y2 = ((WIDTH // 15), (HEIGHT * 0.065714), (WIDTH * 0.866666), (HEIGHT * 0.928571))
+        palette_corners = (x1 + aux_x, y1 + aux_y, x2 - aux_x, y1 + ((y2 - y1) / 2))
+        color_selector: ColorSelector = ColorSelector(area=(x1, y1, x2, y2),
+                                                     palette_area=palette_corners,
+                                                     rows=20, cols=30)
+
+        setattr(self, "color_selector", color_selector)
 
 
     def level_up(self, how_much: int=1) -> None:
@@ -297,8 +330,8 @@ class Game:
         Clears all enemies and bullets in their lists once returned to the main menu.
         """
 
-        self.enemies = list()
-        self.bullets = list()
+        self.enemies = []
+        self.bullets = []
 
 
     def advance_game(self) -> None:

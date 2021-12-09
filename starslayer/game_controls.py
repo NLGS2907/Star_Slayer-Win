@@ -4,16 +4,16 @@ with the game.
 """
 
 from typing import Optional
+from random import choice
 
-from . import gamelib, files, selector
+from . import gamelib, files
 from .utils import Timer
 from .game_state import Game # Just for type hinting
-from .consts import DEFAULT_THEME, EXITING_DELAY, NEW_THEME, SPECIAL_CHARS
+from .consts import DEFAULT_THEME, DEFAULT_THEME_LINES, EXITING_DELAY, NEW_THEME, SPECIAL_CHARS, WIDTH
 
 class GameControls:
     """
-    Class for controlling the interactions with
-    the game.
+    Class for controlling the interactions with the game.
     """
 
 
@@ -23,13 +23,13 @@ class GameControls:
         """
 
         # Control Attributes
-        self.show_about = False
-        self.is_on_prompt = False
-        self.exiting = False
-        self.exit = False
+        self.show_about: bool = False
+        self.is_on_prompt: bool = False
+        self.exiting: bool = False
+        self.exit: bool = False
 
         # Timers
-        self.exiting_cooldown = Timer(EXITING_DELAY)
+        self.exiting_cooldown: Timer = Timer(EXITING_DELAY)
 
 
     def process_key(self, key: str) -> str:
@@ -60,6 +60,21 @@ class GameControls:
         """
 
         self.is_on_prompt = True
+
+
+    def copy_dict(self, original: files.StrDict) -> files.StrDict:
+        """
+        Copies, element-by-element, a dictionary into another, so it
+        does not work with shallow copies.
+        """
+
+        new_dict = {}
+
+        for key, value in original.items():
+
+            new_dict[key] = value
+
+        return new_dict
 
 
     def execute_up(self, game: Game) -> None:
@@ -239,17 +254,17 @@ class GameControls:
 
             for button in (menu.buttons_on_screen + (game.sub_menu.buttons_on_screen if game.sub_menu else [])):
 
-                if button.x1 <= x <= button.x2 and button.y1 <= y <= button.y2:
+                if button.is_inside(x, y):
 
                     if all((menu is game.controls_menu, button.msg in files.list_actions(), not game.action_to_show == button.msg)):
 
                         game.action_to_show = button.msg
-                        game.sub_menu = game.refresh_controls_sub_menu()
+                        game.refresh_controls_sub_menu()
 
-                    elif all((menu is game.profiles_menu, button.msg in files.list_profiles(), not game.selected_theme == button.msg)):
+                    elif all((menu is game.profiles_menu, button.msg in files.list_profiles(game.color_profiles), not game.selected_theme == button.msg)):
 
                         game.selected_theme = button.msg
-                        game.sub_menu = game.refresh_profiles_sub_menu()
+                        game.refresh_profiles_sub_menu()
 
                     elif all((menu is game.profiles_menu, button.msg in files.list_attributes(game.color_profile))):
 
@@ -421,7 +436,7 @@ class GameControls:
 
             keys_dict[event.key] = action
             files.print_keys(keys_dict)
-            game.sub_menu = game.refresh_controls_sub_menu()
+            game.refresh_controls_sub_menu()
 
         self.is_on_prompt = False
 
@@ -443,14 +458,14 @@ class GameControls:
                 keys_dict['/'] = value
 
             files.print_keys(keys_dict)
-            game.sub_menu = game.refresh_controls_sub_menu()
+            game.refresh_controls_sub_menu()
 
             return key
 
 
-    def click_on_change_color_profile(self, game: Game) -> None:
+    def click_on_edit_color_profiles(self, game: Game) -> None:
         """
-        Changes the color theme of the game.
+        Changes the color themes of the game.
         """
 
         game.current_menu = game.profiles_menu
@@ -473,12 +488,16 @@ class GameControls:
             gamelib.say("Name already used")
             return
 
+        elif new_name == DEFAULT_THEME:
+
+            gamelib.say(choice(DEFAULT_THEME_LINES))
+            return
+
         game.color_profiles[new_name] = game.color_profiles.pop(game.selected_theme)
-        files.print_profiles(game.color_profiles)
-
         game.selected_theme = new_name
-        self.refresh_menu(game)
 
+        self.refresh_menu(game)
+        files.print_profiles(game.color_profiles)
 
     def click_on_add_profile(self, game: Game) -> None:
         """
@@ -486,14 +505,14 @@ class GameControls:
         profile 'DEFAULT'.
         """
 
-        repeated_new_ones = [profile for profile in files.list_profiles(game.color_profiles) if profile.startswith(NEW_THEME)]
+        repeated_new_ones = [profile for profile in game.color_profiles if profile.startswith(NEW_THEME)]
         new_theme_name = f"{NEW_THEME}_{len(repeated_new_ones) + 1}"
 
-        game.color_profiles[new_theme_name] = game.color_profiles[DEFAULT_THEME]
-        files.print_profiles(game.color_profiles)
+        game.color_profiles[new_theme_name] = self.copy_dict(game.color_profiles[DEFAULT_THEME])
 
         game.selected_theme = new_theme_name
         self.refresh_menu(game)
+        files.print_profiles(game.color_profiles)
 
 
     def click_on_delete_this_profile(self, game: Game) -> Optional[files.StrDict]:
@@ -508,13 +527,15 @@ class GameControls:
             gamelib.say("You cannot delete this color profile, as it is the only one remaining.")
             return
 
+        themes_list = files.list_profiles(game.color_profiles)
+
         old_theme_name = game.selected_theme
+        old_theme_index = themes_list.index(old_theme_name)
         old_theme = game.color_profiles.pop(game.selected_theme)
 
-        files.print_profiles(game.color_profiles)
-
-        game.selected_theme = files.list_profiles(game.color_profiles)[0]
+        game.selected_theme = themes_list[old_theme_index - 1]
         self.refresh_menu(game)
+        files.print_profiles(game.color_profiles)
 
         return {old_theme_name : old_theme}
 
@@ -523,21 +544,42 @@ class GameControls:
         """
         Prompts the user to select a new color.
         """
-        WIDTH, HEIGHT = 750, 700
-        aux_cons = (HEIGHT // 10)
-        corners = (aux_cons, (HEIGHT // 2) - aux_cons, WIDTH - aux_cons, (HEIGHT // 2) + aux_cons)
-        game.color_selector = selector.ColorSelector(area=corners, rows=14, cols=20)
 
+        game.attribute_to_edit = attribute
         self.go_prompt()
 
 
-    def refresh_menu(self, game: Game) -> None:
+    def process_color_selection(self, game: Game) -> None:
         """
-        Resfreshes the current menu buttons.
+        Executes the logic of the color selection.
         """
 
-        game.current_menu.change_buttons(files.list_profiles(game.color_profiles) + ["+"])
-        game.sub_menu = game.refresh_profiles_sub_menu()
+        selector = game.color_selector
+
+        while True:
+
+            event = gamelib.wait(gamelib.EventType.ButtonPress)
+
+            if event.mouse_button == 1: # Left Click
+
+                selector.click(event.x, event.y, game.color_profile, game.attribute_to_edit)
+
+                if selector.next:
+
+                    selector.next = False
+                    break
+
+                if selector.exit:
+
+                    selector.exit = False
+                    game.attribute_to_edit = None
+
+                    files.print_profiles(game.color_profiles)
+                    self.is_on_prompt = False
+
+                    break
+
+        game.refresh_profiles_sub_menu()
 
 
     def prompt(self, game: Game) -> None:
@@ -551,8 +593,16 @@ class GameControls:
 
         elif game.current_menu is game.profiles_menu:
 
-            gamelib.wait(gamelib.EventType.ButtonPress)
-            self.is_on_prompt = False
+            self.process_color_selection(game)
+
+
+    def refresh_menu(self, game: Game) -> None:
+        """
+        Resfreshes the current menu buttons.
+        """
+
+        game.current_menu.change_buttons(files.list_profiles(game.color_profiles) + ['+'])
+        game.refresh_profiles_sub_menu()
 
 
     def refresh(self, keys_dict: dict[str, bool]) -> None:

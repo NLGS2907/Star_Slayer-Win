@@ -15,11 +15,11 @@ def main() -> None:
     gamelib.resize(WIDTH, HEIGHT)
     gamelib.icon(PLAYER_SPRITE)
 
-    game = game_state.Game(inital_power=3)
+    game = game_state.Game(initial_power=3)
     controls = game_controls.GameControls()
 
-    keys_pressed = dict()
-    events_processed = dict()
+    keys_pressed = {}
+    events_processed = {}
 
     is_first_lap = True # So that some actions take place in the next iteration of the loop
 

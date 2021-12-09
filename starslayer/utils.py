@@ -41,7 +41,8 @@ class _Entity:
         self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
 
 
-    def all_coord(self) -> IntTuple:
+    @property
+    def all_coords(self) -> IntTuple:
         """
         Returns a tuple with all the coordiantes of its hitbox.
         """
@@ -236,55 +237,42 @@ class Menu:
 
         # Measures
         self.area_x1, self.area_y1, self.area_x2, self.area_y2 = area_corners
-        self.max_columns = how_many_columns
-        self.max_rows = max_rows
+        self.max_columns: int = how_many_columns
+        self.max_rows: int = max_rows
 
-        self.x_space = (self.area_x2 - self.area_x1) // self.max_columns
-        self.y_space = (self.area_y2 - self.area_y1) // self.max_rows
+        self.x_space: int = (self.area_x2 - self.area_x1) // self.max_columns
+        self.y_space: int = (self.area_y2 - self.area_y1) // self.max_rows
 
         # Pages-related calculations
-        self.max_pages = (((how_many_rows // self.max_rows) + 1) if all((not how_many_rows == self.max_rows, not how_many_rows % self.max_rows == 0)) else how_many_rows // self.max_rows)
-        self.current_page = 1
+        self.max_pages: int = (((how_many_rows // self.max_rows) + 1) if all((not how_many_rows == self.max_rows, not how_many_rows % self.max_rows == 0)) else how_many_rows // self.max_rows)
+        self.current_page: int = 1
 
         # Menu-related
         self.parent = parent_menu
 
         # Special Buttons
 
-        special_x1 = ((self.area_x2 + self.space_between) if special_btn_on_right else (self.area_x1 - (self.y_space // 2)))
-        special_x2 = ((self.area_x2 + (self.y_space // 2)) if special_btn_on_right else (self.area_x1 - self.space_between_y))
+        special_x1: int = ((self.area_x2 + self.space_between) if special_btn_on_right else (self.area_x1 - (self.y_space // 2)))
+        special_x2: int = ((self.area_x2 + (self.y_space // 2)) if special_btn_on_right else (self.area_x1 - self.space_between_y))
 
-        self.pgup_button = Button(special_x1,
+        self.pgup_button: Button = Button(special_x1,
                                   self.area_y1,
                                   special_x2,
                                   (self.area_y1 + (self.y_space // 2)), "/\\")
-        self.pgdn_button = Button(special_x1,
+        self.pgdn_button: Button = Button(special_x1,
                                   (self.area_y2 - (self.y_space // 2)),
                                   special_x2,
                                   self.area_y2, "\/")
-        self.return_button = Button(self.area_x1,
+        self.return_button: Button = Button(self.area_x1,
                                     self.area_y1 - (HEIGHT // 20),
                                     self.area_x1 + (WIDTH // 20),
                                     self.area_y1 - self.space_between_y, '<')
 
         # Button Lists
-        self._buttons = self.generate_buttons(button_titles)
-        self.buttons_on_screen = self.update_buttons()
+        self.generate_buttons(button_titles)
 
         # Timers
         self.press_cooldown = Timer(20)
-
-
-    @property
-    def buttons(self) -> ButtonsList:
-
-        return self._buttons
-
-    @buttons.setter
-    def buttons(self, new_buttons: ButtonsList) -> None:
-
-        self._buttons = new_buttons
-        self.buttons_on_screen = self.update_buttons()
 
 
     @classmethod
@@ -302,13 +290,13 @@ class Menu:
         return sub
 
 
-    def generate_buttons(self, titles_list: StrList) -> ButtonsList:
+    def generate_buttons(self, titles_list: StrList) -> None:
         """
         Generate buttons based on the effective area of the menu and the 'self.button_titles' list.
         'space_between' determines how much dead space there is between each button in said area.
         """
 
-        buttons_list = list()
+        buttons_list: ButtonsList = []
         cols_counter = 0
         rows_counter = 0
 
@@ -330,10 +318,11 @@ class Menu:
 
                 rows_counter += 1
 
-        return buttons_list
+        setattr(self, "buttons", buttons_list)
+        self.update_buttons()
 
 
-    def update_buttons(self, page: int=1) -> ButtonsList:
+    def update_buttons(self, page: int=1) -> None:
         """
         Updates the buttons list if the menu changes pages.
 
@@ -344,7 +333,7 @@ class Menu:
 
             raise ValueError(f"Page number is {page}. It must be between 1 and {self.max_pages} inclusive.") 
 
-        buttons_list = list()
+        buttons_list: ButtonsList = []
 
         for i in range((page - 1) * self.max_columns * self.max_rows, page * self.max_columns * self.max_rows):
 
@@ -364,7 +353,7 @@ class Menu:
 
             buttons_list.append(self.return_button)
 
-        return buttons_list
+        setattr(self, "buttons_on_screen", buttons_list)
 
 
     def change_page(self, to_next: bool=True, forced: bool=False) -> None:
@@ -383,7 +372,7 @@ class Menu:
         if 1 <= new_page <= self.max_pages:
 
             self.current_page = new_page
-            self.buttons_on_screen = self.update_buttons(new_page)
+            self.update_buttons(new_page)
 
 
     def change_buttons(self, new_button_titles: StrList) -> None:
@@ -391,7 +380,7 @@ class Menu:
         Changes all the buttons in the Menu.
         """
 
-        self.buttons = self.generate_buttons(new_button_titles)
+        self.generate_buttons(new_button_titles)
 
 
 class Timer:
@@ -449,6 +438,7 @@ class Timer:
         """
 
         self.msg = new_message
+
 
 class SpringTimer:
     """

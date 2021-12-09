@@ -3,6 +3,8 @@ Files Module. It reads (and writes) in files to define persistent
 variables in the behaviour of the game.
 """
 
+from typing import Any
+
 from .consts import DEFAULT_THEME, KEYS_PATH, LEVEL_PATH, PROFILES_PATH
 
 StrDict = dict[str, str]
@@ -17,7 +19,7 @@ def map_keys(file_name: str=KEYS_PATH) -> StrDict:
     to an action.
     """
 
-    keys_dict = dict()
+    keys_dict = {}
 
     with open(file_name) as file:
 
@@ -40,7 +42,7 @@ def list_actions(keys_dict: StrDict=map_keys()) -> list[str]:
     Returns a list of all the actions in the keys file, without repetitions.
     """
 
-    actions_list = list()
+    actions_list = []
 
     for action in keys_dict.values():
 
@@ -60,31 +62,31 @@ def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
     return [key for (key, val) in keys_dict.items() if val == value]
 
 
-def map_profiles(file_name: str=PROFILES_PATH) -> ProfilesDict:
+def map_profiles(file_name: str=PROFILES_PATH, *, prefix: str='!', comment: str='#') -> ProfilesDict:
     """
     Opens 'file_name' and creates a dictionary where every key is assigned
     to a dictionary filled with color values.
     """
 
-    profiles_dict = dict()
+    profiles_dict = {}
     current_name = ''
 
     with open(file_name) as file:
 
         for line in file:
 
-            if line == '\n' or line[0] == '#': # is a comment
+            if line == '\n' or line.startswith(comment): # is a comment
 
                 continue
 
             type, key, *value = ''.join(line.split('=')).split()
 
-            if type == "!t": # is a new Profile
+            if type == f"{prefix}t": # is a new Profile
 
-                profiles_dict[key] = dict()
+                profiles_dict[key] = {}
                 current_name = key
 
-            elif type == "!v": # is a 'key-value' pair
+            elif type == f"{prefix}v": # is a 'key-value' pair
 
                 value = ''.join(value)
                 profiles_dict[current_name][key] = (value if not value == '/' else '')
@@ -108,14 +110,14 @@ def list_attributes(profile_dict: StrDict) -> list[str]:
     return [attribute for attribute in profile_dict]
 
 
-def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH) -> None:
+def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH, *, prefix: str='!', comment: str='#') -> None:
     """
     Opens 'file_name' and, if existent, edits within the information of the dictionary
     of the keys. If not, it creates one instead.
     """
 
-    intro = "# !t are for 'themes', !v are for the 'key, value' pairs for that theme\n\n"
-    bar = "# -=-=-=-=-=-=-=-=-=-=-"
+    intro = f"{comment} {prefix}t are for 'themes', {prefix}v are for the 'key, value' pairs for that theme\n\n"
+    bar = f"{comment} -=-=-=-=-=-=-=-=-=-=-"
 
     with open(file_name, mode='w') as f:
 
@@ -132,36 +134,36 @@ def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH) ->
         f.write(bar)
 
 
-def map_level(game_level: int) -> LevelDict:
+def map_level(game_level: int, *, prefix: str='!', comment: str='#') -> LevelDict:
     """
     Defines a dictionary with all the variables a level should have.
     """
 
-    level_dict = dict()
+    level_dict = {}
     current_time = -1
 
     with open(LEVEL_PATH.format(level=game_level)) as file:
 
         for line in file:
 
-            if line == '\n' or not line.split():
+            if line == '\n' or not line.split() or line.startswith(comment):
 
                 continue
             
-            if line.lstrip()[:2] == '#t':
+            if line.lstrip()[:2] == f"{prefix}t":
 
                 _, time = line.split()
-                level_dict['total_time'] = int(time)
+                level_dict["total_time"] = int(time)
 
-            elif line.lstrip()[:2] == '#l':
+            elif line.lstrip()[:2] == f"{prefix}l":
 
                 _, current_time = line.split()
-                level_dict[current_time] = list()
+                level_dict[current_time] = []
 
-            elif line.lstrip()[:2] == '#s':
+            elif line.lstrip()[:2] == f"{prefix}s":
 
-                ship_dict = dict()
-                attributes = line.split('#s')[1].split()
+                ship_dict = {}
+                attributes = line.split(f"{prefix}s")[1].split()
 
                 for attribute in attributes:
 

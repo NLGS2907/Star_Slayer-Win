@@ -12,7 +12,7 @@ from .characters import Ship
 BulletKwargs = dict[str, Optional[int | str | bool]]
 
 
-class Bullet(Ship):
+class _Bullet(Ship):
     """
     Class for defining a bullet that is shot
     from a ship, enemy or not.
@@ -31,7 +31,7 @@ class Bullet(Ship):
         self.accel = kwargs.get("acceleration", 1)
 
 
-class BulletNormalAcc(Bullet):
+class BulletNormalAcc(_Bullet):
     """
     A bullet of normal acceleration.
     """
@@ -59,7 +59,7 @@ class BulletNormalAcc(Bullet):
         self.transfer(0, -self.speed * self.accel)
 
 
-class BulletSinusoidalSimple(Bullet):
+class BulletSinusoidalSimple(_Bullet):
     """
     A bullet of normal acceleration.
     """

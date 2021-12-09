@@ -19,7 +19,7 @@ class _EnemyTypes:
         Creates an instance of 'EnemyTypes'.
         """
 
-        self._enemy_types = dict()
+        self._enemy_types = {}
 
 
     def __str__(self) -> str:

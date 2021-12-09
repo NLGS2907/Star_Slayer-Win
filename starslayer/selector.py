@@ -375,6 +375,10 @@ class ColorSelector():
             selected_color = input("Please enter a color in hexadecimal format (#rrggbb)")
             hex = None
 
+            if not selected_color:
+
+                return
+
             if self._validate_hex(selected_color):
 
                 hex = selected_color

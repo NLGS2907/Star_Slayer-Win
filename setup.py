@@ -14,8 +14,8 @@ setup(
 
     package_data={
 
-        "starslayer" : ["*.txt",
-                        "levels/*.txt",
+        "starslayer" : ["*.json",
+                        "levels/*.json",
                         "sprites/player/*.gif"]
     },
 

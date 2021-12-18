@@ -1,0 +1,14 @@
+{
+    "w": "UP",
+    "a": "LEFT",
+    "Left": "LEFT",
+    "d": "RIGHT",
+    "Right": "RIGHT",
+    "s": "DOWN",
+    "Down": "DOWN",
+    "space": "SHOOT",
+    "BackSpace": "RETURN",
+    "Up": "UP",
+    "F3": "DEBUG",
+    "Escape": "EXIT"
+}

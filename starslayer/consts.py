@@ -147,10 +147,10 @@ PLAYER_SPRITE = file_path("star_player.gif", "sprites.player")
 
 PLAYER_DAMAGED_SPRITE = file_path("star_player_damaged.gif", "sprites.player")
 
-KEYS_PATH = file_path("keys.txt")
+KEYS_PATH = file_path("keys.json")
 
-PROFILES_PATH = file_path("color_profiles.txt")
+PROFILES_PATH = file_path("color_profiles.json")
 
-LEVEL_PATH = file_path("level_{level}.txt", "levels")
+LEVEL_PATH = file_path("level_{level}.json", "levels")
 
 LOG_PATH = file_path("thestarthatslays.log")

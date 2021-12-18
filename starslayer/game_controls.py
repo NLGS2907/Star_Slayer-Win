@@ -9,7 +9,7 @@ from random import choice
 from . import gamelib, files
 from .utils import Timer
 from .game_state import Game # Just for type hinting
-from .consts import DEFAULT_THEME, DEFAULT_THEME_LINES, EXITING_DELAY, NEW_THEME, SPECIAL_CHARS, WIDTH
+from .consts import DEFAULT_THEME, DEFAULT_THEME_LINES, EXITING_DELAY, KEYS_PATH, NEW_THEME, PROFILES_PATH, SPECIAL_CHARS
 
 class GameControls:
     """
@@ -37,7 +37,7 @@ class GameControls:
         Reads which key was pressed, and returns its corresponding action.
         """
 
-        return files.map_keys().get(key)
+        return files.load_json(KEYS_PATH).get(key)
 
 
     def process_action(self, action: str, game: Game) -> None:
@@ -270,7 +270,7 @@ class GameControls:
 
                         self.select_att_color(button.msg, game)
 
-                    elif button.msg in (f"Delete {key}" for key in files.map_keys()):
+                    elif button.msg in (f"Delete {key}" for key in files.load_json(KEYS_PATH)):
 
                         self.remove_key(button.msg.removeprefix("Delete "), game)
 
@@ -425,7 +425,7 @@ class GameControls:
         """
 
         event = gamelib.wait(gamelib.EventType.KeyPress)
-        keys_dict = files.map_keys()
+        keys_dict = files.load_json(KEYS_PATH)
         success = False
 
         if event.key not in keys_dict:
@@ -435,7 +435,7 @@ class GameControls:
         if success:
 
             keys_dict[event.key] = action
-            files.print_keys(keys_dict)
+            files.dump_json(keys_dict, KEYS_PATH)
             game.refresh_controls_sub_menu()
 
         self.is_on_prompt = False
@@ -447,7 +447,12 @@ class GameControls:
 
         Returns the removed key if available.
         """
-        keys_dict = files.map_keys()
+        keys_dict = files.load_json(KEYS_PATH)
+
+        if len(files.list_repeated_keys(keys_dict[key], keys_dict)) == 1:
+
+            gamelib.say("You cannot delete this key, as it is the only one remaining.")
+            return
 
         if key in keys_dict:
 
@@ -455,9 +460,9 @@ class GameControls:
 
             if not files.list_repeated_keys(value, keys_dict):
 
-                keys_dict['/'] = value
+                keys_dict[''] = value
 
-            files.print_keys(keys_dict)
+            files.dump_json(keys_dict, KEYS_PATH)
             game.refresh_controls_sub_menu()
 
             return key
@@ -497,7 +502,7 @@ class GameControls:
         game.selected_theme = new_name
 
         self.refresh_menu(game)
-        files.print_profiles(game.color_profiles)
+        files.dump_json(game.color_profiles, PROFILES_PATH)
 
     def click_on_add_profile(self, game: Game) -> None:
         """
@@ -512,7 +517,7 @@ class GameControls:
 
         game.selected_theme = new_theme_name
         self.refresh_menu(game)
-        files.print_profiles(game.color_profiles)
+        files.dump_json(game.color_profiles, PROFILES_PATH)
 
 
     def click_on_delete_this_profile(self, game: Game) -> Optional[files.StrDict]:
@@ -535,7 +540,7 @@ class GameControls:
 
         game.selected_theme = themes_list[old_theme_index - 1]
         self.refresh_menu(game)
-        files.print_profiles(game.color_profiles)
+        files.dump_json(game.color_profiles, PROFILES_PATH)
 
         return {old_theme_name : old_theme}
 
@@ -574,7 +579,7 @@ class GameControls:
                     selector.exit = False
                     game.attribute_to_edit = None
 
-                    files.print_profiles(game.color_profiles)
+                    files.dump_json(game.color_profiles, PROFILES_PATH)
                     self.is_on_prompt = False
 
                     break
@@ -612,7 +617,7 @@ class GameControls:
 
         It takes a dictionary of the keys pressed to decide if it counts some timers.
         """
-        correct_keys = files.list_repeated_keys("EXIT", files.map_keys())
+        correct_keys = files.list_repeated_keys("EXIT", files.load_json(KEYS_PATH))
 
         if any(keys_dict.get(key, False) for key in correct_keys):
 

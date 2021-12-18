@@ -3,7 +3,7 @@ Files Module. It reads (and writes) in files to define persistent
 variables in the behaviour of the game.
 """
 
-from typing import Any
+from json import load, dump
 
 from .consts import DEFAULT_THEME, KEYS_PATH, LEVEL_PATH, PROFILES_PATH
 
@@ -12,32 +12,34 @@ ProfilesDict = dict[str, StrDict]
 LevelList = list[str | int]
 LevelDict = dict[str, int | LevelList]
 
+GameDict = StrDict | ProfilesDict | LevelDict
 
-def map_keys(file_name: str=KEYS_PATH) -> StrDict:
+
+def load_json(file_name: str) -> GameDict:
     """
-    Opens 'file_name' and creates a dictionary where every key is assigned
-    to an action.
+    Loads a JSON file into a python dictionary.
     """
 
-    keys_dict = {}
+    dict_to_return = {}
 
     with open(file_name) as file:
 
-        for line in file:
+        dict_to_return = load(file)
 
-            if line == '\n':
-                continue
-
-            keys, action = ''.join(line.split('=')).split()
-
-            for key in keys.split(','):
-
-                keys_dict[key] = action
-
-    return keys_dict
+    return dict_to_return
 
 
-def list_actions(keys_dict: StrDict=map_keys()) -> list[str]:
+def dump_json(dump_dict: GameDict, file_name: str) -> None:
+    """
+    Dumps a python dictionary into a JSON file.
+    """
+
+    with open(file_name, mode='w') as file:
+
+        dump(dump_dict, file, indent=4)
+
+
+def list_actions(keys_dict: StrDict=load_json(KEYS_PATH)) -> list[str]:
     """
     Returns a list of all the actions in the keys file, without repetitions.
     """
@@ -53,7 +55,7 @@ def list_actions(keys_dict: StrDict=map_keys()) -> list[str]:
     return actions_list
 
 
-def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
+def list_repeated_keys(value: str, keys_dict: StrDict=load_json(KEYS_PATH)) -> list[str]:
     """
     Given a value to search for and a dictionary (by default the one that 'map_keys' returns),
     it returns a list of all the keys that have such value.
@@ -62,39 +64,7 @@ def list_repeated_keys(value: str, keys_dict: StrDict=map_keys()) -> list[str]:
     return [key for (key, val) in keys_dict.items() if val == value]
 
 
-def map_profiles(file_name: str=PROFILES_PATH, *, prefix: str='!', comment: str='#') -> ProfilesDict:
-    """
-    Opens 'file_name' and creates a dictionary where every key is assigned
-    to a dictionary filled with color values.
-    """
-
-    profiles_dict = {}
-    current_name = ''
-
-    with open(file_name) as file:
-
-        for line in file:
-
-            if line == '\n' or line.startswith(comment): # is a comment
-
-                continue
-
-            type, key, *value = ''.join(line.split('=')).split()
-
-            if type == f"{prefix}t": # is a new Profile
-
-                profiles_dict[key] = {}
-                current_name = key
-
-            elif type == f"{prefix}v": # is a 'key-value' pair
-
-                value = ''.join(value)
-                profiles_dict[current_name][key] = (value if not value == '/' else '')
-
-    return profiles_dict
-
-
-def list_profiles(profiles_dict: ProfilesDict=map_profiles()) -> list[str]:
+def list_profiles(profiles_dict: ProfilesDict=load_json(PROFILES_PATH)) -> list[str]:
     """
     Returns a list of all the available color profiles titles.
     """
@@ -110,91 +80,10 @@ def list_attributes(profile_dict: StrDict) -> list[str]:
     return [attribute for attribute in profile_dict]
 
 
-def print_profiles(profiles_dict: ProfilesDict, file_name: str=PROFILES_PATH, *, prefix: str='!', comment: str='#') -> None:
-    """
-    Opens 'file_name' and, if existent, edits within the information of the dictionary
-    of the keys. If not, it creates one instead.
-    """
-
-    intro = f"{comment} {prefix}t are for 'themes', {prefix}v are for the 'key, value' pairs for that theme\n\n"
-    bar = f"{comment} -=-=-=-=-=-=-=-=-=-=-"
-
-    with open(file_name, mode='w') as f:
-
-        f.write(intro)
-
-        for profile in profiles_dict:
-
-            f.write(f"{bar}\n\n!t {profile}\n\n")
-
-            for key, value in profiles_dict[profile].items():
-
-                f.write(f"!v {key} = {value if not value == '' else '/'}\n\n")
-
-        f.write(bar)
-
-
-def map_level(game_level: int, *, prefix: str='!', comment: str='#') -> LevelDict:
+def map_level(game_level: int) -> LevelDict:
     """
     Defines a dictionary with all the variables a level should have.
     """
 
-    level_dict = {}
-    current_time = -1
-
-    with open(LEVEL_PATH.format(level=game_level)) as file:
-
-        for line in file:
-
-            if line == '\n' or not line.split() or line.startswith(comment):
-
-                continue
-            
-            if line.lstrip()[:2] == f"{prefix}t":
-
-                _, time = line.split()
-                level_dict["total_time"] = int(time)
-
-            elif line.lstrip()[:2] == f"{prefix}l":
-
-                _, current_time = line.split()
-                level_dict[current_time] = []
-
-            elif line.lstrip()[:2] == f"{prefix}s":
-
-                ship_dict = {}
-                attributes = line.split(f"{prefix}s")[1].split()
-
-                for attribute in attributes:
-
-                    atr, val = attribute.split('-')
-                    ship_dict[atr] = (None if val == '/' else (val if not val.isnumeric() else int(val)))
-                
-                level_dict[current_time].append(ship_dict)
-
+    level_dict = load_json(LEVEL_PATH.format(level=game_level))
     return level_dict
-
-
-def print_keys(keys_dict: StrDict, file_name: str=KEYS_PATH) -> None:
-    """
-    Opens 'file_name' and, if existent, edits within the information of the dictionary
-    of the keys. If not, it creates one instead.
-    """
-
-    with open(file_name, mode='w') as f:
-
-        dict_values = list_actions(keys_dict)
-
-        for value in dict_values:
-
-            if not value == dict_values[0]:
-
-                f.write("\n\n")
-
-            repeated_keys = list_repeated_keys(value, keys_dict)
-
-            if len(repeated_keys) > 1 and '/' in repeated_keys:
-
-                repeated_keys.remove('/')
-
-            f.write(f"{','.join(repeated_keys)} = {value}")

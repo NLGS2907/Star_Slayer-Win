@@ -9,7 +9,7 @@ from .game_controls import GameControls as Controls
 from .utils import Button, Menu
 from .selector import ColorSelector
 from .characters import Ship
-from .consts import DEBUG_TEXT, PROFILES_DELETER, PROFILES_TITLE, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, PROFILES_CHANGER, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
+from .consts import DEBUG_TEXT, KEYS_PATH, PROFILES_DELETER, PROFILES_TITLE, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, PROFILES_CHANGER, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
 
 
 def get_color(game: Game, name: str) -> str:
@@ -109,9 +109,9 @@ def draw_changeable_buttons(game: Game, controls: Controls) -> None:
     gamelib.draw_rectangle((WIDTH // 4) + aux_cons, aux_cons, WIDTH - aux_cons, HEIGHT - aux_cons, width=(HEIGHT // 87), outline=get_color(game, "MENU_OUTLINE_1"), fill=get_color(game, "MENU_COLOR_1"))
     gamelib.draw_text(game.action_to_show, int(WIDTH * (5 / 8)), (HEIGHT // 8), fill=get_color(game, "TEXT_COLOR_1"), size=(WIDTH // 10), justify='c')
 
-    keys_assigned = files.list_repeated_keys(game.action_to_show, files.map_keys())
+    keys_assigned = files.list_repeated_keys(game.action_to_show, files.load_json(KEYS_PATH))
 
-    if '/' in keys_assigned: keys_assigned.remove('/')
+    if '' in keys_assigned: keys_assigned.remove('')
 
     if not keys_assigned:
 

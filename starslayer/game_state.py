@@ -7,7 +7,7 @@ from typing import Optional
 
 from . import utils, characters, bullets, enemies, files
 from .selector import ColorSelector, CoordsTuple
-from .consts import HEIGHT, PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
+from .consts import HEIGHT, KEYS_PATH, PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, PROFILES_PATH, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
 from starslayer import selector
 
 corners_tuple = tuple[int | float, int | float, int | float, int | float]
@@ -26,7 +26,7 @@ class Game:
         # Level Parameters
         self.game_level: int = 1
         self.level_dict: files.LevelDict = files.map_level(1)
-        self.level_timer: utils.Timer = utils.Timer(self.level_dict.pop("total_time"))
+        self.level_timer: utils.Timer = utils.Timer(int(self.level_dict.pop("total_time")))
 
         # Player Parameters
         self.player: characters.Ship = characters.Ship((WIDTH // 2) - 30, int(HEIGHT / 1.17) - 30, (WIDTH // 2) + 30, int(HEIGHT / 1.17) + 30,
@@ -34,7 +34,7 @@ class Game:
         self.power_level: int = initial_power
 
         # Color Profiles
-        self.color_profiles: files.ProfilesDict = files.map_profiles()
+        self.color_profiles: files.ProfilesDict = files.load_json(PROFILES_PATH)
         self._color_theme: list[str] = files.list_profiles(self.color_profiles)[0]
         self.color_profile: files.StrDict = self.color_profiles[self._color_theme]
 
@@ -156,17 +156,16 @@ class Game:
         """
 
         if not len(corners) == 4:
-
             raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
 
-        repeated_keys = files.list_repeated_keys(self.action_to_show, files.map_keys())
+        repeated_keys = files.list_repeated_keys(self.action_to_show, files.load_json(KEYS_PATH))
         changeable_keys = []
 
         for key in repeated_keys:
 
-            if not key == '/':
+            if not key: continue
 
-                changeable_keys.append(f"Delete {key}")
+            changeable_keys.append(f"Delete {key}")
 
         changeable_keys.append("Add Key")
 
@@ -217,6 +216,7 @@ class Game:
 
         self.game_level += how_much
         self.level_dict = files.map_level(self.game_level)
+        self.level_timer = utils.Timer(int(self.level_dict.pop("total_time")))
 
 
     def power_up(self, how_much: int=1) -> None:
@@ -315,13 +315,14 @@ class Game:
 
             if int(instant) == self.level_timer.current_time:
 
-                for action in self.level_dict[instant]:
+                current_instant = self.level_dict.pop(instant)
+
+                for action in current_instant:
 
                     enemy_type_to_add = enemies.enemy_types.get(action["type"], enemies.EnemyCommonA)
 
-                    self.enemies.append(enemy_type_to_add(action["x1"], action["y1"], action["x2"], action["y2"]))
-                
-                self.level_dict.pop(instant)
+                    self.enemies.append(enemy_type_to_add(int(action["x1"]), int(action["y1"]), int(action["x2"]), int(action["y2"])))
+
                 break
 
 

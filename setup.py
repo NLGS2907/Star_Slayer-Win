@@ -19,7 +19,7 @@ setup(
                         "sprites/player/*.gif"]
     },
 
-    version="0.0.15",
+    version="0.0.16",
 
     url="https://github.com/NLGS2907/star-slayer",
 

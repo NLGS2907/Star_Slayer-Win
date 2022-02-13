@@ -6,11 +6,11 @@ that helps the user in picking a color.
 from typing import Callable, Optional
 from colorsys import hsv_to_rgb
 
-from starslayer.files import StrDict
+from ..files.files import StrDict
 
-from .gamelib import input, say
-from .utils import ButtonsList, IntTuple, Button
-from .consts import HEIGHT, WIDTH
+from ..lib.gamelib import input as lib_input, say as lib_say
+from ..utils.utils import ButtonsList, IntTuple, Button
+from ..constants.consts import HEIGHT, WIDTH
 
 CoordsTuple = tuple[int, int]
 ColorsDict = dict[CoordsTuple, str]
@@ -372,7 +372,7 @@ class ColorSelector():
             '#rrggbb' or 'rrggbb'.
             """
 
-            selected_color = input("Please enter a color in hexadecimal format (#rrggbb)")
+            selected_color = lib_input("Please enter a color in hexadecimal format (#rrggbb)")
             hex = None
 
             if not selected_color:
@@ -394,7 +394,7 @@ class ColorSelector():
 
             else:
 
-                say(f"'{selected_color}' is an invalid HEX color")
+                lib_say(f"'{selected_color}' is an invalid HEX color")
 
         actions[input_button.msg] = input_color
         # -------------------------------------------------- #

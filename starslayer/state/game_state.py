@@ -5,10 +5,15 @@ of the game.
 
 from typing import Optional
 
-from . import utils, characters, bullets, enemies, files
-from .selector import ColorSelector, CoordsTuple
-from .consts import HEIGHT, KEYS_PATH, PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, PROFILES_PATH, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH, HEIGHT
-from starslayer import selector
+from ..bullets import bullets
+
+from ..utils import utils
+
+from ..enemies.enemies import _Enemy, enemy_types, EnemyCommonA
+from ..characters.characters import Ship
+from ..files.files import LevelDict, StrDict, ProfilesDict, load_json, list_profiles, list_actions, list_attributes, list_repeated_keys, map_level
+from ..selector.selector import ColorSelector, CoordsTuple
+from ..constants.consts import HEIGHT, KEYS_PATH, PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, PROFILES_PATH, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH
 
 corners_tuple = tuple[int | float, int | float, int | float, int | float]
 
@@ -25,18 +30,18 @@ class Game:
 
         # Level Parameters
         self.game_level: int = 1
-        self.level_dict: files.LevelDict = files.map_level(1)
+        self.level_dict: LevelDict = map_level(1)
         self.level_timer: utils.Timer = utils.Timer(int(self.level_dict.pop("total_time")))
 
         # Player Parameters
-        self.player: characters.Ship = characters.Ship((WIDTH // 2) - 30, int(HEIGHT / 1.17) - 30, (WIDTH // 2) + 30, int(HEIGHT / 1.17) + 30,
+        self.player: Ship = Ship((WIDTH // 2) - 30, int(HEIGHT / 1.17) - 30, (WIDTH // 2) + 30, int(HEIGHT / 1.17) + 30,
                                     how_hard=1, speed=5, texture_path=(PLAYER_SPRITE, PLAYER_DAMAGED_SPRITE))
         self.power_level: int = initial_power
 
         # Color Profiles
-        self.color_profiles: files.ProfilesDict = files.load_json(PROFILES_PATH)
-        self._color_theme: list[str] = files.list_profiles(self.color_profiles)[0]
-        self.color_profile: files.StrDict = self.color_profiles[self._color_theme]
+        self.color_profiles: ProfilesDict = load_json(PROFILES_PATH)
+        self._color_theme: list[str] = list_profiles(self.color_profiles)[0]
+        self.color_profile: StrDict = self.color_profiles[self._color_theme]
 
 
         # Menu Related
@@ -45,7 +50,7 @@ class Game:
         self._menu_in_display: utils.Menu = self.main_menu
 
         # Sub-menu related
-        self.action_to_show: str = files.list_actions()[0]
+        self.action_to_show: str = list_actions()[0]
         self.sub_menu: Optional[utils.Menu] = None
 
         # Timers
@@ -55,7 +60,7 @@ class Game:
         self.debug_cooldown: utils.Timer = utils.Timer(20)
         
         # Enemies, Misc
-        self.enemies: list[enemies._Enemy] = []
+        self.enemies: list[_Enemy] = []
         self.bullets: list[bullets._Bullet] = []
 
         # Control Booleans
@@ -86,11 +91,11 @@ class Game:
                                          main_coords,
                                          max_rows=4, parent_menu=main_menu)
 
-        controls_menu: utils.Menu = utils.Menu(files.list_actions(),
+        controls_menu: utils.Menu = utils.Menu(list_actions(),
                                         ((WIDTH // 75), (HEIGHT // 5), int(WIDTH / 4.237288), int(HEIGHT / 1.014492)),
                                         max_rows=8, parent_menu=options_menu)
 
-        profiles_menu: utils.Menu = utils.Menu(files.list_profiles(self.color_profiles) + ["+"],
+        profiles_menu: utils.Menu = utils.Menu(list_profiles(self.color_profiles) + ["+"],
                                         (int(WIDTH / 1.25), int(HEIGHT / 5.185185), int(WIDTH / 1.013513), int(HEIGHT / 1.076923)),
                                         max_rows=10, special_btn_on_right=False, parent_menu=options_menu)
 
@@ -158,7 +163,7 @@ class Game:
         if not len(corners) == 4:
             raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
 
-        repeated_keys = files.list_repeated_keys(self.action_to_show, files.load_json(KEYS_PATH))
+        repeated_keys = list_repeated_keys(self.action_to_show, load_json(KEYS_PATH))
         changeable_keys = []
 
         for key in repeated_keys:
@@ -184,7 +189,7 @@ class Game:
 
             raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
 
-        profile_atts = [PROFILES_CHANGER, PROFILES_DELETER] + files.list_attributes(self.color_profile)
+        profile_atts = [PROFILES_CHANGER, PROFILES_DELETER] + list_attributes(self.color_profile)
 
         sub_menu: utils.Menu = utils.Menu.sub_menu(profile_atts, corners,
                                    max_rows=7, how_many_columns=2, space_between_x=20, space_between_y=15, button_anchor='w', special_btn_on_right=False)
@@ -215,7 +220,7 @@ class Game:
         """
 
         self.game_level += how_much
-        self.level_dict = files.map_level(self.game_level)
+        self.level_dict = map_level(self.game_level)
         self.level_timer = utils.Timer(int(self.level_dict.pop("total_time")))
 
 
@@ -319,7 +324,7 @@ class Game:
 
                 for action in current_instant:
 
-                    enemy_type_to_add = enemies.enemy_types.get(action["type"], enemies.EnemyCommonA)
+                    enemy_type_to_add = enemy_types.get(action["type"], EnemyCommonA)
 
                     self.enemies.append(enemy_type_to_add(int(action["x1"]), int(action["y1"]), int(action["x2"]), int(action["y2"])))
 

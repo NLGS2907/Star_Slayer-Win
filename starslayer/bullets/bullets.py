@@ -5,8 +5,8 @@ different types of bullets.
 
 from typing import Optional
 
-from .utils import Timer, SpringTimer
-from .characters import Ship
+from ..utils.utils import Timer, SpringTimer
+from ..characters.characters import Ship
 
 
 BulletKwargs = dict[str, Optional[int | str | bool]]

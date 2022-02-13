@@ -1,3 +1,7 @@
+"""
+Constants Module. Contains all the constants parameters of the game.
+"""
+
 from importlib.resources import path as fpath
 from typing import Optional
 
@@ -6,7 +10,7 @@ def file_path(filename: str, subpackage: Optional[str]=None) -> str:
     Returns the absolute path of a file associated with a package or subpackage.
     """
 
-    subpackage_path = f"{__package__}{f'.{subpackage}' if subpackage else ''}"
+    subpackage_path = f"starslayer{f'.{subpackage}' if subpackage else ''}"
 
     return str(fpath(subpackage_path, filename))
 
@@ -147,10 +151,10 @@ PLAYER_SPRITE = file_path("star_player.gif", "sprites.player")
 
 PLAYER_DAMAGED_SPRITE = file_path("star_player_damaged.gif", "sprites.player")
 
-KEYS_PATH = file_path("keys.json")
+KEYS_PATH = file_path("keys.json", "json.keys")
 
-PROFILES_PATH = file_path("color_profiles.json")
+PROFILES_PATH = file_path("color_profiles.json", "json.profiles")
 
-LEVEL_PATH = file_path("level_{level}.json", "levels")
+LEVEL_PATH = file_path("level_{level}.json", "json.levels")
 
 LOG_PATH = file_path("thestarthatslays.log")

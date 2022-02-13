@@ -5,7 +5,8 @@ of the program.
 """
 
 import logging
-from .consts import LOG_PATH
+
+from ..constants.consts import LOG_PATH
 
 
 class GameLogger():
@@ -17,7 +18,7 @@ class GameLogger():
                  *,
                  log_name: str="TheStarThatSlays",
                  log_level: int=logging.INFO,
-                 format: str="[ %(asctime)s ] - %(levelname)s - %(message)s",
+                 fmt: str="[ %(asctime)s ] - %(levelname)s - %(message)s",
                  date_fmt: str="%d-%m-%Y %I:%M:%S %p") -> None:
         """
         Creates an instance of 'GameLogger'.
@@ -25,10 +26,10 @@ class GameLogger():
 
         super().__init__()
 
-        self._format = format
+        self._format = fmt
         self._date_fmt = date_fmt
 
-        self._formatter = logging.Formatter(fmt=self._format, date_fmt=self._date_fmt)
+        self._formatter = logging.Formatter(fmt=self._format, datefmt=self._date_fmt)
 
         self.file_handler = logging.FileHandler(filename=LOG_PATH, encoding="utf-8")
         self.console_handler = logging.StreamHandler()
@@ -74,7 +75,7 @@ class GameLogger():
     def format(self, new_format) -> None:
 
         self._format = new_format
-        self.formatter = logging.Formatter(format=self.format, datefmt=self.date_fmt)
+        self.formatter = logging.Formatter(fmt=self.format, datefmt=self.date_fmt)
 
 
     @property
@@ -87,7 +88,7 @@ class GameLogger():
     def date_fmt(self, new_date_fmt: str) -> None:
 
         self._date_fmt = new_date_fmt
-        self.formatter = logging.Formatter(format=self.format, datefmt=self.date_fmt)
+        self.formatter = logging.Formatter(fmt=self.format, datefmt=self.date_fmt)
 
 
     def debug(self, message: str) -> None:

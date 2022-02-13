@@ -1,8 +1,10 @@
+"""
+Setup the package.
+"""
+
 from setuptools import setup, find_packages
 
-project_description = ''
-
-with open("README.md", mode='r') as readme:
+with open("README.md", mode='r', encoding="utf-8") as readme:
 
     project_description = readme.read()
 
@@ -14,12 +16,13 @@ setup(
 
     package_data={
 
-        "starslayer" : ["*.json",
-                        "levels/*.json",
+        "starslayer" : ["json/keys/*.json",
+                        "json/levels/*.json",
+                        "json/profiles/*.json",
                         "sprites/player/*.gif"]
     },
 
-    version="0.0.16",
+    version="0.0.17",
 
     url="https://github.com/NLGS2907/star-slayer",
 

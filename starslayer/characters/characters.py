@@ -5,11 +5,11 @@ Characters Module. For storing playable characters
 
 from typing import Optional
 
-from .utils import _Entity
-from .consts import WIDTH, HEIGHT, GUI_SPACE
+from ..utils.utils import _Entity
+from ..constants.consts import WIDTH, HEIGHT, GUI_SPACE
 
-ShipVariables = Optional[int | str]
-ShipDict = dict[str, ShipVariables]
+ShipVariable = Optional[int | str]
+ShipDict = dict[str, ShipVariable]
 
 class Ship(_Entity):
     """

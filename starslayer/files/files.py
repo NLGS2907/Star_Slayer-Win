@@ -5,7 +5,7 @@ variables in the behaviour of the game.
 
 from json import load, dump
 
-from .consts import DEFAULT_THEME, KEYS_PATH, LEVEL_PATH, PROFILES_PATH
+from ..constants.consts import DEFAULT_THEME, KEYS_PATH, LEVEL_PATH, PROFILES_PATH
 
 StrDict = dict[str, str]
 ProfilesDict = dict[str, StrDict]

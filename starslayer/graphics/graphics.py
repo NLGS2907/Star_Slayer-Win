@@ -3,13 +3,14 @@ Graphics Module. Draws anything that the player
 sees on screen.
 """
 
-from . import gamelib, files
-from .game_state import Game
-from .game_controls import GameControls as Controls
-from .utils import Button, Menu
-from .selector import ColorSelector
-from .characters import Ship
-from .consts import DEBUG_TEXT, KEYS_PATH, PROFILES_DELETER, PROFILES_TITLE, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, PROFILES_CHANGER, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
+from ..lib import gamelib
+from ..files import files
+from ..state.game_state import Game
+from ..controls.game_controls import GameControls as Controls
+from ..utils.utils import Button, Menu
+from ..selector.selector import ColorSelector
+from ..characters.characters import Ship
+from ..constants.consts import DEBUG_TEXT, KEYS_PATH, PROFILES_DELETER, PROFILES_TITLE, WIDTH, HEIGHT, GUI_SPACE, DEBUG_LINES, PROFILES_CHANGER, SPECIAL_CHARS, GAME_TITLE, OPTIONS_TITLE, CONTROLS_TITLE
 
 
 def get_color(game: Game, name: str) -> str:
@@ -115,7 +116,7 @@ def draw_changeable_buttons(game: Game, controls: Controls) -> None:
 
     if not keys_assigned:
 
-        gamelib.draw_text(f"Action is currently not binded to any key", (WIDTH * (5 / 8)), (HEIGHT / 3.5), fill=get_color(game, "TEXT_COLOR_1"), size=(WIDTH // 34), justify='c')
+        gamelib.draw_text("Action is currently not binded to any key", (WIDTH * (5 / 8)), (HEIGHT / 3.5), fill=get_color(game, "TEXT_COLOR_1"), size=(WIDTH // 34), justify='c')
 
     else:
 

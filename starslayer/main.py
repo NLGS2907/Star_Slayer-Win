@@ -2,8 +2,12 @@
 Main Module. It encases all the other modules to start the game.
 """
 
-from . import gamelib, graphics, game_state, game_controls, files
-from .consts import PLAYER_SPRITE, WIDTH, HEIGHT
+from .state import game_state
+from .controls import game_controls
+from .lib import gamelib
+from .graphics.graphics import draw_screen
+from .files.files import list_repeated_keys
+from .constants.consts import PLAYER_SPRITE, WIDTH, HEIGHT
 
 
 def main() -> None:
@@ -11,7 +15,7 @@ def main() -> None:
     Main function. Initializes the game.
     """
 
-    gamelib.title(f"Star Slayer - Alpha")
+    gamelib.title("Star Slayer - Alpha")
     gamelib.resize(WIDTH, HEIGHT)
     gamelib.icon(PLAYER_SPRITE)
 
@@ -29,7 +33,7 @@ def main() -> None:
             break
 
         gamelib.draw_begin()
-        graphics.draw_screen(game, controls)
+        draw_screen(game, controls)
         gamelib.draw_end()
 
         for event in gamelib.get_events():
@@ -59,7 +63,7 @@ def main() -> None:
 
                 events_processed[action] = True
 
-            elif all((not keys_pressed.get(repeated_key, False) for repeated_key in files.list_repeated_keys(action))):
+            elif all((not keys_pressed.get(repeated_key, False) for repeated_key in list_repeated_keys(action))):
 
                 events_processed[action] = False
 

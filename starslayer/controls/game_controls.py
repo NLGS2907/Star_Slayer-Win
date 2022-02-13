@@ -6,10 +6,15 @@ with the game.
 from typing import Optional
 from random import choice
 
-from . import gamelib, files
-from .utils import Timer
-from .game_state import Game # Just for type hinting
-from .consts import DEFAULT_THEME, DEFAULT_THEME_LINES, EXITING_DELAY, KEYS_PATH, NEW_THEME, PROFILES_PATH, SPECIAL_CHARS
+from ..lib.gamelib import (EventType,
+                           input as lib_input,
+                           say as lib_say,
+                           wait as lib_wait)
+
+from ..files import files
+from ..utils.utils import Timer
+from ..state.game_state import Game # Just for type hinting
+from ..constants.consts import DEFAULT_THEME, DEFAULT_THEME_LINES, EXITING_DELAY, KEYS_PATH, NEW_THEME, PROFILES_PATH, SPECIAL_CHARS
 
 class GameControls:
     """
@@ -280,7 +285,9 @@ class GameControls:
                         button_clicked = getattr(self, "click_on_" + '_'.join(message.lower().split()), None)
 
                         # The button has a method assigned in this class
-                        if button_clicked: button_clicked(game)
+                        if button_clicked is not None:
+
+                            button_clicked(game)
 
                     break
 
@@ -424,7 +431,7 @@ class GameControls:
         succeeded, else 'False' if something happened.
         """
 
-        event = gamelib.wait(gamelib.EventType.KeyPress)
+        event = lib_wait(EventType.KeyPress)
         keys_dict = files.load_json(KEYS_PATH)
         success = False
 
@@ -451,7 +458,7 @@ class GameControls:
 
         if len(files.list_repeated_keys(keys_dict[key], keys_dict)) == 1:
 
-            gamelib.say("You cannot delete this key, as it is the only one remaining.")
+            lib_say("You cannot delete this key, as it is the only one remaining.")
             return
 
         if key in keys_dict:
@@ -481,21 +488,21 @@ class GameControls:
         Changes the name of the color profile.
         """
 
-        new_name = '_'.join(gamelib.input("Please enter the new Profile Name").upper().split())
+        new_name = '_'.join(lib_input("Please enter the new Profile Name").upper().split())
 
         if new_name == '':
 
-            gamelib.say("Name not valid")
+            lib_say("Name not valid")
             return
 
         elif new_name in files.list_profiles(game.color_profiles):
 
-            gamelib.say("Name already used")
+            lib_say("Name already used")
             return
 
         elif new_name == DEFAULT_THEME:
 
-            gamelib.say(choice(DEFAULT_THEME_LINES))
+            lib_say(choice(DEFAULT_THEME_LINES))
             return
 
         game.color_profiles[new_name] = game.color_profiles.pop(game.selected_theme)
@@ -529,7 +536,7 @@ class GameControls:
 
         if len(game.color_profiles) == 2: # +1 for the hidden theme
 
-            gamelib.say("You cannot delete this color profile, as it is the only one remaining.")
+            lib_say("You cannot delete this color profile, as it is the only one remaining.")
             return
 
         themes_list = files.list_profiles(game.color_profiles)
@@ -563,7 +570,7 @@ class GameControls:
 
         while True:
 
-            event = gamelib.wait(gamelib.EventType.ButtonPress)
+            event = lib_wait(EventType.ButtonPress)
 
             if event.mouse_button == 1: # Left Click
 

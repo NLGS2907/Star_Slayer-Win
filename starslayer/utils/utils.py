@@ -5,7 +5,7 @@ in the game.
 
 from typing import Optional
 
-from .consts import WIDTH, HEIGHT
+from ..constants.consts import WIDTH, HEIGHT
 
 StrList = list[str]
 IntTuple = tuple[int, int, int, int]

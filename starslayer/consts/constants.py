@@ -5,14 +5,24 @@ Constants Module. Contains all the constants parameters of the game.
 from importlib.resources import path as fpath
 from typing import Optional
 
-def file_path(filename: str, subpackage: Optional[str]=None) -> str:
+
+def abs_path(filename: str, subpackage: Optional[str]=None) -> str:
     """
     Returns the absolute path of a file associated with a package or subpackage.
+
+    NOTE: The subpackage selected should NOT import the module this function is in.
     """
 
     subpackage_path = f"starslayer{f'.{subpackage}' if subpackage else ''}"
 
     return str(fpath(subpackage_path, filename))
+
+
+GAME_VERSION = "0.0.17"
+"""
+The current version of the game.
+"""
+
 
 WIDTH = 750
 """
@@ -43,6 +53,11 @@ SUB_MENU_LEFT = (WIDTH * 0.066666), (HEIGHT * 0.195714), (WIDTH * 0.766666), (HE
 Dimensions for a Menu that has its sub-menu to its LEFT.
 """
 
+CUSTOMEXT = "customppm"
+"""
+The custom extension to use in sprites.
+"""
+
 PROFILES_CHANGER = "Change Profile Name"
 """
 Name of button that renames color profiles.
@@ -65,7 +80,9 @@ DEFAULT_THEME_LINES = ["...you know, don't you?",
 "Did you discover this by accident? I certainly hope so",
 "Waiting for a secret? Outta luck here",
 "Hmmmmmmmmmmmmmmmmmmmmmmmmmm",
-"(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧\n\n...happy?"]
+"(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧\n\n...happy?",
+"Good try.",
+"The default theme sadly is not available for the user"]
 """
 Lines to say if the user tries to switch to the default theme.
 """
@@ -75,7 +92,7 @@ NEW_THEME = "NEW_THEME"
 Name template for newly created themes.
 """
 
-EXITING_DELAY = 30
+EXITING_DELAY = 150
 """
 How much time the game waits when the 'EXIT' action is left pressed.
 """
@@ -147,14 +164,14 @@ PROFILES_TITLE = """
 ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚═╝░░░░░╚═╝╚══════╝╚══════╝╚═════╝░
 """
 
-PLAYER_SPRITE = file_path("star_player.gif", "sprites.player")
+PLAYER_SPRITE = abs_path("star_player.gif", "textures.player")
 
-PLAYER_DAMAGED_SPRITE = file_path("star_player_damaged.gif", "sprites.player")
+PLAYER_DAMAGED_SPRITE = abs_path("star_player_damaged.gif", "textures.player")
 
-KEYS_PATH = file_path("keys.json", "json.keys")
+KEYS_PATH = abs_path("keys.json", "json.keys")
 
-PROFILES_PATH = file_path("color_profiles.json", "json.profiles")
+PROFILES_PATH = abs_path("color_profiles.json", "json.profiles")
 
-LEVEL_PATH = file_path("level_{level}.json", "json.levels")
+LEVEL_PATH = abs_path("level_{level}.json", "json.levels")
 
-LOG_PATH = file_path("thestarthatslays.log")
+LOG_PATH = abs_path("thestarthatslays.log")

@@ -4,6 +4,8 @@ Setup the package.
 
 from setuptools import setup, find_packages
 
+from starslayer.consts.constants import GAME_VERSION
+
 with open("README.md", mode='r', encoding="utf-8") as readme:
 
     project_description = readme.read()
@@ -22,7 +24,7 @@ setup(
                         "sprites/player/*.gif"]
     },
 
-    version="0.0.17",
+    version=GAME_VERSION,
 
     url="https://github.com/NLGS2907/star-slayer",
 

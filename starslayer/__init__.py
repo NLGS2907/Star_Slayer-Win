@@ -2,7 +2,7 @@
 Start the game.
 """
 
-from .lib import gamelib
+from .gamelib import init
 from .main import main
 
-gamelib.init(main)
+init(main)

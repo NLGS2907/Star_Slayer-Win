@@ -5,31 +5,33 @@ Characters Module. For storing playable characters
 
 from typing import Optional
 
-from ..utils.utils import _Entity
-from ..constants.consts import WIDTH, HEIGHT, GUI_SPACE
+from ..utils import HitBox
+from ..consts import WIDTH, HEIGHT, GUI_SPACE
 
 ShipVariable = Optional[int | str]
 ShipDict = dict[str, ShipVariable]
 
-class Ship(_Entity):
+
+class Entity(HitBox):
     """
     Class for defining a ship that
     moves on the screen.
     """
 
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: ShipDict) -> None:
+    def __init__(self, **kwargs: ShipDict) -> None:
         """
         Initializes an instance of type 'Ship'.
         """
 
-        super().__init__(x1, y1, x2, y2)
+        super().__init__(**kwargs)
 
-        if self.is_out_bounds(x1, y1, x2, y2):
+        if self.is_out_bounds(self.x1, self.y1, self.x2, self.y2):
 
-            raise ValueError(f"Coordinates ({x1}, {y1}), ({x2}, {y2}) are not valid, as they are outside of the boundaries of the screen")
+            raise ValueError(f"Coordinates {self.upper_left}, {self.bottom_right} are not " +
+                             "valid, as they are outside of the boundaries of the screen")
 
         self.max_hp = kwargs.get("health", 100)
-        self.hp = self.max_hp
+        self.hp = self.max_hp #pylint: disable=invalid-name
         self.hardness = kwargs.get("how_hard", 0)
         self.speed = kwargs.get("speed", 1)
         self.sprites = kwargs.get("texture_path", None)
@@ -40,7 +42,8 @@ class Ship(_Entity):
         Returns a string with class information so it can be printed later.
         """
 
-        return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}"
+        return (f"x1, y1, x2, y2: {self.all_coords} - health: {self.hp} - " +
+                f"hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}")
 
 
     def __repr__(self) -> str:
@@ -48,9 +51,10 @@ class Ship(_Entity):
         Returns a string with class information so it can be parsed 'as is' later.
         """
 
-        return f"x1, y1, x2, y2: {self.x1}, {self.y1}, {self.x2}, {self.y2} - health: {self.hp} - hardness: {self.hardness} - speed: {self.speed} - sprites: {self.sprites}"
+        return self.__str__()
 
 
+    #pylint: disable=invalid-name
     def is_out_bounds(self, x1: int, y1: int, x2: int, y2: int) -> bool:
         """
         Checks if an _Entity is out of the bounds of the screen.
@@ -71,7 +75,7 @@ class Ship(_Entity):
         return self.hp <= 0
 
 
-    def collides_with(self, other: "Ship") -> bool:
+    def collides_with(self, other: "Entity") -> bool:
         """
         Tests if the hitbox of the ship is colliding with another given one. Returns a boolean.
 
@@ -85,7 +89,7 @@ class Ship(_Entity):
             if other.x1 < self.x1 < other.x2:
 
                 return True
-                
+
             # Test Upper-Right Corner
             if other.x1 < self.x2 < other.x2:
 
@@ -109,7 +113,8 @@ class Ship(_Entity):
 
     def transfer(self, dx: int, dy: int) -> None:
         """
-        Changes ship coordinates from '(x1, y1), (x2, y2)' to '(x1 + dx, y1 + dy), (x2 + dx, y2 + dy)'.
+        Changes ship coordinates from '(x1, y1), (x2, y2)' to
+        '(x1 + dx, y1 + dy), (x2 + dx, y2 + dy)'.
         """
 
         self.x1 += dx
@@ -131,5 +136,4 @@ class Ship(_Entity):
             return False
 
         self.transfer(dx, dy)
-
-        return True   
+        return True

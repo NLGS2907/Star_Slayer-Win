@@ -3,19 +3,29 @@ Logics Module. Its purpose is to control the logic behaviour
 of the game.
 """
 
-from typing import Optional
+from typing import List, Optional
 
-from ..bullets import bullets
+from starslayer.scene.profilescene import ProfileScene
 
-from ..utils import utils
+from ..bullets import Bullet, BulletNormalAcc, BulletSinusoidalSimple
+from ..characters import Entity
+from ..consts import (EXITING_DELAY, HEIGHT, KEYS_PATH, PLAYER_DAMAGED_SPRITE,
+                      PLAYER_SPRITE, PROFILES_PATH, WIDTH)
+from ..enemies import Enemy
+from ..files import (LevelDict, ProfilesDict, StrDict, list_actions,
+                     list_profiles, list_repeated_keys, load_json, map_level)
+from ..hooks import HooksGroup
+from ..hooks.groups import Menus
+from ..hooks.groups import Miscellaneous as Misc
+from ..hooks.groups import Movements
+from ..logger import GameLogger
+from ..scene import (ControlScene, InGameScene, MainScene, OptionScene, Scene,
+                     SceneDict)
+from ..selector import ColorSelector
+from ..utils import Menu, Timer
 
-from ..enemies.enemies import _Enemy, enemy_types, EnemyCommonA
-from ..characters.characters import Ship
-from ..files.files import LevelDict, StrDict, ProfilesDict, load_json, list_profiles, list_actions, list_attributes, list_repeated_keys, map_level
-from ..selector.selector import ColorSelector, CoordsTuple
-from ..constants.consts import HEIGHT, KEYS_PATH, PLAYER_DAMAGED_SPRITE, PLAYER_SPRITE, PROFILES_CHANGER, PROFILES_DELETER, PROFILES_PATH, SUB_MENU_LEFT, SUB_MENU_RIGHT, WIDTH
-
-corners_tuple = tuple[int | float, int | float, int | float, int | float]
+CornersTuple = tuple[int | float, int | float, int | float, int | float]
+TimerDict = dict[str, Timer]
 
 
 class Game:
@@ -23,7 +33,7 @@ class Game:
     Class for the Game itself.
     """
 
-    def __init__(self, initial_power: int=1, cooldown_constant: int=30) -> None:
+    def __init__(self, *_args, **kwargs) -> None:
         """
         Initalizes an instance of type 'Game'.
         """
@@ -31,78 +41,227 @@ class Game:
         # Level Parameters
         self.game_level: int = 1
         self.level_dict: LevelDict = map_level(1)
-        self.level_timer: utils.Timer = utils.Timer(int(self.level_dict.pop("total_time")))
 
         # Player Parameters
-        self.player: Ship = Ship((WIDTH // 2) - 30, int(HEIGHT / 1.17) - 30, (WIDTH // 2) + 30, int(HEIGHT / 1.17) + 30,
-                                    how_hard=1, speed=5, texture_path=(PLAYER_SPRITE, PLAYER_DAMAGED_SPRITE))
-        self.power_level: int = initial_power
+        self.player: Entity = Entity(x1=(WIDTH // 2) - 30,
+                                 y1=int(HEIGHT / 1.17) - 30,
+                                 x2=(WIDTH // 2) + 30,
+                                 y2=int(HEIGHT / 1.17) + 30,
+                                 how_hard=1,
+                                 speed=5,
+                                 texture_path=(PLAYER_SPRITE, PLAYER_DAMAGED_SPRITE))
+        self.power_level: int = kwargs.get("initial_power", 1)
 
         # Color Profiles
         self.color_profiles: ProfilesDict = load_json(PROFILES_PATH)
-        self._color_theme: list[str] = list_profiles(self.color_profiles)[0]
+        self._color_theme: List[str] = list_profiles(self.color_profiles)[0]
         self.color_profile: StrDict = self.color_profiles[self._color_theme]
 
-
-        # Menu Related
-        self.generate_menus()
-
-        self._menu_in_display: utils.Menu = self.main_menu
-
         # Sub-menu related
-        self.action_to_show: str = list_actions()[0]
-        self.sub_menu: Optional[utils.Menu] = None
+        self.action_to_show: str = list_actions(load_json(KEYS_PATH))[0]
+        self.sub_menu: Optional[Menu] = None
 
         # Timers
-        self.cool_cons: int = cooldown_constant
-        self.invulnerability: utils.Timer = utils.Timer(50 + (self.power_level * 5))
-        self.shooting_cooldown: utils.Timer = utils.Timer(self.cool_cons // self.power_level)
-        self.debug_cooldown: utils.Timer = utils.Timer(20)
-        
-        # Enemies, Misc
-        self.enemies: list[_Enemy] = []
-        self.bullets: list[bullets._Bullet] = []
+        self.cool_cons: int = kwargs.get("cooldown_constant", 30)
+        self.timers: TimerDict = {"invulnerability": Timer(50 + (self.power_level * 5)),
+                                  "shooting_cooldown": Timer(self.cool_cons // self.power_level),
+                                  "debug_cooldown": Timer(20),
+                                  "level_timer": Timer(int(self.level_dict.pop("total_time")))}
+        self.special_timers: TimerDict = {"exiting_cooldown": Timer(EXITING_DELAY)}
 
-        # Control Booleans
-        self.is_in_game: bool = False
+        # Enemies, Misc
+        self.enemies: List[Enemy] = []
+        self.bullets: List[Bullet] = []
+
+        # Control Attributes
+        self.is_on_prompt: bool = False
+        # self.is_in_game: bool = False
         self.show_debug_info: bool = False
+        self.show_about: bool = False
+        self.is_on_prompt: bool = False
+        self.exiting: bool = False
+        self.exit: bool = False
 
         # Selector
-        self.generate_color_selector()
+        self.color_selector = self.generate_color_selector()
         self.attribute_to_edit: Optional[str] = None
 
+        # Actions
+        self.__hooks_groups: List[HooksGroup] = []
+        self.add_group(Movements(self))
+        self.add_group(Menus(self))
+        self.add_group(Misc(self))
 
-    def generate_menus(self) -> None:
+        # Scenes Related
+        self.scenes: SceneDict = {}
+        self.current_scene: Optional[Scene] = None
+
+        mainscene = MainScene()
+        optionscene = OptionScene(parent=mainscene)
+        controlscene = ControlScene(parent=optionscene)
+        profilescene = ProfileScene(parent=optionscene)
+        ingamescene = InGameScene(parent=mainscene)
+        self.add_scene(mainscene)
+        self.add_scene(optionscene)
+        self.add_scene(controlscene)
+        self.add_scene(profilescene)
+        self.add_scene(ingamescene)
+
+
+    @staticmethod
+    def process_key(key: str) -> str:
         """
-        Generates all of the Menus of the game.
+        Reads which key was pressed, and returns its corresponding action.
+        The key is guaranteed to already exist it the json file.
         """
 
-        main_x1: int = int(WIDTH / 3.75)
-        main_y1: int = int(HEIGHT / 2)
-        main_x2: int = int(WIDTH / 1.363636)
-        main_y2: int = int(HEIGHT / 1.076923)
-        main_coords: CoordsTuple = (main_x1, main_y1, main_x2, main_y2)
+        return load_json(KEYS_PATH).get(key)
 
-        # Menus
-        main_menu: utils.Menu = utils.Menu(["Play", "Options", "About", "Exit"],
-                                      main_coords)
 
-        options_menu: utils.Menu = utils.Menu(["Configure Controls", "Edit Color Profiles"],
-                                         main_coords,
-                                         max_rows=4, parent_menu=main_menu)
+    def add_group(self, new_group: HooksGroup) -> None:
+        """
+        Adds new group to internal actions groups list.
+        """
 
-        controls_menu: utils.Menu = utils.Menu(list_actions(),
-                                        ((WIDTH // 75), (HEIGHT // 5), int(WIDTH / 4.237288), int(HEIGHT / 1.014492)),
-                                        max_rows=8, parent_menu=options_menu)
+        self.__hooks_groups.append(new_group)
 
-        profiles_menu: utils.Menu = utils.Menu(list_profiles(self.color_profiles) + ["+"],
-                                        (int(WIDTH / 1.25), int(HEIGHT / 5.185185), int(WIDTH / 1.013513), int(HEIGHT / 1.076923)),
-                                        max_rows=10, special_btn_on_right=False, parent_menu=options_menu)
 
-        setattr(self, "main_menu", main_menu)
-        setattr(self, "options_menu", options_menu)
-        setattr(self, "controls_menu", controls_menu)
-        setattr(self, "profiles_menu", profiles_menu)
+    def delete_group(self, group: HooksGroup) -> Optional[HooksGroup]:
+        """
+        Deletes an action group.
+        If it finds it, it returns such group.
+        """
+
+        group_to_return = None
+
+        if group in self.__hooks_groups:
+
+            group_to_return = group
+            self.__hooks_groups.remove(group)
+
+        return group_to_return
+
+
+    def add_scene(self, new_scene: Scene) -> None:
+        """
+        Adds a new scene to the game.
+        """
+
+        if not self.current_scene:
+            self.current_scene = new_scene
+
+        self.scenes[new_scene.id] = new_scene
+        new_scene.resfresh_sub_menus(self) # One initial refresh
+
+
+    def remove_scene(self, scene: Scene) -> Optional[Scene]:
+        """
+        Removes and returns a scene of the game, if available.
+        """
+
+        if self.current_scene == scene:
+            self.current_scene = None
+
+        return self.scenes.pop(scene.id, None)
+
+
+    def change_scene(self, scene_id: str) -> None:
+        """
+        Searches for a scene name id. If it finds it,
+        the current scene is replaced.
+        """
+
+        scene = self.scenes.get(scene_id, None)
+
+        if scene:
+
+            self.current_scene = scene
+
+
+    def execute_action(self, action: str) -> None:
+        """
+        Executes one specified action.
+        """
+
+        for group in self.__hooks_groups:
+
+            group.execute_act(action)
+
+
+    # pylint: disable=invalid-name
+    def execute_button(self, x: int, y: int) -> None:
+        """
+        Tries to execute a button handler.
+        """
+
+        if self.current_scene and self.current_scene.execute_button(self, x, y):
+            # There should be only one button in all of the
+            # scenes that coincides with these coords
+            return
+
+
+    @property
+    def log(self) -> GameLogger:
+        """
+        Returns the game logger.
+        """
+
+        return GameLogger()
+
+
+    @property
+    def is_in_game(self) -> bool:
+        """
+        Checks if the game is the playable area or not.
+        """
+
+        return self.current_scene == self.scenes.get("scene-in-game", "-= not-in-game =-")
+
+
+    @property
+    def invulnerability(self) -> Timer:
+        """
+        Returns the invulnerability the player has,
+        after it has received damage.
+        """
+
+        return self.timers.get("invulnerability")
+
+
+    @property
+    def shooting_cooldown(self) -> Timer:
+        """
+        Returns the cooldown to shoot again.
+        """
+
+        return self.timers.get("shooting_cooldown")
+
+
+    @property
+    def debug_cooldown(self) -> Timer:
+        """
+        Returns the cooldown for showing debug messages.
+        """
+
+        return self.timers.get("debug_cooldown")
+
+
+    @property
+    def level_timer(self) -> Timer:
+        """
+        Returns the timer of the current level.
+        """
+
+        return self.timers.get("level_timer")
+
+
+    @property
+    def exiting_cooldown(self) -> Timer:
+        """
+        Returns the timer fot exiting the game.
+        """
+
+        return self.special_timers.get("exiting_cooldown")
 
 
     @property
@@ -128,90 +287,54 @@ class Game:
             self.color_profile = self.color_profiles[real_name]
 
 
-    @property
-    def current_menu(self) -> Optional[utils.Menu]:
+    def check_scene(self, name_id: str) -> bool:
         """
-        Returns the current menu in display.
-        """
-
-        return self._menu_in_display
-
-
-    @current_menu.setter
-    def current_menu(self, new_menu: Optional[utils.Menu]=None) -> None:
-        """
-        Changes the current menu in display for the one passed as an argument.
+        Checks if a given scene is present in the game and is the
+        current one showing.
         """
 
-        self._menu_in_display = new_menu
-
-        if new_menu is self.controls_menu:
-
-            self.refresh_controls_sub_menu()
-
-        elif new_menu is self.profiles_menu:
-
-            self.refresh_profiles_sub_menu()
+        return (name_id in self.scenes) and (self.current_scene == self.scenes[name_id])
 
 
-    def refresh_controls_sub_menu(self, corners: corners_tuple=SUB_MENU_RIGHT) -> None:
+    def go_prompt(self) -> None:
         """
-        Refreshes a mini menu made of buttons of the keys of the action to show.
-        It then returns it, to be assigned elsewhere.
+        Sets the 'is_on_prompt' attribute to 'True' so that the
+        next iteration, the program prompts the user for interaction.
         """
 
-        if not len(corners) == 4:
-            raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
-
-        repeated_keys = list_repeated_keys(self.action_to_show, load_json(KEYS_PATH))
-        changeable_keys = []
-
-        for key in repeated_keys:
-
-            if not key: continue
-
-            changeable_keys.append(f"Delete {key}")
-
-        changeable_keys.append("Add Key")
-
-        sub_menu: utils.Menu = utils.Menu.sub_menu(changeable_keys, corners,
-                                   how_many_columns=2, space_between=20)
-
-        setattr(self, "sub_menu", sub_menu)
+        self.is_on_prompt = True
 
 
-    def refresh_profiles_sub_menu(self, corners: corners_tuple=SUB_MENU_LEFT) -> None:
+    def prompt(self, *args, **kwargs) -> None:
         """
-        Refreshes a mini menu where are stored the profiles of the game.
+        Processes the action to prompt the user.
         """
 
-        if not len(corners) == 4:
-
-            raise ValueError(f"corners has {len(corners)} values. It must be 4 integers or floats.")
-
-        profile_atts = [PROFILES_CHANGER, PROFILES_DELETER] + list_attributes(self.color_profile)
-
-        sub_menu: utils.Menu = utils.Menu.sub_menu(profile_atts, corners,
-                                   max_rows=7, how_many_columns=2, space_between_x=20, space_between_y=15, button_anchor='w', special_btn_on_right=False)
-
-        setattr(self, "sub_menu", sub_menu)
+        kwargs.update({"game": self})
+        self.current_scene.prompt(*args, **kwargs)
 
 
-    def generate_color_selector(self) -> None:
+    def generate_color_selector(self) -> ColorSelector:
         """
         Generates and assigns the color selector of the game.
         """
 
         aux_x = (WIDTH // 75)
-        aux_y = (HEIGHT // 70) 
+        aux_y = (HEIGHT // 70)
 
-        x1, y1, x2, y2 = ((WIDTH // 15), (HEIGHT * 0.065714), (WIDTH * 0.866666), (HEIGHT * 0.928571))
-        palette_corners = (x1 + aux_x, y1 + aux_y, x2 - aux_x, y1 + ((y2 - y1) / 2))
-        color_selector: ColorSelector = ColorSelector(area=(x1, y1, x2, y2),
-                                                     palette_area=palette_corners,
-                                                     rows=20, cols=30)
+        area_x1, area_y1, area_x2, area_y2 = ((WIDTH // 15),
+                                              (HEIGHT * 0.065714),
+                                              (WIDTH * 0.866666),
+                                              (HEIGHT * 0.928571))
+        palette_corners = (area_x1 + aux_x,
+                           area_y1 + aux_y,
+                           area_x2 - aux_x,
+                           area_y1 + ((area_y2 - area_y1) / 2))
+        color_selector: ColorSelector = ColorSelector(area=(area_x1, area_y1, area_x2, area_y2),
+                                                      palette_area=palette_corners,
+                                                      rows=20, cols=30)
 
-        setattr(self, "color_selector", color_selector)
+        return color_selector
 
 
     def level_up(self, how_much: int=1) -> None:
@@ -221,7 +344,7 @@ class Game:
 
         self.game_level += how_much
         self.level_dict = map_level(self.game_level)
-        self.level_timer = utils.Timer(int(self.level_dict.pop("total_time")))
+        self.level_timer = Timer(int(self.level_dict.pop("total_time")))
 
 
     def power_up(self, how_much: int=1) -> None:
@@ -244,21 +367,39 @@ class Game:
 
             case 1:
 
-                self.bullets.append(bullets.BulletNormalAcc(player_center_x - 5, self.player.y1 + 30, player_center_x + 5, self.player.y1 + 20,
-                                    how_hard=self.player.hardness, speed=2))
+                self.bullets.append(BulletNormalAcc(x1=player_center_x - 5,
+                                                    y1=self.player.y1 + 30,
+                                                    x2=player_center_x + 5,
+                                                    y2=self.player.y1 + 20,
+                                                    how_hard=self.player.hardness,
+                                                    speed=2))
 
             case 2:
 
-                self.bullets.append(bullets.BulletSinusoidalSimple(player_center_x - 5, self.player.y1 + 30, player_center_x + 5, self.player.y1 + 20,
-                                    how_hard=self.player.hardness, speed=3, first_to_right=True))
+                self.bullets.append(BulletSinusoidalSimple(x1=player_center_x - 5,
+                                                           y1=self.player.y1 + 30,
+                                                           x2=player_center_x + 5,
+                                                           y2=self.player.y1 + 20,
+                                                           how_hard=self.player.hardness,
+                                                           speed=3,
+                                                           first_to_right=True))
 
             case 3:
 
-                self.bullets.append(bullets.BulletSinusoidalSimple(player_center_x - 15, self.player.y1 + 30, player_center_x -5, self.player.y1 + 20,
-                                    how_hard=self.player.hardness, speed=3, first_to_right=True))
-
-                self.bullets.append(bullets.BulletSinusoidalSimple(player_center_x + 5, self.player.y1 + 30, player_center_x + 15, self.player.y1 + 20,
-                                    how_hard=self.player.hardness, speed=3, first_to_right=False))
+                self.bullets.append(BulletSinusoidalSimple(x1=player_center_x - 15,
+                                                           y1=self.player.y1 + 30,
+                                                           x2=player_center_x -5,
+                                                           y2=self.player.y1 + 20,
+                                                           how_hard=self.player.hardness,
+                                                           speed=3,
+                                                           first_to_right=True))
+                self.bullets.append(BulletSinusoidalSimple(x1=player_center_x + 5,
+                                                           y1=self.player.y1 + 30,
+                                                           x2=player_center_x + 15,
+                                                           y2=self.player.y1 + 20,
+                                                           how_hard=self.player.hardness,
+                                                           speed=3,
+                                                           first_to_right=False))
 
 
     def exec_bul_trajectory(self) -> None:
@@ -296,7 +437,7 @@ class Game:
         """
 
         for enem in self.enemies:
-            
+
             if enem.collides_with(self.player):
 
                 if self.invulnerability.is_zero_or_less():
@@ -304,7 +445,7 @@ class Game:
                     self.player.hp -= enem.hardness
                     self.invulnerability.reset()
 
-            if enem.has_no_health() or enem.y1 > HEIGHT + 100:
+            if enem.has_no_health() or enem.y1 > (HEIGHT * 1.15):
 
                 self.enemies.remove(enem)
 
@@ -324,9 +465,12 @@ class Game:
 
                 for action in current_instant:
 
-                    enemy_type_to_add = enemy_types.get(action["type"], EnemyCommonA)
+                    enemy_type_to_add = Enemy.types[action["type"]] or Enemy.default
 
-                    self.enemies.append(enemy_type_to_add(int(action["x1"]), int(action["y1"]), int(action["x2"]), int(action["y2"])))
+                    self.enemies.append(enemy_type_to_add(x1=int(action["x1"]),
+                                                          y1=int(action["y1"]),
+                                                          x2=int(action["x2"]),
+                                                          y2=int(action["y2"])))
 
                 break
 
@@ -340,14 +484,15 @@ class Game:
         self.bullets = []
 
 
-    def advance_game(self) -> None:
+    def advance_game(self, keys_dict: dict[str, bool]) -> None:
         """
         This function is that one of a wrapper, and advances the state of the game.
+        It takes a dictionary of the keys pressed to decide if it counts some timers.
         """
 
-        if self.is_in_game:
+        self.refresh_return_timer(keys_dict)
 
-            self.current_menu = None
+        if self.is_in_game:
 
             self.exec_bul_trajectory()
             self.exec_enem_trajectory()
@@ -358,32 +503,45 @@ class Game:
         else:
 
             self.show_debug_info = False
-
-            if not self._menu_in_display.press_cooldown.is_zero_or_less():
-
-                self._menu_in_display.press_cooldown.deduct(1)
+            self.current_scene.press_cooldown.count(1)
 
 
     def refresh_timers(self) -> None:
         """
-        Refreshes all the timers of the game, so that it updates theirs values.
+        Refreshes all the in-game timers of the game, so that it updates theirs values.
         """
 
-        if not self.level_timer.is_zero_or_less():
+        for timer in self.timers.values():
 
-            self.level_timer.deduct(1)
+            timer.count(1)
 
-        if not self.shooting_cooldown.is_zero_or_less():
 
-            self.shooting_cooldown.deduct(1)
+    def reset_timers(self) -> None:
+        """
+        Resets all the in-game timers of the game.
+        """
 
-        if not self.debug_cooldown.is_zero_or_less():
+        for timer in self.timers.values():
 
-            self.debug_cooldown.deduct(1)
+            timer.reset()
 
-        if not self.invulnerability.is_zero_or_less():
 
-            self.invulnerability.deduct(1)
+    def refresh_return_timer(self, keys_dict: dict[str, bool]) -> None:
+        """
+        Refreshes the return timer.
+        """
+
+        exit_correct_keys = list_repeated_keys("EXIT", load_json(KEYS_PATH))
+
+        if any(keys_dict.get(key, False) for key in exit_correct_keys):
+
+            self.exiting = True
+            self.exiting_cooldown.deduct(1 if self.is_in_game else 2)
+
+        else:
+
+            self.exiting = False
+            self.exiting_cooldown.reset()
 
 
     def change_is_in_game(self) -> None:

@@ -5,43 +5,44 @@ different types of bullets.
 
 from typing import Optional
 
-from ..utils.utils import Timer, SpringTimer
-from ..characters.characters import Ship
+from ..utils import Timer, SpringTimer
+from ..characters import Entity
 
 
 BulletKwargs = dict[str, Optional[int | str | bool]]
 
 
-class _Bullet(Ship):
+class Bullet(Entity):
     """
     Class for defining a bullet that is shot
     from a ship, enemy or not.
     """
 
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: BulletKwargs) -> None:
+    def __init__(self, **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'Bullet'.
         """
 
         # Defining default types
+        if kwargs.get("health", None) is None:
 
-        if kwargs.get("health", None) == None: kwargs["health"] = 10
+            kwargs["health"] = 10
 
-        super().__init__(x1, y1, x2, y2, **kwargs)
+        super().__init__(**kwargs)
         self.accel = kwargs.get("acceleration", 1)
 
 
-class BulletNormalAcc(_Bullet):
+class BulletNormalAcc(Bullet):
     """
     A bullet of normal acceleration.
     """
 
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: BulletKwargs) -> None:
+    def __init__(self, **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'BulletNormalAcc'.
         """
 
-        super().__init__(x1, y1, x2, y2, **kwargs)
+        super().__init__(**kwargs)
 
         oscillation_time: int = kwargs.get("oscillation_time", 30)
         self.accel_timer = Timer(oscillation_time)
@@ -59,21 +60,24 @@ class BulletNormalAcc(_Bullet):
         self.transfer(0, -self.speed * self.accel)
 
 
-class BulletSinusoidalSimple(_Bullet):
+class BulletSinusoidalSimple(Bullet):
     """
     A bullet of normal acceleration.
     """
 
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, **kwargs: BulletKwargs) -> None:
+    def __init__(self, **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'BulletSinusoidalSimple'.
         """
 
-        super().__init__(x1, y1, x2, y2, **kwargs)
+        super().__init__(**kwargs)
 
         oscillation_time: int = kwargs.get("oscillation_time", 30)
         first_to_right: bool = kwargs.get("first_to_right", True)
-        self.oscillatation = SpringTimer(-oscillation_time, oscillation_time, (oscillation_time if first_to_right else -oscillation_time))
+        self.oscillatation = SpringTimer(-oscillation_time,
+                                         oscillation_time,
+                                         (oscillation_time if first_to_right
+                                                           else -oscillation_time))
 
 
     def trajectory(self) -> None:

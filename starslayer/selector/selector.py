@@ -3,18 +3,15 @@ Selector Module. This stores a color selector
 that helps the user in picking a color.
 """
 
-from typing import Callable, Optional
-from colorsys import hsv_to_rgb
+from typing import Callable, List, Optional, Tuple
 
-from ..files.files import StrDict
-
-from ..lib.gamelib import input as lib_input, say as lib_say
-from ..utils.utils import ButtonsList, IntTuple, Button
-from ..constants.consts import HEIGHT, WIDTH
-
-CoordsTuple = tuple[int, int]
-ColorsDict = dict[CoordsTuple, str]
-RGBTuple = tuple[int, int, int]
+from ..color import Color
+from ..consts import HEIGHT, WIDTH
+from ..files import StrDict
+from ..gamelib import input as lib_input
+from ..gamelib import say as lib_say
+from ..utils import Button, ButtonsList, IntTuple4
+from ..color import CoordsTuple, ColorsDict
 
 
 class ColorSelector():
@@ -24,8 +21,8 @@ class ColorSelector():
 
     def __init__(self,
                  *,
-                 area: IntTuple,
-                 palette_area: Optional[IntTuple]=None,
+                 area: IntTuple4,
+                 palette_area: Optional[IntTuple4]=None,
                  cols: int=10,
                  rows: int=7,
                  hue_bar_size: int=100) -> None:
@@ -33,7 +30,7 @@ class ColorSelector():
         Creates an instace of 'ColorSelector'.
         """
 
-        self._validate_area(area)        
+        self._validate_area(area)
 
         if not palette_area:
 
@@ -45,7 +42,7 @@ class ColorSelector():
 
         self._validate_areas_boundaries(area, palette_area)
 
-        self.x1, self.y1, self.x2, self.y2 = area
+        self.x1, self.y1, self.x2, self.y2 = area # pylint: disable=invalid-name
         self.p_x1, self.p_y1, self.p_x2, self.p_y2 = palette_area
 
         self.rows: int = rows
@@ -53,21 +50,32 @@ class ColorSelector():
 
         # HSV Attributes
         self._hue_index: int = 0
-        self.generate_hue_bar(hue_bar_size)
 
-        self.generate_colors()
+        # Hue Bar
+        hue_bar: List[str] = []
+        hue = 0.0
+
+        for _ in range(hue_bar_size):
+
+            color = Color.from_hsv(hue * 360, 100, 100)
+
+            hue_bar.append((hue, color))
+            hue += (1.0 / hue_bar_size)
+
+        self.hue_bar: List[Tuple[float, Color]] = hue_bar
+        self.color_palette: ColorsDict = self.generate_colors()
 
         self.selection: CoordsTuple = ((self.cols - 1), 0)
-        self.generate_buttons()
+        self.buttons, self.actions = self.generate_buttons()
 
         # Control Booleans
-        self.is_transparent = False
+        self.is_transparent: bool = False
         self.next: bool = False
         self.exit: bool = False
 
 
     @property
-    def area(self) -> IntTuple:
+    def area(self) -> IntTuple4:
         """
         Returns the coordinates of the selector area.
         """
@@ -76,7 +84,7 @@ class ColorSelector():
 
 
     @property
-    def palette_area(self) -> IntTuple:
+    def palette_area(self) -> IntTuple4:
         """
         Returns the coordinates of the palette area.
         """
@@ -104,6 +112,9 @@ class ColorSelector():
 
     @property
     def hue_index(self) -> int:
+        """
+        Returns the hue index.
+        """
 
         return self._hue_index
 
@@ -111,11 +122,11 @@ class ColorSelector():
     def hue_index(self, new_index: int) -> None:
 
         self._hue_index = new_index
-        self.generate_colors()
+        self.color_palette = self.generate_colors()
 
 
     @property
-    def hue_bar_area(self) -> IntTuple:
+    def hue_bar_area(self) -> IntTuple4:
         """
         Returns the corners of the hue bar area.
         """
@@ -129,7 +140,7 @@ class ColorSelector():
                 self.p_y2 + (7 * aux_y))
 
     @property
-    def inv_color_area(self) -> IntTuple:
+    def inv_color_area(self) -> IntTuple4:
         """
         Returns the corners of the area of a button
         made to select no color.
@@ -150,12 +161,12 @@ class ColorSelector():
         Returns the augment of the hue bar.
         """
 
-        x1, _, x2, _ = self.hue_bar_area
+        x1, _, x2, _ = self.hue_bar_area #pylint: disable=invalid-name
 
         return (x2 - x1) / len(self.hue_bar)
 
 
-    def _validate_16_bit(self, number: int) -> None:
+    def _validate_8_bit(self, number: int) -> None:
         """
         The number must be an integer between 0 and 255.
 
@@ -167,7 +178,7 @@ class ColorSelector():
             raise ValueError(f"Decimal Number '{number}' is not a number between 0 and 255.")
 
 
-    def _validate_area(self, area: IntTuple) -> None:
+    def _validate_area(self, area: IntTuple4) -> None:
         """
         An area must be a tuple of exactly 4 (four) integers.
 
@@ -179,14 +190,14 @@ class ColorSelector():
             raise ValueError(f"area has {len(area)} values. It must be 4 integers or floats.")
 
 
-    def _validate_areas_boundaries(self, larger_area: IntTuple, smaller_area: IntTuple) -> bool:
+    def _validate_areas_boundaries(self, larger_area: IntTuple4, smaller_area: IntTuple4) -> bool:
         """
         The smaller area must always be inside the boundaries of the larger one.
 
         This function returns 'True' if that is the case, otherwise returns 'False'.
         """
 
-        x1, y1, x2, y2 = larger_area
+        x1, y1, x2, y2 = larger_area #pylint: disable=invalid-name
         p_x1, p_y1, p_x2, p_y2 = smaller_area
 
         if any((p_x1 < x1,
@@ -194,10 +205,11 @@ class ColorSelector():
                 x2 < p_x2,
                 y2 < p_y2)):
 
-            raise ValueError(f"Smaller area '{smaller_area}' is not inside the boundaries of the greater area '{larger_area}'.")
+            raise ValueError(f"Smaller area '{smaller_area}' is not inside the boundaries " +
+                             f"of the greater area '{larger_area}'.")
 
 
-    def _validate_hex(self, hex: str) -> bool:
+    def _validate_hex(self, hex_n: str) -> bool:
         """
         Returns 'True' if hex if a string of the pattern
         '#rrggbb'.
@@ -205,10 +217,10 @@ class ColorSelector():
         Otherwise, returns 'False'.
         """
 
-        if not len(hex) == 7 or not hex.startswith('#'):
+        if not len(hex_n) == 7 or not hex_n.startswith('#'):
             return False
 
-        for i in hex[1:]:
+        for i in hex_n[1:]:
 
             if i not in "0123456789abcdefABCDEF":
 
@@ -226,49 +238,15 @@ class ColorSelector():
         return f"#{red:02x}{green:02x}{blue:02x}"
 
 
-    def hex_to_dec(self, hex: str) -> RGBTuple:
-        """
-        Converts the format '#rrggbb' to a string of type
-        '(rr, gg, bb)'.
-        """
-
-        if not self._validate_hex(hex):
-
-            raise ValueError(f"hex number '{hex}' is invalid.")
-
-        dec = []
-
-        for i in range(0, 6, 2):
-
-            hex_number = hex[1:][i:i + 2]
-            dec.append(int(hex_number, 16))
-
-        for dec_number in dec:
-
-            self._validate_16_bit(dec_number)    
-
-        return tuple(dec)
-
-
-    def dec_float_to_int(self, rgb_floats: tuple[float, float, float]) -> RGBTuple:
-        """
-        Converts a tuple of RGB values in float form to its integer variant.
-        """
-
-        return tuple(int(color * 255) for color in rgb_floats)
-
-
-    def generate_colors(self, rows: int=0, cols: int=0) -> None:
+    def generate_colors(self, rows: int=0, cols: int=0) -> ColorsDict:
         """
         Creates the color palette.
         """
 
         if not rows:
-
             rows = self.rows
 
         if not cols:
-
             cols = self.cols
 
         s_augment = 1.0 / cols
@@ -285,42 +263,31 @@ class ColorSelector():
                 hue, _ = self.hue_bar[self.hue_index]
                 saturation = (s_augment * col)
 
-                red, green, blue = self.dec_float_to_int(hsv_to_rgb(hue, saturation, value))
-
-                colors[(col, row)] = self.dec_to_hex(red, green, blue)
-
-        setattr(self, "color_palette", colors)
+                colors[(col, row)] = Color.from_hsv(hue * 360, saturation * 100, value * 100)
 
 
-    def get_selected_color(self) -> str:
+        return colors
+
+
+    def get_selected_color(self) -> Color:
         """
-        Returns a string of type '#rrggbb' which
+        Returns a Color object which
         is the color selected.
         """
 
         return ('' if self.is_transparent else self.color_palette[self.selection])
 
 
-    def generate_hue_bar(self, size) -> None:
+    def get_selected_color_hex(self) -> str:
         """
-        Generates a bar with a lot of possible hue values.
+        Returns a hexadecimal string
+        which is the color selected.
         """
 
-        bar: list[str] = []
-        hue = 0.0
-
-        for _ in range(size):
-
-            red, green, blue = self.dec_float_to_int(hsv_to_rgb(hue, 1.0, 1.0))
-            color = self.dec_to_hex(red, green, blue)
-
-            bar.append((hue, color))
-            hue += (1.0 / size)
-
-        setattr(self, "hue_bar", bar)
+        return ('' if self.is_transparent else self.color_palette[self.selection].hex)
 
 
-    def generate_buttons(self) -> None:
+    def generate_buttons(self) -> tuple[ButtonsList, dict[str, Callable]]:
         """
         Creates the buttons, the function assigned to them,
         and adds everything to dictionaries that contain them.
@@ -333,7 +300,11 @@ class ColorSelector():
         upper = self.y2 - (HEIGHT * 0.078571)
         bottom = self.y2 - (HEIGHT / 70)
 
-        apply_button = Button(self.x2 - (22 * aux), upper, self.x2 - (12 * aux), bottom, "Apply")
+        apply_button = Button(x1=self.x2 - (22 * aux),
+                              y1=upper,
+                              x2=self.x2 - (12 * aux),
+                              y2=bottom,
+                              message="Apply")
         buttons.append(apply_button)
 
         # -------------------------------------------------- #
@@ -342,17 +313,21 @@ class ColorSelector():
             Applies the selected color.
             """
 
-            profile[attribute] = self.get_selected_color()
+            profile[attribute] = self.get_selected_color_hex()
             self.exit_selector()
 
         actions[apply_button.msg] = apply_color
         # -------------------------------------------------- #
 
-        cancel_button = Button(self.x2 - (11 * aux), upper, self.x2 - aux, bottom, "Cancel")
+        cancel_button = Button(x1=self.x2 - (11 * aux),
+                               y1=upper,
+                               x2=self.x2 - aux,
+                               y2=bottom,
+                               message="Cancel")
         buttons.append(cancel_button)
 
         # -------------------------------------------------- #
-        def cancel_selection(profile: StrDict, attribute: str) -> None:
+        def cancel_selection(_profile: StrDict, _attribute: str) -> None:
             """
             Cancel the selection and exit the prompt.
             """
@@ -362,7 +337,11 @@ class ColorSelector():
         actions[cancel_button.msg] = cancel_selection
         # -------------------------------------------------- #
 
-        input_button = Button(self.x1 + aux, upper, self.x1 + (11* aux), bottom, "Input")
+        input_button = Button(x1=self.x1 + aux,
+                              y1=upper,
+                              x2=self.x1 + (11* aux),
+                              y2=bottom,
+                              message="Input")
         buttons.append(input_button)
 
         # -------------------------------------------------- #
@@ -373,7 +352,7 @@ class ColorSelector():
             """
 
             selected_color = lib_input("Please enter a color in hexadecimal format (#rrggbb)")
-            hex = None
+            hex_n = None
 
             if not selected_color:
 
@@ -381,15 +360,15 @@ class ColorSelector():
 
             if self._validate_hex(selected_color):
 
-                hex = selected_color
+                hex_n = selected_color
 
             elif self._validate_hex(f"#{selected_color}"):
 
-                hex = f"#{selected_color}"
+                hex_n = f"#{selected_color}"
 
-            if hex:
+            if hex_n:
 
-                profile[attribute] = hex
+                profile[attribute] = hex_n
                 self.exit_selector()
 
             else:
@@ -399,11 +378,11 @@ class ColorSelector():
         actions[input_button.msg] = input_color
         # -------------------------------------------------- #
 
-        setattr(self, "buttons", buttons)
-        setattr(self, "actions", actions)
+        return buttons, actions
 
 
-    def clicked_inside_area(self, x: int, y: int, area: IntTuple) -> bool:
+    # pylint: disable=invalid-name
+    def clicked_inside_area(self, x: int, y: int, area: IntTuple4) -> bool:
         """
         Returns 'True' if the click coordinates are inside
         the corners of a given area.
@@ -474,11 +453,12 @@ class ColorSelector():
             return
 
         for button in self.buttons:
-
             if button.is_inside(x, y):
-
                 func = self.actions.get(button.msg, None)
-                if func: func(profile, attribute)
+
+                if func:
+                    func(profile, attribute)
+                    break
 
 
     def reset(self) -> None:

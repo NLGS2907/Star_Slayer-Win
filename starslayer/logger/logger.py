@@ -4,21 +4,35 @@ from which is created the objects that logs events
 of the program.
 """
 
-import logging
+from logging import INFO, FileHandler, Formatter, StreamHandler, getLogger
 
-from ..constants.consts import LOG_PATH
+from ..consts import LOG_PATH
 
 
-class GameLogger():
+class GameLogger:
     """
     Class that registers game events.
+    Made with singleton pattern.
     """
+
+    def __new__(cls) -> "GameLogger":
+        """
+        Returns the instance of the class.
+        This one is unique and there can't be duplicates.
+        """
+
+        if not hasattr(cls, "_instance"):
+
+            cls._instance = super(GameLogger, cls).__new__(cls)
+
+        return cls._instance
+
 
     def __init__(self,
                  *,
                  log_name: str="TheStarThatSlays",
-                 log_level: int=logging.INFO,
-                 fmt: str="[ %(asctime)s ] - %(levelname)s - %(message)s",
+                 log_level: int=INFO,
+                 fmt: str="[ %(asctime)s ] [ %(levelname)s ] %(message)s",
                  date_fmt: str="%d-%m-%Y %I:%M:%S %p") -> None:
         """
         Creates an instance of 'GameLogger'.
@@ -26,16 +40,16 @@ class GameLogger():
 
         super().__init__()
 
-        self._format = fmt
-        self._date_fmt = date_fmt
+        self._format: str = fmt
+        self._date_fmt: str = date_fmt
 
-        self._formatter = logging.Formatter(fmt=self._format, datefmt=self._date_fmt)
+        self._formatter = Formatter(fmt=self.format, datefmt=self.date_fmt)
 
-        self.file_handler = logging.FileHandler(filename=LOG_PATH, encoding="utf-8")
-        self.console_handler = logging.StreamHandler()
+        self.file_handler = FileHandler(filename=LOG_PATH, encoding="utf-8")
+        self.console_handler = StreamHandler()
         self.update_formatter()
 
-        self.logger = logging.Logger(name=log_name)
+        self.logger = getLogger(log_name)
         self.logger.setLevel(log_level)
         self.logger.addHandler(self.file_handler)
         self.logger.addHandler(self.console_handler)
@@ -46,17 +60,20 @@ class GameLogger():
         Sets the formatter for every handler that the logger has.
         """
 
-        self.file_handler.setFormatter(self._formatter)
-        self.console_handler.setFormatter(self._formatter)
+        self.file_handler.setFormatter(self.formatter)
+        self.console_handler.setFormatter(self.formatter)
 
 
     @property
-    def formatter(self) -> logging.Formatter:
+    def formatter(self) -> Formatter:
+        """
+        Returns the formatter used.
+        """
 
         return self._formatter
 
     @formatter.setter
-    def formatter(self, new_formatter: logging.Formatter) -> None:
+    def formatter(self, new_formatter: Formatter) -> None:
         """
         Updates automatically the formatter for every handler.
         """
@@ -67,6 +84,9 @@ class GameLogger():
 
     @property
     def format(self) -> str:
+        """
+        Returns the format of the log messages.
+        """
 
         return self._format
 
@@ -75,56 +95,68 @@ class GameLogger():
     def format(self, new_format) -> None:
 
         self._format = new_format
-        self.formatter = logging.Formatter(fmt=self.format, datefmt=self.date_fmt)
+        self.formatter = Formatter(fmt=self.format, datefmt=self.date_fmt)
 
 
     @property
     def date_fmt(self) -> str:
+        """
+        Returns the date format of the log messages.
+        """
 
         return self._date_fmt
 
-    
+
     @date_fmt.setter
     def date_fmt(self, new_date_fmt: str) -> None:
 
         self._date_fmt = new_date_fmt
-        self.formatter = logging.Formatter(fmt=self.format, datefmt=self.date_fmt)
+        self.formatter = Formatter(fmt=self.format, datefmt=self.date_fmt)
 
 
-    def debug(self, message: str) -> None:
+    def debug(self, message: str, *args, **kwargs) -> None:
         """
         Registers an event of level DEBUG.
         """
 
-        self.logger.debug(message)
+        self.logger.debug(message, *args, **kwargs)
 
 
-    def info(self, message: str) -> None:
+    def info(self, message: str, *args, **kwargs) -> None:
         """
         Registers an event of level INFO.
         """
 
-        self.logger.info(message)
+        self.logger.info(message, *args, **kwargs)
 
 
-    def warning(self, message: str) -> None:
+    def warning(self, message: str, *args, **kwargs) -> None:
         """
         Registers an event of level WARNING.
         """
 
-        self.logger.warning(message)
+        self.logger.warning(message, *args, **kwargs)
 
 
-    def error(self, message: str) -> None:
+    def error(self, message: str, *args, **kwargs) -> None:
         """
         Registers an event of level ERROR.
         """
 
-        self.logger.error(message)
+        self.logger.error(message, *args, **kwargs)
 
-    def critical(self, message: str) -> None:
+
+    def critical(self, message: str, *args, **kwargs) -> None:
         """
         Registers an event of level CRITICAL.
         """
 
-        self.logger.critical(message)
+        self.logger.critical(message, *args, **kwargs)
+
+
+    def exception(self, msg, *args, exc_info=True, **kwargs) -> None:
+        """
+        Registers an exception.
+        """
+
+        self.logger.exception(msg, *args, exc_info, **kwargs)

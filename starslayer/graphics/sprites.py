@@ -2,7 +2,7 @@
 Sprites Graphics Module.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from ..gamelib import draw_rectangle
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 # pylint: disable=invalid-name
-def draw_sprite(sprite: "Sprite",
+def draw_sprite(sprite: Optional["Sprite"],
                 x1: float,
                 y1: float,
                 x2: float,
@@ -24,10 +24,22 @@ def draw_sprite(sprite: "Sprite",
     Draws a sprite in the given coordinates.
     """
 
+    if not sprite:
+
+        middle_x = (x2 - x1) // 2
+        middle_y = (y2 - y1) // 2
+
+        draw_rectangle(x1, y1, x1 + middle_x, y1 + middle_y, outline='', fill="#ff00ff")
+        draw_rectangle(x1 + middle_x, y1, x2, y1 + middle_y, outline='', fill="#000000")
+        draw_rectangle(x1, y1 + middle_y, x1 + middle_x, y2, outline='', fill="#000000")
+        draw_rectangle(x1 + middle_x, y1 + middle_y, x2, y2, outline='', fill="#ff00ff")
+
+        return
+
     width = sprite.width
     height = sprite.height
-    x_increment = (x2 - x1) // width
-    y_increment = (y2 - y1) // height
+    x_increment = (x2 - x1) / width
+    y_increment = (y2 - y1) / height
     cur_frame = sprite.current_frame
 
     for i in range(width):

@@ -5,7 +5,7 @@ a message and a designed handler.
 
 from typing import Callable, TYPE_CHECKING, List, Optional
 
-from .generic import HitBox
+from .hitbox import HitBox
 
 if TYPE_CHECKING:
 

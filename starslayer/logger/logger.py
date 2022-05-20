@@ -5,28 +5,21 @@ of the program.
 """
 
 from logging import INFO, FileHandler, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING
 
+from ..auxiliar import Singleton
 from ..consts import LOG_PATH
 
+if TYPE_CHECKING:
 
-class GameLogger:
+    from logging import Logger
+
+
+class GameLogger(metaclass=Singleton):
     """
     Class that registers game events.
     Made with singleton pattern.
     """
-
-    def __new__(cls) -> "GameLogger":
-        """
-        Returns the instance of the class.
-        This one is unique and there can't be duplicates.
-        """
-
-        if not hasattr(cls, "_instance"):
-
-            cls._instance = super(GameLogger, cls).__new__(cls)
-
-        return cls._instance
-
 
     def __init__(self,
                  *,
@@ -49,7 +42,7 @@ class GameLogger:
         self.console_handler = StreamHandler()
         self.update_formatter()
 
-        self.logger = getLogger(log_name)
+        self.logger: "Logger" = getLogger(log_name)
         self.logger.setLevel(log_level)
         self.logger.addHandler(self.file_handler)
         self.logger.addHandler(self.console_handler)

@@ -49,22 +49,6 @@ def is_in_game(inside_game: bool=True) -> ActionHandler:
     return check(in_a_game)
 
 
-# def exists_sub_menu(exists: bool=True) -> ActionHandler:
-#     """
-#     Adds a sub_menu checker.
-#     """
-
-#     def is_sub_menu(game: "Game") -> bool:
-#         """
-#         Checks if there exists a sub-menu in
-#         the current menu in display.
-#         """
-
-#         return bool(game.sub_menu) if exists else not bool(game.sub_menu)
-
-#     return check(is_sub_menu)
-
-
 def can_show_debug() -> ActionHandler:
     """
     Adds a debug checker.

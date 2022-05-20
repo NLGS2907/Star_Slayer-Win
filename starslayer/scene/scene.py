@@ -5,15 +5,20 @@ the content on display.
 
 from typing import TYPE_CHECKING, Dict, List, Optional
 
+from ..sprites import Sprite
 from ..utils import ButtonKwargs, Label, Menu, Timer
-
-MenuList = List[Menu]
-LabelList = List[Label]
-SceneDict = Dict[str, "Scene"]
 
 if TYPE_CHECKING:
 
+    from ..graphics.animations import Animation
     from ..state import Game
+
+MenuList = List[Menu]
+LabelList = List[Label]
+SpriteProperties = Dict[str, int | Sprite]
+SpritesList = List[SpriteProperties]
+AnimationsList = List["Animation"]
+SceneDict = Dict[str, "Scene"]
 
 
 class Scene:
@@ -30,6 +35,10 @@ class Scene:
         self._selected_menu_index: int = -1
         self._menus: MenuList = []
         self._labels: LabelList = []
+        self._sprites: SpritesList = []
+        self._rear_animations: AnimationsList = []
+        self._front_animations: AnimationsList = []
+
         self.parent: Optional["Scene"] = kwargs.get("parent", None)
 
         # Timers
@@ -48,7 +57,7 @@ class Scene:
 
 
     @property
-    #pylint: disable=invalid-name
+    # pylint: disable=invalid-name
     def id(self) -> str:
         """
         Returns the unique name of the scene.
@@ -87,6 +96,35 @@ class Scene:
         return self._labels
 
 
+    @property
+    def sprites(self) -> SpritesList:
+        """
+        Returns all the sprites of the scene.
+        """
+
+        return self._sprites
+
+
+    @property
+    def rear_animations(self) -> AnimationsList:
+        """
+        Returns all the animations in the scene.
+        """
+
+        return self._rear_animations
+
+
+    @property
+    def front_animations(self) -> AnimationsList:
+        """
+        Returns all the front animations in the scene.
+        These ones are special in that they are drawn above
+        everything else.
+        """
+
+        return self._front_animations
+
+
     def add_menu(self, menu: Menu) -> None:
         """
         Adds a new menu to the scene.
@@ -106,13 +144,37 @@ class Scene:
 
         if label:
             self.labels.append(label)
+            return
+
+        self.labels.append(Label(x=kwargs.get("x"),
+                                 y=kwargs.get("y"),
+                                 text=kwargs.get("text", ''),
+                                 **kwargs))
+
+
+    def add_sprite(self, sprite: Optional[Sprite]=None, **kwargs) -> None:
+        """
+        Adds a sprite to the scene.
+        """
+
+        if not sprite:
+            sprite = Sprite(kwargs.get("texture_path"))
+
+        kwargs.update(sprite=sprite)
+        self.sprites.append(kwargs)
+
+
+    def add_animation(self, animation: "Animation", is_front: bool=False) -> None:
+        """
+        Adds an animation to the scene.
+        """
+
+        if is_front:
+            anim_list = self.front_animations
         else:
-            self.labels.append(Label(
-                x=kwargs.get("x"),
-                y=kwargs.get("y"),
-                text=kwargs.get("text", ''),
-                **kwargs
-            ))
+            anim_list = self.rear_animations
+
+        anim_list.append(animation)
 
 
     def change_selection(self, reverse: bool=False) -> None:
@@ -160,3 +222,25 @@ class Scene:
 
         for menu in self.menus:
             menu.refresh_sub_menu(game)
+
+
+    def refresh_hook(self) -> None:
+        """
+        Hook for refreshing the scene. Useful if something is needed
+        to be done every time the scene is in display.
+
+        It must be overriden to be used.
+        """
+
+        return None
+
+
+    def reset_hook(self) -> None:
+        """
+        Hook for resetting the scene. If the current scene is changed,
+        this will be called to clean up what would be needed.
+
+        It must be overriden to be used.
+        """
+
+        return None

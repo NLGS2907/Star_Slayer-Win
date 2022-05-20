@@ -25,7 +25,15 @@ class Sprite:
         'folder_path' should be a folder path relative to the 'textures' package.
         """
 
-        realpath = abs_path(folder_path, "textures")
+        subpackage, *name = folder_path.rsplit('/', 1)
+        if not name:
+            name = subpackage
+            subpackage = None
+        else:
+            name = name[0]
+            subpackage = subpackage.replace('/', '.')
+
+        realpath = abs_path(name, ("textures" + (f".{subpackage}" if subpackage else '')))
 
         if not isdir(realpath):
             raise ValueError(f"'{folder_path}' is not a directory.")
@@ -85,7 +93,8 @@ class Sprite:
                             else:
                                 rgba[i] = int(comp)
 
-                        if all(rgba):
+                        alpha = rgba[3]
+                        if alpha and (alpha > 0):
                             red, green, blue, alpha = rgba
                             color = Color(red, green, blue, int(alpha / 255 * 100))
                         else:

@@ -25,7 +25,7 @@ def draw_menu_buttons(game: "Game", menu: "Menu") -> None:
 
     for button in menu.buttons_on_screen:
 
-        draw_button_hitbox(game, button)
+        draw_button_hitbox(game, menu, button)
 
         if not button.msg:
             continue

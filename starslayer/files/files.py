@@ -11,14 +11,12 @@ from os.path import join as path_join
 from os.path import splitext
 from typing import List, Optional
 
-from ..consts import DEFAULT_THEME, LEVEL_PATH
+from ..consts import DEFAULT_THEME
 
 StrDict = dict[str, str]
 ProfilesDict = dict[str, StrDict]
-LevelList = List[str | int]
-LevelDict = dict[str, int | LevelList]
 
-GameDict = StrDict | ProfilesDict | LevelDict
+GameDict = StrDict | ProfilesDict
 
 
 def load_json(file_name: str) -> GameDict:
@@ -84,15 +82,6 @@ def list_attributes(profile_dict: StrDict) -> List[str]:
     """
 
     return list(profile_dict)
-
-
-def map_level(game_level: int) -> LevelDict:
-    """
-    Defines a dictionary with all the variables a level should have.
-    """
-
-    level_dict = load_json(LEVEL_PATH.format(level=game_level))
-    return level_dict
 
 
 def check_ext(path: str, ext: str) -> bool:

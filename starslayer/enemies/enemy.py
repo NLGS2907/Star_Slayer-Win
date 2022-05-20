@@ -4,7 +4,7 @@ Generic Enemy class module.
 
 from abc import ABC, abstractmethod
 
-from ..characters import Entity
+from ..entity import Entity
 
 
 class Enemy(Entity, ABC):

@@ -5,29 +5,12 @@ Gmaeplay Graphics Module.
 from typing import TYPE_CHECKING
 
 from ..auxiliar import get_color
-from ..characters import Entity
-from ..consts import HEIGHT, WIDTH
-from ..gamelib import draw_image, draw_line, draw_oval, draw_rectangle
+from ..consts import DEBUG_LINES, DEBUG_TEXT, HEIGHT, WIDTH
+from ..gamelib import draw_line, draw_oval, draw_text
 
 if TYPE_CHECKING:
 
     from ..state import Game
-
-
-def draw_ship(game: "Game", ship: Entity, which_one: int=0) -> None:
-    """
-    Draws the sprite of a ship.
-
-    'which_one' refers to which frame to draw.
-    """
-
-    if ship.sprites is None:
-
-        draw_rectangle(ship.x1, ship.y1, ship.x2, ship.y2, fill=get_color(game, "DEBUG_LINES_1"))
-
-    else:
-
-        draw_image(ship.sprites[which_one], ship.x1, ship.y1)
 
 
 def draw_bullets(game: "Game") -> None:
@@ -151,3 +134,71 @@ def draw_debug_lines(game: "Game") -> None:
               player.x2,
               player.y2 - (aux * 2),
               fill=get_color(game, "DEBUG_LINES_1"))
+
+
+def draw_debug_info(game: "Game") -> None:
+    """
+    Draws debug information about the current game.
+    """
+
+    player = game.player
+    debug_cons = (HEIGHT // 70)
+
+    settings = {"player_x1": f"{player.x1:.2f}",
+               "player_y1": f"{player.y1:.2f}",
+               "player_x2": f"{player.x2:.2f}",
+               "player_y2": f"{player.y2:.2f}",
+
+               "hitbox_center": player.center,
+               "shooting_cooldown": ("Ready!" if game.shooting_cooldown.is_zero_or_less()
+                                     else game.shooting_cooldown.current_time),
+               "inv_cooldown": ("Ready!" if game.invulnerability.is_zero_or_less()
+                                else game.invulnerability.current_time),
+
+               "level_time": f"{game.level_time.current_time:.2f}",
+               "power_level": game.power_level.name,
+
+               "health": game.player.hp,
+               "hardness": game.player.hardness,
+               "speed": game.player.speed,
+
+               "enemies": len(game.enemies),
+               "bullets": len(game.bullets)}
+
+    debug_text = DEBUG_TEXT.format(**settings)
+
+    draw_text(debug_text,
+              debug_cons,
+              debug_cons,
+              size=debug_cons,
+              fill=get_color(game, "TEXT_COLOR_1"),
+              anchor="nw")
+
+    if not DEBUG_LINES:
+        return
+
+    draw_debug_lines(game)
+
+    aux = (WIDTH // 30)
+
+    for bullet in game.bullets:
+
+        x, y = bullet.center # pylint: disable=invalid-name
+        draw_line(x, y - aux,
+                  x, y + aux,
+                  fill=get_color(game, "DEBUG_LINES_2"))
+        draw_line(x - aux, y,
+                  x + aux, y,
+                  fill=get_color(game, "DEBUG_LINES_2"))
+
+    for enem in game.enemies:
+
+        aux2 = int(aux * 1.67)
+
+        x, y = enem.center # pylint: disable=invalid-name
+        draw_line(x, y - aux2, x,
+                  y + aux2,
+                  fill=get_color(game, "DEBUG_LINES_2"))
+        draw_line(x - aux2,
+                  y, x + aux2,
+                  y, fill=get_color(game, "DEBUG_LINES_2"))

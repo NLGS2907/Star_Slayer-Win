@@ -3,15 +3,18 @@ Selector Module. This stores a color selector
 that helps the user in picking a color.
 """
 
-from typing import Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 
-from ..color import Color
+from ..color import Color, ColorsDict, CoordsTuple
 from ..consts import HEIGHT, WIDTH
 from ..files import StrDict
 from ..gamelib import input as lib_input
 from ..gamelib import say as lib_say
-from ..utils import Button, ButtonsList, IntTuple4
-from ..color import CoordsTuple, ColorsDict
+from ..utils import Button, ButtonsList, FloatTuple4
+
+if TYPE_CHECKING:
+
+    from ..utils import ButtonKwargs
 
 
 class ColorSelector():
@@ -21,8 +24,8 @@ class ColorSelector():
 
     def __init__(self,
                  *,
-                 area: IntTuple4,
-                 palette_area: Optional[IntTuple4]=None,
+                 area: FloatTuple4,
+                 palette_area: Optional[FloatTuple4]=None,
                  cols: int=10,
                  rows: int=7,
                  hue_bar_size: int=100) -> None:
@@ -75,7 +78,7 @@ class ColorSelector():
 
 
     @property
-    def area(self) -> IntTuple4:
+    def area(self) -> FloatTuple4:
         """
         Returns the coordinates of the selector area.
         """
@@ -84,7 +87,7 @@ class ColorSelector():
 
 
     @property
-    def palette_area(self) -> IntTuple4:
+    def palette_area(self) -> FloatTuple4:
         """
         Returns the coordinates of the palette area.
         """
@@ -126,7 +129,7 @@ class ColorSelector():
 
 
     @property
-    def hue_bar_area(self) -> IntTuple4:
+    def hue_bar_area(self) -> FloatTuple4:
         """
         Returns the corners of the hue bar area.
         """
@@ -140,7 +143,7 @@ class ColorSelector():
                 self.p_y2 + (7 * aux_y))
 
     @property
-    def inv_color_area(self) -> IntTuple4:
+    def inv_color_area(self) -> FloatTuple4:
         """
         Returns the corners of the area of a button
         made to select no color.
@@ -178,7 +181,7 @@ class ColorSelector():
             raise ValueError(f"Decimal Number '{number}' is not a number between 0 and 255.")
 
 
-    def _validate_area(self, area: IntTuple4) -> None:
+    def _validate_area(self, area: FloatTuple4) -> None:
         """
         An area must be a tuple of exactly 4 (four) integers.
 
@@ -190,7 +193,7 @@ class ColorSelector():
             raise ValueError(f"area has {len(area)} values. It must be 4 integers or floats.")
 
 
-    def _validate_areas_boundaries(self, larger_area: IntTuple4, smaller_area: IntTuple4) -> bool:
+    def _validate_areas_boundaries(self, larger_area: FloatTuple4, smaller_area: FloatTuple4) -> bool:
         """
         The smaller area must always be inside the boundaries of the larger one.
 
@@ -308,10 +311,14 @@ class ColorSelector():
         buttons.append(apply_button)
 
         # -------------------------------------------------- #
-        def apply_color(profile: StrDict, attribute: str) -> None:
+        def apply_color(profile: StrDict, attribute: str, **kwargs: "ButtonKwargs") -> None:
             """
             Applies the selected color.
             """
+
+            mouse_btn = kwargs.get("mouse_button")
+            if not mouse_btn == 1: # Left Click
+                return
 
             profile[attribute] = self.get_selected_color_hex()
             self.exit_selector()
@@ -327,10 +334,14 @@ class ColorSelector():
         buttons.append(cancel_button)
 
         # -------------------------------------------------- #
-        def cancel_selection(_profile: StrDict, _attribute: str) -> None:
+        def cancel_selection(_profile: StrDict, _attribute: str, **kwargs: "ButtonKwargs") -> None:
             """
             Cancel the selection and exit the prompt.
             """
+
+            mouse_btn = kwargs.get("mouse_button")
+            if not mouse_btn == 1: # Left Click
+                return
 
             self.exit_selector()
 
@@ -345,11 +356,15 @@ class ColorSelector():
         buttons.append(input_button)
 
         # -------------------------------------------------- #
-        def input_color(profile: StrDict, attribute: str) -> None:
+        def input_color(profile: StrDict, attribute: str, **kwargs: "ButtonKwargs") -> None:
             """
             Prompts the user for a box where they input a custom color in the Pattern
             '#rrggbb' or 'rrggbb'.
             """
+
+            mouse_btn = kwargs.get("mouse_button")
+            if not mouse_btn == 1: # Left Click
+                return
 
             selected_color = lib_input("Please enter a color in hexadecimal format (#rrggbb)")
             hex_n = None
@@ -382,7 +397,7 @@ class ColorSelector():
 
 
     # pylint: disable=invalid-name
-    def clicked_inside_area(self, x: int, y: int, area: IntTuple4) -> bool:
+    def clicked_inside_area(self, x: int, y: int, area: FloatTuple4) -> bool:
         """
         Returns 'True' if the click coordinates are inside
         the corners of a given area.
@@ -421,7 +436,12 @@ class ColorSelector():
         return int((px_x - hue_x1) / self.hue_augment)
 
 
-    def click(self, x: int, y: int, profile: StrDict, attribute: str) -> None:
+    def click(self,
+              x: int,
+              y: int,
+              profile: StrDict,
+              attribute: str,
+              **kwargs: "ButtonKwargs") -> None:
         """
         Processes the click and executes the logic of a
         button, were the coordinates (x, y) inside of
@@ -457,7 +477,7 @@ class ColorSelector():
                 func = self.actions.get(button.msg, None)
 
                 if func:
-                    func(profile, attribute)
+                    func(profile, attribute, **kwargs)
                     break
 
 

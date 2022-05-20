@@ -1,0 +1,46 @@
+@startuml Starslayer Powerup System
+
+abstract class Bullet {
+    + accel: int = 1
+    {abstract} + trajectory(): None
+}
+
+interface PlayableChracter {
+    + shoot_simple_bullets(bullets: Bullet[0..*]): None
+    + shoot_super_bullets(bullets: Bullet[0..*]): None
+    + shoot_ultra_bullets(bullets: Bullet[0..*]): None
+    + shoot_mega_bullets(bullets: Bullet[0..*]): None
+    + shoot_hyper_bullets(bullets: Bullet[0..*]): None
+}
+
+PlayableChracter .up.> Bullet
+
+class StarSlayerChracter implements PlayableChracter
+class BilbyTankaChracter implements PlayableChracter
+class ViperDodgerChracter implements PlayableChracter
+
+interface PowerLevel {
+    + shoot_bullets(player: PlayableCharacter, bullets: Bullet[0..*]): None
+    + next_level(): Optional[PlayableCharacter]
+    + cooldown(): int
+    + invulnerability(): int
+    + name(): str
+}
+
+PowerLevel .down.> PlayableChracter
+PowerLevel .left.> Bullet
+
+class SimplePower {
+    + shoot_bullets(player: PlayableCharacter, bullets: Bullet[0..*]): None
+}
+SimplePower .up..|> PowerLevel
+class SuperPower implements PowerLevel
+class UltraPower implements PowerLevel
+class MegaPower implements PowerLevel
+class HyperPower implements PowerLevel
+
+note right of SimplePower::shoot_bullets
+    player.shoot_simple_bullets(bullets)
+end note
+
+@enduml

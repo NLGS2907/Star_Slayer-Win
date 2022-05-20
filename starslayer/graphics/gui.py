@@ -11,6 +11,7 @@ from ..gamelib import draw_line, draw_rectangle, draw_text
 if TYPE_CHECKING:
 
     from ..state import Game
+    from ..utils import Menu
     from ..utils import Button
 
 
@@ -29,13 +30,13 @@ def draw_gui(game: "Game") -> None:
                    fill=get_color(game, "GUI_COLOR_1"))
 
     # Power Level
-    draw_text("Current Power Level:",
+    draw_text("Power Level:",
               WIDTH - GUI_SPACE + aux_cons,
               HEIGHT * 0.73,
               size=(WIDTH // 50),
               fill=get_color(game, "TEXT_COLOR_1"),
               anchor='w')
-    draw_text(f"{game.power_level}",
+    draw_text(f"{game.power_level.name}",
               WIDTH - aux_cons,
               HEIGHT * 0.73,
               size=(WIDTH // 50),
@@ -116,17 +117,20 @@ def draw_gui(game: "Game") -> None:
                        fill=get_color(game, "GUI_COLOR_3"))
 
 
-def draw_button_hitbox(game: "Game", btn: "Button") -> None:
+def draw_button_hitbox(game: "Game", menu: "Menu", btn: "Button") -> None:
     """
     Draws a single button square.
     """
 
     x1, y1, x2, y2 = btn.all_coords # pylint: disable=invalid-name
+    fill_color = (get_color(game, "BUTTON_COLOR_1")
+                  if menu is game.current_scene.selected_menu
+                  else get_color(game, "BUTTON_COLOR_3"))
 
     draw_rectangle(x1, y1, x2, y2,
                    width=((y2 - y1) // 25),
                    outline=get_color(game, "TEXT_COLOR_1"),
-                   fill=get_color(game, "BUTTON_COLOR_1"),
+                   fill=fill_color,
                    activefill=get_color(game, "BUTTON_COLOR_2"))
 
 

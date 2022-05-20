@@ -2,8 +2,14 @@
 Miscellaneous group for miscellaneous stuff.
 """
 
-from ..hooks_group import HooksGroup
+from typing import TYPE_CHECKING
+
 from ...checks import can_exit, can_show_debug, is_in_game
+from ..hooks_group import HooksGroup
+
+if TYPE_CHECKING:
+
+    from ...state import Game
 
 
 class Miscellaneous(HooksGroup):
@@ -42,3 +48,11 @@ class Miscellaneous(HooksGroup):
         """
 
         self.game.exit = True
+
+
+def setup_hook(game: "Game") -> None:
+    """
+    Adds the hook group in this file to the game.
+    """
+
+    game.add_group(Miscellaneous(game))

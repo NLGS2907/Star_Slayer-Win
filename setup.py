@@ -19,9 +19,11 @@ setup(
     package_data={
 
         "starslayer" : ["json/keys/*.json",
-                        "json/levels/*.json",
                         "json/profiles/*.json",
-                        "sprites/player/*.gif"]
+                        "textures/icon/*.gif",
+                        "textures/player/star_slayer/*.customppm",
+                        "textures/player/bilby_tanka/*.customppm",
+                        "textures/player/viper_dodger/*.customppm"]
     },
 
     version=GAME_VERSION,

@@ -2,11 +2,10 @@
 Main Module. It encases all the other modules to start the game.
 """
 
-from .consts import GAME_VERSION, HEIGHT, KEYS_PATH, PLAYER_SPRITE, WIDTH
-from .files import list_repeated_keys, load_json
+from .consts import GAME_VERSION, HEIGHT, GAME_ICON, WIDTH
 from .gamelib import (EventType, draw_begin, draw_end, get_events, icon, init,
                       loop, resize, title)
-from .graphics import draw_screen
+from .graphics import draw_screen, SceneDrawer
 from .state import Game
 
 
@@ -17,22 +16,27 @@ def main() -> int:
 
     title(f"Star Slayer v{GAME_VERSION}")
     resize(WIDTH, HEIGHT)
-    icon(PLAYER_SPRITE)
+    icon(GAME_ICON)
 
-    game = Game(initial_power=3)
+    game = Game()
 
-    keys_pressed = {}
-    events_processed = {}
+    scene_drawer = SceneDrawer(game)
+
+    keys_pressed = game.keys_pressed
+    keys_released = game.keys_released
 
     is_first_lap = True # So that some actions take place in the next iteration of the loop
 
-    while loop(fps=60):
+    cursor_x = None
+    cursor_y = None
+
+    while loop(fps=game.time_flow):
 
         if game.exit:
             break
 
         draw_begin()
-        draw_screen(game)
+        draw_screen(game, cursor_x, cursor_y, scene_drawer)
         draw_end()
 
         for event in get_events():
@@ -41,46 +45,30 @@ def main() -> int:
                 break
 
             if event.type == EventType.KeyPress:
-
                 keys_pressed[event.key] = True
+                keys_released[event.key] = False
 
             elif event.type == EventType.KeyRelease:
-
                 keys_pressed[event.key] = False
+                keys_released[event.key] = True
 
-            elif event.type == EventType.ButtonPress:
+            elif event.type in (EventType.ButtonPress, EventType.ButtonRelease):
+                game.execute_button(event.x, event.y,
+                                    event_type=event.type,
+                                    mouse_button=event.mouse_button)
 
-                if event.mouse_button == 1:
+            elif event.type == EventType.Motion:
+                cursor_x = event.x
+                cursor_y = event.y
 
-                    game.execute_button(event.x, event.y)
-
-        for key in keys_pressed:
-
-            action = game.process_key(key)
-
-            if keys_pressed.get(key, False):
-
-                events_processed[action] = True
-
-            elif all((not keys_pressed.get(repeated_key, False)
-                      for repeated_key in list_repeated_keys(action, load_json(KEYS_PATH)))):
-
-                events_processed[action] = False
-
-        for game_action in events_processed:
-
-            if events_processed.get(game_action, False):
-
-                game.execute_action(game_action)
+        game.process_events()
 
         if game.is_on_prompt:
 
             if is_first_lap:
-
                 is_first_lap = False
 
             else:
-
                 is_first_lap = True
                 game.prompt()
 

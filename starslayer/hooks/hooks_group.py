@@ -2,9 +2,7 @@
 Actions Group Module. Provides a way to organize actions in separate groups.
 """
 
-from typing import Any, Callable, List, Optional, TYPE_CHECKING
-
-from ..logger import GameLogger
+from typing import TYPE_CHECKING, Any, Callable, List, Optional
 
 if TYPE_CHECKING:
 
@@ -47,15 +45,6 @@ class HooksGroup:
         original_cls.cls_actions.clear()
 
 
-    @property
-    def log(self) -> GameLogger:
-        """
-        Returns the GameLogger instance.
-        """
-
-        return GameLogger()
-
-
     @classmethod
     def action(cls, *, on_action: Optional[str]) -> ActionHandler:
         """
@@ -94,30 +83,6 @@ class HooksGroup:
         return decorator
 
 
-    # @classmethod
-    # # pylint: disable=invalid-name
-    # def button(cls, *, x1: int, y1: int, x2: int, y2: int, message: str='') -> ButtonHandler:
-    #     """
-    #     Creates a button, and registers a handler.
-    #     """
-
-    #     button = Button(x1=x1, y1=y1, x2=x2, y2=y2, message=message)
-
-    #     def decorator(handler_func: ButtonHandler) -> ButtonHandler:
-    #         """
-    #         Decorates the button to add its handler.
-    #         """
-
-    #         if button not in cls.cls_buttons:
-
-    #             button.handler = handler_func
-    #             cls.cls_buttons.append(button)
-
-    #         return handler_func
-
-    #     return decorator
-
-
     def execute_act(self, action_type: str) -> bool:
         """
         Executes a specified action.
@@ -137,48 +102,16 @@ class HooksGroup:
         If it is successful, it returns 'True', otherwise 'False'.
         """
 
-        if action_type in act_dict:
+        if action_type not in act_dict:
+            return False
 
-            for action in act_dict[action_type]:
+        for action_handler in act_dict[action_type]:
 
-                if (hasattr(action, "__checks__")
-                    and not all(checked(self.game) for checked in action.__checks__)):
+            if (hasattr(action_handler, "__checks__")
+                and not all(checked(self.game) for checked in action_handler.__checks__)):
 
-                    continue
+                continue
 
-                action(self)
-                return True
+            action_handler(self)
 
-        return False
-
-
-    # #pylint: disable=invalid-name
-    # def execute_btn(self, x: int, y: int, **kwargs: ButtonKwargs) -> bool:
-    #     """
-    #     Tries to execute the first button handler it finds if the
-    #     coordinates are correct.
-    #     """
-
-    #     if self.ins_buttons:
-
-    #         # Buttons specific to this instance should override those of its class.
-    #         return self._execute_btn(self.ins_buttons, x, y, **kwargs)
-
-    #     return self._execute_btn(self.cls_buttons, x, y, **kwargs)
-
-
-    # def _execute_btn(self, btn_list: ButtonsList, x: int, y: int, **kwargs: ButtonKwargs) -> bool:
-    #     """
-    #     Ultimately execute the buttons handler, if possible.
-    #     If it is successful, it returns 'True', otherwise 'False'.
-    #     """
-
-    #     for btn in btn_list:
-
-    #         if (btn.is_inside(x, y) and hasattr(btn, "__btn_checks__")
-    #             and all(checker(self.game, btn) for checker in btn.__btn_checks__)):
-
-    #             btn.handler(self, btn, **kwargs)
-    #             return True
-
-    #     return False
+        return True

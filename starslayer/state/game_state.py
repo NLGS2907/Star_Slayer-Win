@@ -3,29 +3,35 @@ Logics Module. Its purpose is to control the logic behaviour
 of the game.
 """
 
-from typing import List, Optional
+from importlib import import_module
+from os import listdir
+from random import choice, randrange
+from typing import TYPE_CHECKING, Dict, List, Optional
 
-from starslayer.scene.profilescene import ProfileScene
-
-from ..bullets import Bullet, BulletNormalAcc, BulletSinusoidalSimple
-from ..characters import Entity
-from ..consts import (EXITING_DELAY, HEIGHT, KEYS_PATH, PLAYER_DAMAGED_SPRITE,
-                      PLAYER_SPRITE, PROFILES_PATH, WIDTH)
-from ..enemies import Enemy
-from ..files import (LevelDict, ProfilesDict, StrDict, list_actions,
-                     list_profiles, list_repeated_keys, load_json, map_level)
+from ..consts import (EXITING_DELAY, GUI_SPACE, HEIGHT, HOOKS_GROUPS_PATH,
+                      KEYS_PATH, PROFILES_PATH, WIDTH)
+from ..enemies import EnemyCommonA, EnemyCommonB
+from ..files import (ProfilesDict, StrDict, list_actions, list_profiles,
+                     list_repeated_keys, load_json)
 from ..hooks import HooksGroup
-from ..hooks.groups import Menus
-from ..hooks.groups import Miscellaneous as Misc
-from ..hooks.groups import Movements
 from ..logger import GameLogger
-from ..scene import (ControlScene, InGameScene, MainScene, OptionScene, Scene,
-                     SceneDict)
+from ..power_levels import SimplePower
+from ..scene import (CharacterScene, ControlScene, InGameScene, MainScene,
+                     OptionScene, ProfileScene, Scene, SceneDict)
 from ..selector import ColorSelector
-from ..utils import Menu, Timer
+from ..utils import Chronometer, Menu, Timer
+
+if TYPE_CHECKING:
+
+    from ..bullets import Bullet
+    from ..enemies import Enemy
+    from ..entity import Entity
+    from ..power_levels import PowerLevel
 
 CornersTuple = tuple[int | float, int | float, int | float, int | float]
-TimerDict = dict[str, Timer]
+TimerDict = Dict[str, Timer]
+ChronDict = Dict[str, Chronometer]
+EventsDict = Dict[str, bool]
 
 
 class Game:
@@ -33,24 +39,18 @@ class Game:
     Class for the Game itself.
     """
 
-    def __init__(self, *_args, **kwargs) -> None:
+    def __init__(self) -> None:
         """
         Initalizes an instance of type 'Game'.
         """
 
         # Level Parameters
         self.game_level: int = 1
-        self.level_dict: LevelDict = map_level(1)
+        self.score: int = 0
 
         # Player Parameters
-        self.player: Entity = Entity(x1=(WIDTH // 2) - 30,
-                                 y1=int(HEIGHT / 1.17) - 30,
-                                 x2=(WIDTH // 2) + 30,
-                                 y2=int(HEIGHT / 1.17) + 30,
-                                 how_hard=1,
-                                 speed=5,
-                                 texture_path=(PLAYER_SPRITE, PLAYER_DAMAGED_SPRITE))
-        self.power_level: int = kwargs.get("initial_power", 1)
+        self.player: Optional["Entity"] = None
+        self.power_level: "PowerLevel" = SimplePower()
 
         # Color Profiles
         self.color_profiles: ProfilesDict = load_json(PROFILES_PATH)
@@ -62,20 +62,18 @@ class Game:
         self.sub_menu: Optional[Menu] = None
 
         # Timers
-        self.cool_cons: int = kwargs.get("cooldown_constant", 30)
-        self.timers: TimerDict = {"invulnerability": Timer(50 + (self.power_level * 5)),
-                                  "shooting_cooldown": Timer(self.cool_cons // self.power_level),
-                                  "debug_cooldown": Timer(20),
-                                  "level_timer": Timer(int(self.level_dict.pop("total_time")))}
+        self.timers: TimerDict = {"invulnerability": Timer(self.power_level.invulnerability),
+                                  "shooting_cooldown": Timer(self.power_level.cooldown),
+                                  "debug_cooldown": Timer(20)}
         self.special_timers: TimerDict = {"exiting_cooldown": Timer(EXITING_DELAY)}
+        self.chronometers: ChronDict = {"level_time": Chronometer()}
 
         # Enemies, Misc
-        self.enemies: List[Enemy] = []
-        self.bullets: List[Bullet] = []
+        self.enemies: List["Enemy"] = []
+        self.bullets: List["Bullet"] = []
 
         # Control Attributes
         self.is_on_prompt: bool = False
-        # self.is_in_game: bool = False
         self.show_debug_info: bool = False
         self.show_about: bool = False
         self.is_on_prompt: bool = False
@@ -88,24 +86,19 @@ class Game:
 
         # Actions
         self.__hooks_groups: List[HooksGroup] = []
-        self.add_group(Movements(self))
-        self.add_group(Menus(self))
-        self.add_group(Misc(self))
+        self.load_hook_groups()
 
-        # Scenes Related
+        # Scenes
         self.scenes: SceneDict = {}
         self.current_scene: Optional[Scene] = None
+        self.load_scenes()
 
-        mainscene = MainScene()
-        optionscene = OptionScene(parent=mainscene)
-        controlscene = ControlScene(parent=optionscene)
-        profilescene = ProfileScene(parent=optionscene)
-        ingamescene = InGameScene(parent=mainscene)
-        self.add_scene(mainscene)
-        self.add_scene(optionscene)
-        self.add_scene(controlscene)
-        self.add_scene(profilescene)
-        self.add_scene(ingamescene)
+
+        # events control
+        self.keys_pressed: EventsDict = {}
+        self.keys_released: EventsDict = {}
+        self.events_processed: EventsDict = {}
+        self.time_flow: int = 60 # fps
 
 
     @staticmethod
@@ -116,6 +109,48 @@ class Game:
         """
 
         return load_json(KEYS_PATH).get(key)
+
+
+    def apply_events(self,
+                     key: str,
+                     events_dict: EventsDict,
+                     action: str,
+                     original_action: str) -> None:
+        """
+        Updates the events dictionaries to match the current events.
+        """
+
+        if events_dict.get(key, False):
+
+            self.events_processed[action] = True
+
+        elif all((not events_dict.get(repeated_key, False)
+                 for repeated_key in list_repeated_keys(original_action,
+                                                        load_json(KEYS_PATH)))):
+
+            self.events_processed[action] = False
+
+
+    def process_events(self) -> None:
+        """
+        Processes all the events currently happening.
+        """
+
+        for key in self.keys_pressed:
+
+            action = self.process_key(key)
+            self.apply_events(key, self.keys_pressed, action, action)
+
+        for key_r in self.keys_released:
+
+            original_action = self.process_key(key_r)
+            action = f"{original_action}_RELEASE"
+            self.apply_events(key_r, self.keys_released, action, original_action)
+            self.keys_released[key_r] = False # Release events should be done only once
+
+        for game_action in self.events_processed:
+            if self.events_processed.get(game_action, False):
+                self.execute_action(game_action)
 
 
     def add_group(self, new_group: HooksGroup) -> None:
@@ -140,6 +175,20 @@ class Game:
             self.__hooks_groups.remove(group)
 
         return group_to_return
+
+
+    def load_hook_groups(self) -> None:
+        """
+        Loads all the hook groups located in the `starlsayer.hooks.groups` package.
+        """
+
+        for file_name in listdir(HOOKS_GROUPS_PATH):
+            if file_name.startswith("__"):
+                continue
+
+            module = import_module(f"..hooks.groups.{file_name.removesuffix('.py')}",
+                                   "starslayer.state")
+            module.setup_hook(self)
 
 
     def add_scene(self, new_scene: Scene) -> None:
@@ -174,8 +223,40 @@ class Game:
         scene = self.scenes.get(scene_id, None)
 
         if scene:
-
+            self.current_scene.reset_hook()
             self.current_scene = scene
+
+
+    def load_scenes(self) -> None:
+        """
+        Loads the scenes into the game.
+        """
+
+        mainscene = MainScene()
+        optionscene = OptionScene(parent=mainscene)
+        controlscene = ControlScene(parent=optionscene)
+        profilescene = ProfileScene(parent=optionscene)
+        characterscene = CharacterScene(parent=mainscene)
+        ingamescene = InGameScene(parent=mainscene)
+
+        self.add_scene(mainscene)
+        self.add_scene(optionscene)
+        self.add_scene(controlscene)
+        self.add_scene(profilescene)
+        self.add_scene(characterscene)
+        self.add_scene(ingamescene)
+
+
+    def start_game(self) -> None:
+        """
+        Formally starts the game.
+        """
+
+        if not self.player:
+            self.log.error(f"Player {self.player!r} is not a valid playable character.")
+            return
+
+        self.change_scene("scene-in-game")
 
 
     def execute_action(self, action: str) -> None:
@@ -184,17 +265,16 @@ class Game:
         """
 
         for group in self.__hooks_groups:
-
             group.execute_act(action)
 
 
     # pylint: disable=invalid-name
-    def execute_button(self, x: int, y: int) -> None:
+    def execute_button(self, x: int, y: int, **kwargs) -> None:
         """
         Tries to execute a button handler.
         """
 
-        if self.current_scene and self.current_scene.execute_button(self, x, y):
+        if self.current_scene and self.current_scene.execute_button(self, x, y, **kwargs):
             # There should be only one button in all of the
             # scenes that coincides with these coords
             return
@@ -247,12 +327,12 @@ class Game:
 
 
     @property
-    def level_timer(self) -> Timer:
+    def level_time(self) -> Chronometer:
         """
-        Returns the timer of the current level.
+        Returns the time of the current level.
         """
 
-        return self.timers.get("level_timer")
+        return self.chronometers.get("level_time")
 
 
     @property
@@ -310,7 +390,7 @@ class Game:
         Processes the action to prompt the user.
         """
 
-        kwargs.update({"game": self})
+        kwargs.update(game=self)
         self.current_scene.prompt(*args, **kwargs)
 
 
@@ -343,17 +423,18 @@ class Game:
         """
 
         self.game_level += how_much
-        self.level_dict = map_level(self.game_level)
-        self.level_timer = Timer(int(self.level_dict.pop("total_time")))
 
 
-    def power_up(self, how_much: int=1) -> None:
+    def power_up(self) -> None:
         """
         Increments by 'how_much' the power of the player.
         """
 
-        self.power_level += how_much
-        self.shooting_cooldown.initial_time = self.cool_cons // self.power_level
+        next_level = self.power_level.next_level()
+        if next_level:
+            self.power_level = next_level
+
+        self.shooting_cooldown.initial_time = self.power_level.cooldown
 
 
     def shoot_bullets(self) -> None:
@@ -361,45 +442,7 @@ class Game:
         Shoots bullets from player.
         """
 
-        player_center_x = self.player.center[0]
-
-        match self.power_level:
-
-            case 1:
-
-                self.bullets.append(BulletNormalAcc(x1=player_center_x - 5,
-                                                    y1=self.player.y1 + 30,
-                                                    x2=player_center_x + 5,
-                                                    y2=self.player.y1 + 20,
-                                                    how_hard=self.player.hardness,
-                                                    speed=2))
-
-            case 2:
-
-                self.bullets.append(BulletSinusoidalSimple(x1=player_center_x - 5,
-                                                           y1=self.player.y1 + 30,
-                                                           x2=player_center_x + 5,
-                                                           y2=self.player.y1 + 20,
-                                                           how_hard=self.player.hardness,
-                                                           speed=3,
-                                                           first_to_right=True))
-
-            case 3:
-
-                self.bullets.append(BulletSinusoidalSimple(x1=player_center_x - 15,
-                                                           y1=self.player.y1 + 30,
-                                                           x2=player_center_x -5,
-                                                           y2=self.player.y1 + 20,
-                                                           how_hard=self.player.hardness,
-                                                           speed=3,
-                                                           first_to_right=True))
-                self.bullets.append(BulletSinusoidalSimple(x1=player_center_x + 5,
-                                                           y1=self.player.y1 + 30,
-                                                           x2=player_center_x + 15,
-                                                           y2=self.player.y1 + 20,
-                                                           how_hard=self.player.hardness,
-                                                           speed=3,
-                                                           first_to_right=False))
+        self.power_level.shoot_bullets(self.player, self.bullets)
 
 
     def exec_bul_trajectory(self) -> None:
@@ -412,14 +455,13 @@ class Game:
             if self.player.collides_with(bullet):
 
                 if bullet.hardness > self.player.hardness:
-
                     self.player.hp -= bullet.hardness
-                    bullet.hp = 0
+
+                bullet.hp = 0
 
             for enem in self.enemies:
 
                 if bullet.collides_with(enem):
-
                     enem.hp -= bullet.hardness
                     bullet.hp = 0
                     break
@@ -452,27 +494,70 @@ class Game:
             enem.trajectory()
 
 
-    def exec_lvl_script(self) -> None:
+    def spawn_enemies(self,
+                      *,
+                      when: int | float,
+                      enemy_types: List["Enemy"],
+                      amount_from: int=1,
+                      amount_until: int=1,
+                      spacing_x: int=20,
+                      spacing_y: int=5
+                      ) -> None:
         """
-        Reads the level dictionary timeline and executes the instructions detailed within.
+        Given the parameters, effectively spawns the enemies on the game.
         """
 
-        for instant in self.level_dict:
+        if float(f"{self.level_time.current_time:.2f}") % when != 0:
+            return
 
-            if int(instant) == self.level_timer.current_time:
+        number_of_enemies = randrange(amount_from, amount_until + 1) # +1 'cause it's not inclusive
+        counter = 0
 
-                current_instant = self.level_dict.pop(instant)
+        aux_x = (WIDTH // 15)
+        aux_y = (HEIGHT // 14)
+        range_x = lambda : randrange(aux_x, (WIDTH - GUI_SPACE - aux_x), spacing_x)
+        range_y = lambda : randrange(-50, 0, spacing_y)
 
-                for action in current_instant:
+        while counter < number_of_enemies:
 
-                    enemy_type_to_add = Enemy.types[action["type"]] or Enemy.default
+            x1 = range_x()
+            y1 = range_y()
 
-                    self.enemies.append(enemy_type_to_add(x1=int(action["x1"]),
-                                                          y1=int(action["y1"]),
-                                                          x2=int(action["x2"]),
-                                                          y2=int(action["y2"])))
+            new_enemy = choice(enemy_types)(x1=x1,
+                                            y1=y1,
+                                            x2=x1 + aux_x,
+                                            y2=y1 + aux_y,
+                                            can_spawn_outside=True)
 
-                break
+            if any([new_enemy.x1 == new_enemy.x2,
+                    new_enemy.y1 == new_enemy.y2] +
+                    [new_enemy.collides_with(enemy)
+                        for enemy in self.enemies]):
+                continue
+
+            self.enemies.append(new_enemy)
+            counter += 1
+
+
+    def generate_enemies(self) -> None:
+        """
+        Generates specific types on enemies depending on the
+        current game level.
+        """
+
+        weak_enemies = (EnemyCommonA, EnemyCommonB)
+
+        if self.game_level in range(6): # until level 5
+
+            self.spawn_enemies(when=5,
+                               enemy_types=weak_enemies,
+                               amount_from=4,
+                               amount_until=6,
+                               spacing_x=20,
+                               spacing_y=5)
+
+        elif self.game_level in range(6, 11): # until level 10
+            ...
 
 
     def clear_assets(self) -> None:
@@ -484,7 +569,7 @@ class Game:
         self.bullets = []
 
 
-    def advance_game(self, keys_dict: dict[str, bool]) -> None:
+    def advance_game(self, keys_dict: EventsDict) -> None:
         """
         This function is that one of a wrapper, and advances the state of the game.
         It takes a dictionary of the keys pressed to decide if it counts some timers.
@@ -496,14 +581,16 @@ class Game:
 
             self.exec_bul_trajectory()
             self.exec_enem_trajectory()
-            self.exec_lvl_script()
 
             self.refresh_timers()
+            self.generate_enemies()
 
         else:
 
             self.show_debug_info = False
             self.current_scene.press_cooldown.count(1)
+
+        self.current_scene.refresh_hook()
 
 
     def refresh_timers(self) -> None:
@@ -512,8 +599,10 @@ class Game:
         """
 
         for timer in self.timers.values():
-
             timer.count(1)
+
+        for chrono in self.chronometers.values():
+            chrono.count(0.01)
 
 
     def reset_timers(self) -> None:
@@ -526,7 +615,7 @@ class Game:
             timer.reset()
 
 
-    def refresh_return_timer(self, keys_dict: dict[str, bool]) -> None:
+    def refresh_return_timer(self, keys_dict: EventsDict) -> None:
         """
         Refreshes the return timer.
         """
@@ -542,11 +631,3 @@ class Game:
 
             self.exiting = False
             self.exiting_cooldown.reset()
-
-
-    def change_is_in_game(self) -> None:
-        """
-        Changes 'self.is_in_game' to its opposite.
-        """
-
-        self.is_in_game = not self.is_in_game

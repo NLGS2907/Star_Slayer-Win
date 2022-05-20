@@ -2,4 +2,6 @@
 Bullets Package.
 """
 
-from .bullets import *
+from .bullet import *
+from .bullet_acc import *
+from .bullet_sinusoidal import *

@@ -5,10 +5,11 @@ Menu Module. A Menu is a container of buttons
 
 from typing import TYPE_CHECKING, List, Optional
 
+from ..checks import left_click, on_press
 from ..consts import HEIGHT, WIDTH
 from ..files import StrDict
 from .button import Button, ButtonHandler, ButtonsList
-from .generic import IntTuple4
+from .hitbox import FloatTuple4
 
 if TYPE_CHECKING:
 
@@ -29,7 +30,7 @@ class Menu:
     their handlers.
     """
 
-    def __init__(self, area_corners: IntTuple4, **kwargs: MenuDict) -> None:
+    def __init__(self, area_corners: FloatTuple4, **kwargs: MenuDict) -> None:
         """
         Initializes an instance of type 'Menu'.
 
@@ -75,23 +76,12 @@ class Menu:
         'hidden' means if the menu should begin with being able to show itself.
         """
 
-        # if button_titles and hooks_group:
-
-        #     raise Exception("Parameters 'button_titles' and 'hooks_group' cannot be both used." +
-        #                     " Choose either.")
-
-        # if not button_titles:
-
-        #     raise ValueError("'button_titles' cannot be empty. Must be an iteration with names " +
-        #                      "(strings) and must have a length of at least 1.")
-
         # Define default values
         max_rows: int = kwargs.get("max_rows", 4)
         self.how_many_columns: int = kwargs.get("how_many_columns", 1)
         self.space_between: int = kwargs.get("space_between", 10)
         self.space_between_x: int = kwargs.get("space_between_x", self.space_between)
         self.space_between_y: int = kwargs.get("space_between_y", self.space_between)
-        # parent_menu: Optional["Menu"] = kwargs.get("parent_menu", None)
         force_button_resize: bool = kwargs.get("force_button_resize", False)
         special_btn_on_right: bool = kwargs.get("special_btn_on_right", True)
 
@@ -115,18 +105,10 @@ class Menu:
             raise ValueError(f"area_corners has {len(area_corners)} values. " +
                              "It must have exactly 4 integers as values.")
 
-        # button_titles = (button_titles.split("-=trash_value=-")
-        #                  if isinstance(button_titles, str) else list(button_titles))
-
         # Button Lists
         self._buttons_list: ButtonsList = []
         self._off_buttons_list: ButtonsList = []
         self.buttons_on_screen: ButtonsList = []
-
-        # btn_len = self.buttons_len
-        # self.how_many_rows = ((btn_len // self.how_many_columns)
-        #                  if any((self.how_many_columns == 1, btn_len % self.how_many_columns == 0))
-        #                  else (btn_len // self.how_many_columns) + 1)
 
         if force_button_resize and self.how_many_rows < max_rows:
 
@@ -141,29 +123,24 @@ class Menu:
         self.y_space: int = (self.area_y2 - self.area_y1) // self.max_rows
 
         # Pages-related calculations
-        # self.max_pages: int = (((self.how_many_rows // self.max_rows) + 1)
-        #                        if all((not self.how_many_rows == self.max_rows,
-        #                                not self.how_many_rows % self.max_rows == 0))
-        #                        else self.how_many_rows // self.max_rows)
-        # if not self.max_pages:
-        #     self.max_pages += 1
         self.current_page: int = 1
-
-        # Menu-related
-        # self.parent = parent_menu
 
         # scene-related
         self.current_scene = None
 
         # Special Buttons
-
         special_x1: int = ((self.area_x2 + self.space_between)
                             if special_btn_on_right else (self.area_x1 - (self.y_space // 2)))
         special_x2: int = ((self.area_x2 + (self.y_space // 2))
                             if special_btn_on_right else (self.area_x1 - self.space_between_y))
 
 
-        def page_up(_game: "Game", _scene: "Scene", _btn: Button) -> None:
+        @left_click()
+        @on_press()
+        def page_up(_game: "Game",
+                    _scene: "Scene",
+                    _btn: Button,
+                    **_kwargs: ButtonKwargs) -> None:
             """
             Changes the page for the previous one.
             """
@@ -171,7 +148,12 @@ class Menu:
             self.change_page(False)
 
 
-        def page_down(_game: "Game", _scene: "Scene", _btn: Button) -> None:
+        @left_click()
+        @on_press()
+        def page_down(_game: "Game",
+                      _scene: "Scene",
+                      _btn: Button,
+                      **_kwargs: ButtonKwargs) -> None:
             """
             Changes the page for the next one.
             """
@@ -179,13 +161,17 @@ class Menu:
             self.change_page(True)
 
 
-        def go_to_parent(game: "Game", scene: "Scene", _btn: Button) -> None:
+        @left_click()
+        @on_press()
+        def go_to_parent(game: "Game",
+                         scene: "Scene",
+                         _btn: Button,
+                         **_kwargs: ButtonKwargs) -> None:
             """
             Turns the current scene to its parent, if any.
             """
 
             if scene.parent:
-
                 game.change_scene(scene.parent.id)
 
 
@@ -216,19 +202,13 @@ class Menu:
         self.update_buttons()
 
 
-    # @classmethod
-    # def sub_menu(cls, button_titles: StrList, corners: IntTuple4, **kwargs: MenuDict) -> "Menu":
-    #     """
-    #     It creates an instance of type 'Menu', but with the symbols for some buttons
-    #     changed.
-    #     """
+    @property
+    def area(self) -> FloatTuple4:
+        """
+        Shows the area occupied by the menu.
+        """
 
-    #     sub = cls(button_titles, corners, **kwargs)
-
-    #     sub.pgup_button.msg = '^'
-    #     sub.pgdn_button.msg = 'v'
-
-    #     return sub
+        return self.area_x1, self.area_y1, self.area_x2, self.area_y2
 
 
     @property
@@ -302,6 +282,16 @@ class Menu:
         return self._off_buttons_list
 
 
+    @off_buttons.setter
+    def off_buttons(self, new_off_buttons: ButtonsList) -> None:
+        """
+        Changes the list of off-buttons, if valid.
+        """
+
+        self._off_buttons_list = new_off_buttons
+        self.update_buttons()
+
+
     @property
     def show_return(self) -> bool:
         """
@@ -367,10 +357,10 @@ class Menu:
 
         else:
 
-            if all(not coord for coord in (x1, y1, x2, y2)): # Empty
+            if all((coord is None) for coord in (x1, y1, x2, y2)): # Empty
                 x1, y1, x2, y2 = 10, 10, 20, 20 # Trash values
                 is_off = False
-            elif all(coord for coord in (x1, y1, x2, y2)): # Full
+            elif all((coord is not None) for coord in (x1, y1, x2, y2)): # Full
                 is_off = True
             else:
                 raise ValueError("Etiher all of the coords or none of them must be present.")
@@ -409,9 +399,10 @@ class Menu:
 
         for btn in self.buttons_on_screen:
 
-            if (not btn.is_inside(x, y) or (hasattr(btn, "__btn_checks__")
-                and not all(checker(game, btn) for checker in btn.__btn_checks__))):
-
+            if (not btn.is_inside(x, y) or (hasattr(btn.handler, "__btn_checks__")
+                                            and not all(checker(game, btn, **kwargs)
+                                                        for checker
+                                                        in btn.handler.__btn_checks__))):
                 continue
 
             btn.handler(game, scene, btn, **kwargs)

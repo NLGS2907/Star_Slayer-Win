@@ -93,7 +93,7 @@ def draw_selector_buttons(game: "Game") -> None:
 
     for button in selector.buttons:
 
-        draw_button_hitbox(game, button)
+        draw_button_hitbox(game, game.current_scene.selected_menu, button)
 
         cx, cy = button.center # pylint: disable=invalid-name
         draw_text(' '.join(button.msg.split('_')),

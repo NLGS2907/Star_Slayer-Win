@@ -32,4 +32,9 @@ def get_color(game: "Game", name: str) -> str:
     Wrapper for searching colors in game profile.
     """
 
-    return game.color_profile.get('_'.join(name.split()))
+    true_name = '_'.join(name.upper().split())
+
+    if not true_name or true_name == '/':
+        return ''
+
+    return game.color_profile.get(true_name)

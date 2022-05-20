@@ -2,8 +2,15 @@
 Action group for player ship movements.
 """
 
-from ..hooks_group import HooksGroup
+from typing import TYPE_CHECKING
+
 from ...checks import can_shoot, is_in_game
+from ..hooks_group import HooksGroup
+
+if TYPE_CHECKING:
+
+    from ...state import Game
+
 
 class Movements(HooksGroup):
     """
@@ -60,3 +67,11 @@ class Movements(HooksGroup):
 
         self.game.shoot_bullets()
         self.game.shooting_cooldown.reset()
+
+
+def setup_hook(game: "Game") -> None:
+    """
+    Adds the hook group in this file to the game.
+    """
+
+    game.add_group(Movements(game))

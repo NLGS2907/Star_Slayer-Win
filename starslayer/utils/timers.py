@@ -3,20 +3,23 @@ Timers Module. Contains simple timers to
 handle event timing.
 """
 
+from typing import List
+
+
 class Timer:
     """
     Class for a simple timer that counts
     from a certain number to 0.
     """
 
-    def __init__(self, init_time: int, message: str='') -> None:
+    def __init__(self, init_time: float, message: str='') -> None:
         """
         Initializes an instance of type 'Timer'.
         """
 
-        self.initial_time = init_time
-        self.current_time = init_time
-        self.msg = message
+        self.initial_time: float = init_time
+        self.current_time: float = init_time
+        self.msg: str = message
 
 
     def __str__(self) -> str:
@@ -28,15 +31,15 @@ class Timer:
                 f"{f' - Message: {self.msg}' if self.msg != '' else ''}")
 
 
-    def deduct(self, how_much: int) -> None:
+    def deduct(self, how_much: float) -> None:
         """
         Descends the countdown subtracting 'how_much' time from 'self.current_time'.
         """
 
-        self.current_time -= how_much
+        self.current_time -= float(how_much)
 
 
-    def count(self, how_much: int, reset: bool=False) -> None:
+    def count(self, how_much: float, reset: bool=False) -> None:
         """
         Count the timer to zero.
         if 'reset' is set to 'True', it automatically restarts the timer.
@@ -44,7 +47,7 @@ class Timer:
 
         if not self.is_zero_or_less():
 
-            self.deduct(how_much)
+            self.deduct(float(how_much))
 
         elif reset:
 
@@ -66,7 +69,7 @@ class Timer:
         and 'False' otherwise.
         """
 
-        return self.current_time <= 0
+        return self.current_time <= 0.0
 
 
     def change_message(self, new_message: str) -> None:
@@ -84,9 +87,9 @@ class SpringTimer:
     """
 
     def __init__(self,
-                 floor: int,
-                 ceiling: int,
-                 where_to_start: int,
+                 floor: float,
+                 ceiling: float,
+                 where_to_start: float,
                  is_it_adding: bool=True) -> None:
         """
         Initializes an instance of type 'SpringTimer'.
@@ -101,10 +104,10 @@ class SpringTimer:
             raise ValueError("'where_to_start' parameter needs to be between " +
                              f"{floor} and {ceiling} inclusive")
 
-        self.floor = floor
-        self.ceil = ceiling
-        self.current = where_to_start
-        self.adding = is_it_adding
+        self.floor: float = floor
+        self.ceil: float = ceiling
+        self.current: float = where_to_start
+        self.adding: bool = is_it_adding
 
 
     def __str__(self) -> str:
@@ -116,7 +119,7 @@ class SpringTimer:
                 f"Ceiling: {self.ceil} - Is it adding: {self.adding}")
 
 
-    def count(self, how_much: int=1) -> None:
+    def count(self, how_much: float=1.0) -> None:
         """
         Advances the counting of the Timer, deducting if 'self.adding' is False, otherwise adding.
         """
@@ -135,3 +138,77 @@ class SpringTimer:
         if any((self.current <= self.floor, self.current >= self.ceil)):
 
             self.adding = not self.adding
+
+
+class Chronometer:
+    """
+    A chronometer to count up indefinitely.
+    """
+
+    def __init__(self, where_from: float=0.0, can_count: bool=True) -> None:
+        """
+        Initializes an instance of type 'Chronometer'.
+        """
+
+        self.initial_time: float = where_from
+        self.current_time: float = self.initial_time
+        self.splits: List[float] = []
+        self.can_count: bool = can_count
+
+
+    def __str__(self) -> str:
+        """
+        Shows the chronometer properties.
+        """
+
+        splits_info = ((f"\nSplit {ind + 1}:\t{split_time}"
+                        for ind, split_time in enumerate(self.splits))
+                       if self.splits else "N/A")
+
+        return (f"Chronometer of: Initial Time: {self.initial_time} - " +
+                f"Current Time: {self.current_time}" +
+                f"\nSplits: {splits_info}")
+
+
+    def start(self) -> None:
+        """
+        Starts the chronometer, allowing to start counting.
+        """
+
+        self.can_count = True
+
+
+    def stop(self) -> None:
+        """
+        Stops the chronometer, forcing it to stop counting.
+        """
+
+        self.can_count = False
+
+
+    def count(self, how_much: float=0.001) -> None:
+        """
+        Counts up by `how_much`.
+        """
+
+        if not self.can_count:
+            return
+
+        self.current_time += float(how_much)
+
+
+    def split(self) -> None:
+        """
+        Appends the current time to the splits list.
+        """
+
+        self.splits.append(self.current_time)
+
+
+    def reset(self) -> None:
+        """
+        Resets the chronometer back to its inital value.
+        """
+
+        self.current_time = self.initial_time
+        self.splits.clear()

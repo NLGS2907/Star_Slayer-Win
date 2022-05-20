@@ -5,6 +5,8 @@
     "d": "RIGHT",
     "Right": "RIGHT",
     "s": "DOWN",
+    "e": "ROTATE",
+    "q": "ROTATE_INV",
     "Down": "DOWN",
     "space": "SHOOT",
     "BackSpace": "RETURN",

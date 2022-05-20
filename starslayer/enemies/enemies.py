@@ -4,7 +4,7 @@ of hostiles.
 """
 
 from ..utils import Timer, SpringTimer
-from ..characters import ShipDict
+from ..entity import ShipDict
 from .enemy import Enemy
 
 
@@ -18,6 +18,7 @@ class EnemyCommonA(Enemy):
         Initializes an instance of type 'EnemyCommonA'.
         """
 
+        # kwargs.update({"texture_path": "enemies/common_a"})
         super().__init__(**kwargs)
 
         self.hp = 3 #pylint: disable=invalid-name
@@ -26,8 +27,6 @@ class EnemyCommonA(Enemy):
 
         self.internal_timer = Timer(30)
         self.direction = 0 # 0 for "LEFT", 1 for "DOWN" and 2 for "RIGHT"
-
-        self.sprites = None # for now
 
 
     def trajectory(self) -> None:
@@ -59,6 +58,7 @@ class EnemyCommonB(Enemy):
         Initializes an instance of type 'EnemyCommonB'.
         """
 
+        # kwargs.update({"texture_path": "enemies/common_b"})
         super().__init__(**kwargs)
 
         self.hp = 3
@@ -67,8 +67,6 @@ class EnemyCommonB(Enemy):
 
         self.internal_timer = SpringTimer(0, 30, 30)
         self.direction = 0 # 0 for "LEFT", 1 for "DOWN" and 2 for "RIGHT"
-
-        self.sprites = None # for now
 
 
     def trajectory(self) -> None:

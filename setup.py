@@ -24,7 +24,7 @@ setup(
                         "textures/player/viper_dodger/*.customppm"]
     },
 
-    version="0.0.9",
+    version="0.1.0-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING
 from ....auxiliar import Singleton
 from ....checks import left_click, on_press
 from ....consts import HEIGHT, WIDTH
-from ...hitbox import FloatTuple4
 from ...menu import ButtonKwargs, Menu, MenuDict
+from ...shapes import FloatTuple4
 
 if TYPE_CHECKING:
-    from ....state import Game
     from ....scene import Scene
+    from ....state import Game
     from ...button import Button
 
 

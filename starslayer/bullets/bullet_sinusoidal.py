@@ -11,15 +11,17 @@ class BulletSinusoidalSimple(Bullet):
     A bullet of normal acceleration.
     """
 
-    def __init__(self, **kwargs: BulletKwargs) -> None:
+    def __init__(self,
+                 *,
+                 oscillation_time: int=30,
+                 first_to_right: bool=True,
+                 **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'BulletSinusoidalSimple'.
         """
 
         super().__init__(**kwargs)
 
-        oscillation_time: int = kwargs.get("oscillation_time", 30)
-        first_to_right: bool = kwargs.get("first_to_right", True)
         self.oscillatation = SpringTimer(-oscillation_time,
                                          oscillation_time,
                                          (oscillation_time if first_to_right

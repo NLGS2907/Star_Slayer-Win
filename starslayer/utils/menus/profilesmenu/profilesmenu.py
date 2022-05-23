@@ -8,19 +8,19 @@ from typing import TYPE_CHECKING
 from ....auxiliar import Singleton, copy_dict
 from ....checks import left_click, on_press
 from ....consts import (DEFAULT_THEME, DEFAULT_THEME_LINES, HEIGHT,
-                       PROFILES_PATH, WIDTH)
+                        PROFILES_PATH, WIDTH)
 from ....files import dump_json, list_attributes, list_profiles, load_json
 from ....gamelib import EventType
 from ....gamelib import input as lib_input
 from ....gamelib import say as lib_say
 from ....gamelib import wait as lib_wait
-from ...hitbox import FloatTuple4
 from ...menu import ButtonKwargs, Menu, MenuDict
+from ...shapes import FloatTuple4
 from .profilesubmenu import ProfileSubMenu
 
 if TYPE_CHECKING:
-    from ....state import Game
     from ....scene import Scene
+    from ....state import Game
     from ...button import Button
 
 

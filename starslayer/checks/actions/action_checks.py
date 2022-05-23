@@ -49,6 +49,23 @@ def is_in_game(inside_game: bool=True) -> ActionHandler:
     return check(in_a_game)
 
 
+def has_shield(yes_it_does: bool=True) -> ActionHandler:
+    """
+    Adds a shield checker.
+    """
+
+    def does_it_have_shield(game: "Game") -> bool:
+        """
+        Checks if the player has a shield.
+        """
+
+        shield = game.player.shield
+
+        return bool(shield) if yes_it_does else not bool(shield)
+
+    return check(does_it_have_shield)
+
+
 def can_show_debug() -> ActionHandler:
     """
     Adds a debug checker.
@@ -76,7 +93,7 @@ def can_shoot() -> ActionHandler:
         is ready.
         """
 
-        return game.shooting_cooldown.is_zero_or_less()
+        return game.player.shooting_cooldown.is_zero_or_less()
 
     return check(can_shoot_bullets)
 

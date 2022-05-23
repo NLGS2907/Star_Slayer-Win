@@ -36,12 +36,6 @@ def draw_screen(game: "Game",
 
     if game.is_in_game:
 
-        draw_sprite(game.player.sprite,
-                    game.player.x1,
-                    game.player.y1,
-                    game.player.x2,
-                    game.player.y2)
-
         for enem in game.enemies:
 
             draw_sprite(enem.sprite,
@@ -49,6 +43,21 @@ def draw_screen(game: "Game",
                         enem.y1,
                         enem.x2,
                         enem.y2)
+
+        draw_sprite(game.player.sprite,
+                    game.player.x1,
+                    game.player.y1,
+                    game.player.x2,
+                    game.player.y2)
+
+        if game.player.shield:
+            sh_x1, sh_y1, sh_x2, sh_y2 = game.player.shield.all_coords
+            draw_sprite(game.player.shield.sprite,
+                        sh_x1,
+                        sh_y1,
+                        sh_x2,
+                        sh_y2,
+                        sprite_type="CIRCLE")
 
         if game.show_debug_info:
             draw_debug_info(game)
@@ -59,9 +68,7 @@ def draw_screen(game: "Game",
 
         draw_about(game)
 
-    elif not game.is_in_game:
-
-        scene_drawer.draw_scene()
+    scene_drawer.draw_scene()
 
     if game.exiting:
 

@@ -26,7 +26,7 @@ class MainScene(Scene):
                              HEIGHT // 4,
                              GAME_TITLE,
                              size=(WIDTH // 90),
-                             color_name="TEXT_COLOR_1",
+                             fill_name="TEXT_COLOR_1",
                              justify='c'))
         self.add_animation(SinusoidalWave(x1=WIDTH / 75,
                                           y1=-HEIGHT / 70,

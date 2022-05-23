@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from ..auxiliar import get_color
 from ..consts import GUI_SPACE, HEIGHT, WIDTH
-from ..gamelib import draw_line, draw_rectangle, draw_text
+from ..gamelib import draw_rectangle, draw_text
 
 if TYPE_CHECKING:
 
@@ -29,92 +29,123 @@ def draw_gui(game: "Game") -> None:
                    outline=get_color(game, "GUI_OUTLINE_1"),
                    fill=get_color(game, "GUI_COLOR_1"))
 
-    # Power Level
-    draw_text("Power Level:",
-              WIDTH - GUI_SPACE + aux_cons,
-              HEIGHT * 0.73,
-              size=(WIDTH // 50),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text(f"{game.power_level.name}",
-              WIDTH - aux_cons,
-              HEIGHT * 0.73,
-              size=(WIDTH // 50),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='e')
+    # # Power Level
+    # draw_text("Power Level:",
+    #           WIDTH - GUI_SPACE + aux_cons,
+    #           HEIGHT * 0.73,
+    #           size=(WIDTH // 50),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='w')
+    # draw_text(f"{game.power_level.name}",
+    #           WIDTH - aux_cons,
+    #           HEIGHT * 0.73,
+    #           size=(WIDTH // 50),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='e')
 
-    draw_line(WIDTH - GUI_SPACE + aux_cons,
-              HEIGHT * 0.765,
-              WIDTH - aux_cons,
-              HEIGHT * 0.765,
-              width=(aux_cons // 2),
-              fill=get_color(game, "GUI_COLOR_2"))
+    # draw_line(WIDTH - GUI_SPACE + aux_cons,
+    #           HEIGHT * 0.765,
+    #           WIDTH - aux_cons,
+    #           HEIGHT * 0.765,
+    #           width=(aux_cons // 2),
+    #           fill=get_color(game, "GUI_COLOR_2"))
 
-    # Hardness
-    draw_text("Current Hardness:",
-              WIDTH - GUI_SPACE + aux_cons,
-              HEIGHT * 0.8,
-              size=(WIDTH // 62),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text(f"{game.player.hardness}",
-              WIDTH - aux_cons,
-              HEIGHT * 0.8,
-              size=(WIDTH // 62),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='e')
+    # # Hardness
+    # draw_text("Current Hardness:",
+    #           WIDTH - GUI_SPACE + aux_cons,
+    #           HEIGHT * 0.8,
+    #           size=(WIDTH // 62),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='w')
+    # draw_text(f"{game.player.hardness}",
+    #           WIDTH - aux_cons,
+    #           HEIGHT * 0.8,
+    #           size=(WIDTH // 62),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='e')
 
-    # Speed
-    draw_text("Current Speed:",
-              WIDTH - GUI_SPACE + aux_cons,
-              HEIGHT * 0.85,
-              size=(WIDTH // 62),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text(f"{game.player.speed}",
-              WIDTH - aux_cons,
-              HEIGHT * 0.85,
-              size=(WIDTH // 62),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='e')
+    # # Speed
+    # draw_text("Current Speed:",
+    #           WIDTH - GUI_SPACE + aux_cons,
+    #           HEIGHT * 0.85,
+    #           size=(WIDTH // 62),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='w')
+    # draw_text(f"{game.player.speed}",
+    #           WIDTH - aux_cons,
+    #           HEIGHT * 0.85,
+    #           size=(WIDTH // 62),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='e')
 
-    # Health
-    draw_text("Remaining health:",
-              WIDTH - GUI_SPACE + aux_cons,
-              HEIGHT * 0.9,
-              size=(WIDTH // 62),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text(f"{game.player.hp}  /  {game.player.max_hp}",
-              WIDTH - aux_cons,
-              HEIGHT * 0.9,
-              size=(WIDTH // 62),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='e')
+    # # Health
+    # draw_text("Remaining health:",
+    #           WIDTH - GUI_SPACE + aux_cons,
+    #           HEIGHT * 0.9,
+    #           size=(WIDTH // 62),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='w')
+    # draw_text(f"{game.player.hp}  /  {game.player.max_hp}",
+    #           WIDTH - aux_cons,
+    #           HEIGHT * 0.9,
+    #           size=(WIDTH // 62),
+    #           fill=get_color(game, "TEXT_COLOR_1"),
+    #           anchor='e')
 
-    # Health Bar
-    draw_rectangle(WIDTH - GUI_SPACE + aux_cons,
-                  HEIGHT * 0.93, WIDTH - aux_cons,
-                  HEIGHT - aux_cons,
-                  width=(aux_cons // 2),
-                  outline=get_color(game, "GUI_OUTLINE_2"),
-                  fill=get_color(game, "GUI_OUTLINE_1"))
+    # # Health Bar
+    # draw_rectangle(WIDTH - GUI_SPACE + aux_cons,
+    #               HEIGHT * 0.93, WIDTH - aux_cons,
+    #               HEIGHT - aux_cons,
+    #               width=(aux_cons // 2),
+    #               outline=get_color(game, "GUI_OUTLINE_2"),
+    #               fill=get_color(game, "GUI_OUTLINE_1"))
 
-    if not game.player.has_no_health():
+    if game.player.has_no_health():
+        return
 
-        hp_percentage = (game.player.hp / game.player.max_hp) * 100
+    draw_bar_percentage(game=game,
+                        x1=WIDTH - GUI_SPACE + aux_cons,
+                        y1=HEIGHT * 0.9,
+                        x2=WIDTH - aux_cons,
+                        y2=HEIGHT - aux_cons,
+                        percentage=game.player.health_percentage())
 
-        bar_start = WIDTH - GUI_SPACE + (2 * aux_cons)
-        bar_end = WIDTH - (2 * aux_cons)
 
-        augment = ((bar_end - bar_start) / 100) * hp_percentage
+# pylint: disable=invalid-name
+def draw_bar_percentage(game: "Game",
+                        x1: float,
+                        y1: float,
+                        x2: float,
+                        y2: float,
+                        percentage: float,
+                        *,
+                        horizontal: bool=True) -> None:
+    """
+    Given a rectangle, if draws a part of it given a percentage.
+    """
 
-        draw_rectangle(bar_start,
-                       HEIGHT * 0.945,
-                       bar_start + augment,
-                       HEIGHT - (2 * aux_cons),
-                       outline=get_color(game, "GUI_OUTLINE_1"),
-                       fill=get_color(game, "GUI_COLOR_3"))
+    bar_start, bar_end = ((x1, x2) if horizontal else (y1, y2))
+
+    augment = ((bar_end - bar_start) / 100) * percentage
+
+    if horizontal:
+        bar_x1 = bar_start
+        bar_y1 = y1
+        bar_x2 = bar_start + augment
+        bar_y2 = y2
+
+    else:
+        bar_x1 = x1
+        bar_y1 = bar_start
+        bar_x2 = x2
+        bar_y2 = bar_start + augment
+
+    draw_rectangle(x1=bar_x1,
+                   y1=bar_y1,
+                   x2=bar_x2,
+                   y2=bar_y2,
+                   outline=get_color(game, "GUI_OUTLINE_1"),
+                   fill=get_color(game, "HEALTH_COLOR_1", percentage))
 
 
 def draw_button_hitbox(game: "Game", menu: "Menu", btn: "Button") -> None:

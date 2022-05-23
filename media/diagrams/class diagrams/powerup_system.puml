@@ -5,7 +5,7 @@ abstract class Bullet {
     {abstract} + trajectory(): None
 }
 
-interface PlayableChracter {
+interface PlayableCharacter {
     + shoot_simple_bullets(bullets: Bullet[0..*]): None
     + shoot_super_bullets(bullets: Bullet[0..*]): None
     + shoot_ultra_bullets(bullets: Bullet[0..*]): None
@@ -13,11 +13,11 @@ interface PlayableChracter {
     + shoot_hyper_bullets(bullets: Bullet[0..*]): None
 }
 
-PlayableChracter .up.> Bullet
+PlayableCharacter .up.> Bullet
 
-class StarSlayerChracter implements PlayableChracter
-class BilbyTankaChracter implements PlayableChracter
-class ViperDodgerChracter implements PlayableChracter
+class StarSlayerCharacter implements PlayableCharacter
+class BilbyTankaCharacter implements PlayableCharacter
+class ViperDodgerCharacter implements PlayableCharacter
 
 interface PowerLevel {
     + shoot_bullets(player: PlayableCharacter, bullets: Bullet[0..*]): None
@@ -27,7 +27,7 @@ interface PowerLevel {
     + name(): str
 }
 
-PowerLevel .down.> PlayableChracter
+PowerLevel .down.> PlayableCharacter
 PowerLevel .left.> Bullet
 
 class SimplePower {

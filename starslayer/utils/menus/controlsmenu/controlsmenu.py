@@ -11,13 +11,13 @@ from ....files import dump_json, list_actions, list_repeated_keys, load_json
 from ....gamelib import EventType
 from ....gamelib import say as lib_say
 from ....gamelib import wait as lib_wait
-from ...hitbox import FloatTuple4
 from ...menu import ButtonKwargs, Menu, MenuDict
+from ...shapes import FloatTuple4
 from .controlsubmenu import ControlSubMenu
 
 if TYPE_CHECKING:
-    from ....state import Game
     from ....scene import Scene
+    from ....state import Game
     from ...button import Button
 
 

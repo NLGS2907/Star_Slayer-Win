@@ -3,14 +3,14 @@ Button Module. A button is a hitbox with
 a message and a designed handler.
 """
 
-from typing import Callable, TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
-from .hitbox import HitBox
+from .shapes import HitBox
 
 if TYPE_CHECKING:
 
-    from ..state import Game
     from ..scene import Scene
+    from ..state import Game
 
 ButtonsList = List["Button"]
 ButtonHandler = Callable[["Game", "Scene", "Button"], None]
@@ -27,7 +27,8 @@ class Button(HitBox):
         Initializes an instance of type 'Button'.
         """
 
-        super().__init__(**kwargs)
+        super().__init__(can_spawn_outside=True,
+                         **kwargs)
 
         self.msg: str = kwargs.get("message", '')
         self.handler: Optional[ButtonHandler] = kwargs.get("handler", None)

@@ -18,13 +18,14 @@ setup(
 
         "starslayer" : ["json/keys/*.json",
                         "json/profiles/*.json",
+                        "json/scores/*.json",
                         "textures/icon/*.gif",
                         "textures/player/star_slayer/*.customppm",
                         "textures/player/bilby_tanka/*.customppm",
                         "textures/player/viper_dodger/*.customppm"]
     },
 
-    version="0.1.0-alpha",
+    version="0.1.1-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

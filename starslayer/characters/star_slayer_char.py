@@ -4,7 +4,7 @@ Star Slayer character Module.
 
 from typing import TYPE_CHECKING, List
 
-from ..bullets import BulletNormalAcc, BulletSinusoidalSimple
+from ..bullets import BulletNormalAcc
 from ..consts import HEIGHT, STAR_SLAYER_REL_PATH, WIDTH
 from .playable_character import PlayableCharacter
 
@@ -20,18 +20,40 @@ class StarSlayerCharacter(PlayableCharacter):
     Its special power resides in ???.
     """
 
-    def __init__(self) -> None:
+    # pylint: disable=invalid-name
+    def __init__(self,
+                 *,
+                 shooting_cooldown: int=30,
+                 invulnerability: int=55,
+                 has_shield: bool=False,
+                 **kwargs) -> None:
         """
         Initializes an instance of type 'StarSlayerCharacter'.
         """
 
-        super().__init__(x1=(WIDTH / 2) - 30,
-                         y1=(HEIGHT / 1.17) - 30,
-                         x2=(WIDTH / 2) + 30,
-                         y2=(HEIGHT / 1.17) + 30,
+        width_aux = WIDTH / 25
+        height_aux = HEIGHT / (70 / 3)
+        x1 = (WIDTH / 2) - width_aux
+        y1 = (HEIGHT / 1.17) - height_aux
+        x2 = (WIDTH / 2) + width_aux
+        y2 = (HEIGHT / 1.17) + height_aux
+
+        super().__init__(x1=x1,
+                         y1=y1,
+                         x2=x2,
+                         y2=y2,
                          how_hard=2,
                          speed=5,
-                         texture_path=STAR_SLAYER_REL_PATH)
+                         texture_path=STAR_SLAYER_REL_PATH,
+                         shooting_cooldown=shooting_cooldown,
+                         invulnerability=invulnerability,
+                         has_shield=has_shield,
+                         shield_x=x2 + width_aux,
+                         shield_y=y1 - height_aux,
+                         shield_rad=width_aux,
+                         shield_orbit_center_x=(x1 + x2) / 2,
+                         shield_orbit_center_y=(y1 + y2) / 2,
+                         **kwargs)
 
 
     def shoot_simple_bullets(self, bullets: List["Bullet"]) -> None:
@@ -39,12 +61,12 @@ class StarSlayerCharacter(PlayableCharacter):
         Shoots simple bullets.
         """
 
-        player_center_x, _ = self.center
+        center_x, center_y = self.center
 
-        bullets.append(BulletNormalAcc(x1=player_center_x - 5,
-                                       y1=self.y1 + 30,
-                                       x2=player_center_x + 5,
-                                       y2=self.y1 + 20,
+        bullets.append(BulletNormalAcc(cx=center_x,
+                                       cy=center_y - 25,
+                                       radius=5,
+                                       health=1,
                                        how_hard=self.hardness,
                                        speed=2))
 
@@ -54,15 +76,7 @@ class StarSlayerCharacter(PlayableCharacter):
         Shoots super bullets.
         """
 
-        player_center_x, _ = self.center
-
-        bullets.append(BulletSinusoidalSimple(x1=player_center_x - 5,
-                                              y1=self.y1 + 30,
-                                              x2=player_center_x + 5,
-                                              y2=self.y1 + 20,
-                                              how_hard=self.hardness,
-                                              speed=3,
-                                              first_to_right=True))
+        ...
 
 
 
@@ -71,22 +85,7 @@ class StarSlayerCharacter(PlayableCharacter):
         Shoots ultra bullets.
         """
 
-        player_center_x, _ = self.center
-
-        bullets.append(BulletSinusoidalSimple(x1=player_center_x - 15,
-                                              y1=self.y1 + 30,
-                                              x2=player_center_x -5,
-                                              y2=self.y1 + 20,
-                                              how_hard=self.hardness,
-                                              speed=3,
-                                              first_to_right=True))
-        bullets.append(BulletSinusoidalSimple(x1=player_center_x + 5,
-                                              y1=self.y1 + 30,
-                                              x2=player_center_x + 15,
-                                              y2=self.y1 + 20,
-                                              how_hard=self.hardness,
-                                              speed=3,
-                                              first_to_right=False))
+        ...
 
 
     def shoot_mega_bullets(self, bullets: List["Bullet"]) -> None:

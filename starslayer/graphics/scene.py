@@ -14,8 +14,8 @@ from .sprites import draw_sprite
 
 if TYPE_CHECKING:
 
+    from ..scene import AnimationsDict
     from ..state import Game
-    from ..scene import AnimationsList
 
 
 class SceneDrawer:
@@ -50,24 +50,27 @@ class SceneDrawer:
             draw_handler(self)
 
 
-    def draw_scene_animations(self, anim_list: "AnimationsList") -> None:
+    def draw_scene_animations(self, anim_dict: "AnimationsDict") -> None:
         """
         Draws animations in the screen, without caring if
         they are rear or front.
         """
 
-        for anim in anim_list:
+        for anim in anim_dict.values():
 
-            if "fill" not in anim.properties:
+            if "fill" not in anim.properties or "fill_name" in anim.properties:
                 fill_name = anim.properties.pop("fill_name", "MENU COLOR 1")
                 anim.properties.update(fill=get_color(self.game, fill_name))
 
-            if "outline" not in anim.properties:
+            if "outline" not in anim.properties or "outline_name" in anim.properties:
                 outline_name = anim.properties.pop("outline_name", "BG COLOR")
                 anim.properties.update(outline=get_color(self.game, outline_name))
 
             anim.animate()
             anim.post_hook()
+
+            anim.properties.update(fill_name=fill_name,
+                                   outline_name=outline_name)
 
 
     def draw_scene_rear_animations(self) -> None:
@@ -102,13 +105,15 @@ class SceneDrawer:
         """
 
         scene = self.game.current_scene
-        for label in scene.labels:
+        for label in scene.labels.values():
 
-            if not "fill" in label.properties:
-                color_name = label.properties.pop("color_name", "TEXT_COLOR_1")
-                label.properties.update(fill=get_color(self.game, color_name))
+            if not "fill" in label.properties or "fill_name" in label.properties:
+                fill_name = label.properties.pop("fill_name", "TEXT_COLOR_1")
+                label.properties.update(fill=get_color(self.game, fill_name))
 
             draw_text(label.text, label.x, label.y, **label.properties)
+
+            label.properties.update(fill_name=fill_name)
 
 
     def draw_scene_sprites(self) -> None:
@@ -117,13 +122,14 @@ class SceneDrawer:
         """
 
         scene = self.game.current_scene
-        for sprite_properties in scene.sprites:
+        for sprite_properties in scene.sprites.values():
             sprite = sprite_properties.get("sprite")
             draw_sprite(sprite,
                         sprite_properties.get("x1"),
                         sprite_properties.get("y1"),
                         sprite_properties.get("x2"),
-                        sprite_properties.get("y2"))
+                        sprite_properties.get("y2"),
+                        sprite_type=sprite_properties.get("spr_type", "BOX"))
 
             sprite.next_frame()
 

@@ -18,7 +18,7 @@ def abs_path(filename: str, subpackage: Optional[str]=None) -> str:
     return str(fpath(subpackage_path, filename))
 
 
-GAME_VERSION = "0.0.9"
+GAME_VERSION = "0.1.1-alpha"
 """
 The current version of the game.
 """
@@ -85,6 +85,11 @@ DEFAULT_THEME_LINES = ["...you know, don't you?",
 "The default theme sadly is not available for the user"]
 """
 Lines to say if the user tries to switch to the default theme.
+"""
+
+PLAYER_HEALTH_BAR_ANIM = "player_health"
+"""
+Player health's animation template name.
 """
 
 NEW_THEME = "NEW_THEME"
@@ -185,5 +190,6 @@ VIPER_DODGER_REL_PATH = "player/viper_dodger"
 GAME_ICON = abs_path("game_icon.gif", "textures.icon")
 KEYS_PATH = abs_path("keys.json", "json.keys")
 PROFILES_PATH = abs_path("color_profiles.json", "json.profiles")
+SCORES_PATH = abs_path("game_scores.json", "json.scores")
 LOG_PATH = abs_path("thestarthatslays.log")
 HOOKS_GROUPS_PATH = abs_path("groups", "hooks")

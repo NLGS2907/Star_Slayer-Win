@@ -11,14 +11,18 @@ class BulletNormalAcc(Bullet):
     A bullet of normal acceleration.
     """
 
-    def __init__(self, **kwargs: BulletKwargs) -> None:
+    def __init__(self,
+                 *,
+                 oscillation_time: int=30,
+                 upwards: bool=True,
+                 **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'BulletNormalAcc'.
         """
 
         super().__init__(**kwargs)
 
-        oscillation_time: int = kwargs.get("oscillation_time", 30)
+        self.upwards: bool = upwards
         self.accel_timer = Timer(oscillation_time)
 
 
@@ -31,4 +35,4 @@ class BulletNormalAcc(Bullet):
             self.accel_timer.deduct(1)
             self.accel += 0.3
 
-        self.transfer(0, -self.speed * self.accel)
+        self.transfer(0, (-1 if self.upwards else 1) * self.speed * self.accel)

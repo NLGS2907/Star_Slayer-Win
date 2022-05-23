@@ -3,7 +3,8 @@ Scenes Module. Dictates how a scene contains menus and
 the content on display.
 """
 
-from typing import TYPE_CHECKING, Dict, List, Optional
+from re import match
+from typing import TYPE_CHECKING, Dict, Generator, List, Optional
 
 from ..sprites import Sprite
 from ..utils import ButtonKwargs, Label, Menu, Timer
@@ -14,10 +15,10 @@ if TYPE_CHECKING:
     from ..state import Game
 
 MenuList = List[Menu]
-LabelList = List[Label]
+LabelDict = Dict[str, Label]
 SpriteProperties = Dict[str, int | Sprite]
-SpritesList = List[SpriteProperties]
-AnimationsList = List["Animation"]
+SpritesDict = Dict[str, SpriteProperties]
+AnimationsDict = Dict[str, "Animation"]
 SceneDict = Dict[str, "Scene"]
 
 
@@ -34,10 +35,10 @@ class Scene:
         self._name_id: str = name_id
         self._selected_menu_index: int = -1
         self._menus: MenuList = []
-        self._labels: LabelList = []
-        self._sprites: SpritesList = []
-        self._rear_animations: AnimationsList = []
-        self._front_animations: AnimationsList = []
+        self._labels: LabelDict = {}
+        self._sprites: SpritesDict = {}
+        self._rear_animations: AnimationsDict = {}
+        self._front_animations: AnimationsDict = {}
 
         self.parent: Optional["Scene"] = kwargs.get("parent", None)
 
@@ -88,7 +89,7 @@ class Scene:
 
 
     @property
-    def labels(self) -> LabelList:
+    def labels(self) -> LabelDict:
         """
         Returns all the labels of the scene.
         """
@@ -96,8 +97,18 @@ class Scene:
         return self._labels
 
 
+    def find_label_match(self, pattern: str) -> Generator[Label, None, None]:
+        """
+        Yields each label whose name matches the regex pattern.
+        """
+
+        for label_name, label in self.labels.items():
+            if match(pattern, label_name):
+                yield label
+
+
     @property
-    def sprites(self) -> SpritesList:
+    def sprites(self) -> SpritesDict:
         """
         Returns all the sprites of the scene.
         """
@@ -105,8 +116,18 @@ class Scene:
         return self._sprites
 
 
+    def find_sprite_prop_match(self, pattern: str) -> Generator[Sprite, None, None]:
+        """
+        Yields each sprite whose name matches the regex pattern.
+        """
+
+        for sprite_name, sprite_properties in self.sprites.items():
+            if match(pattern, sprite_name):
+                yield sprite_properties
+
+
     @property
-    def rear_animations(self) -> AnimationsList:
+    def rear_animations(self) -> AnimationsDict:
         """
         Returns all the animations in the scene.
         """
@@ -115,7 +136,7 @@ class Scene:
 
 
     @property
-    def front_animations(self) -> AnimationsList:
+    def front_animations(self) -> AnimationsDict:
         """
         Returns all the front animations in the scene.
         These ones are special in that they are drawn above
@@ -123,6 +144,31 @@ class Scene:
         """
 
         return self._front_animations
+
+
+    def find_animation_match(self, pattern: str) -> Generator["Animation", None, None]:
+        """
+        Yields each animation whose name matches the regex pattern.
+        """
+
+        for rear_anim_name, rear_anim in self.rear_animations.items():
+            if match(pattern, rear_anim_name):
+                yield rear_anim
+
+        for front_anim_name, front_anim in self.front_animations.items():
+            if match(pattern, front_anim_name):
+                yield front_anim
+
+
+    def get_default_name(self, elem_name: str, dictionary: Dict) -> str:
+        """
+        Gets a default name when it is not provided.
+        """
+
+        how_many = len([key for key in dictionary if (isinstance(key, str) and
+                                                      key.startswith(f"{elem_name}_"))])
+
+        return f"{elem_name}_{str(how_many + 1).zfill(3)}"
 
 
     def add_menu(self, menu: Menu) -> None:
@@ -137,34 +183,65 @@ class Scene:
         self.menus.append(menu)
 
 
-    def add_label(self, label: Optional[Label]=None, **kwargs) -> None:
+    # pylint: disable=invalid-name
+    def add_label(self,
+                  label: Optional[Label]=None,
+                  name: Optional[str]=None,
+                  *,
+                  x: Optional[float]=None,
+                  y: Optional[float]=None,
+                  text: str='',
+                  **kwargs) -> None:
         """
         Adds a label to the scene.
         """
 
+        if not name:
+            name = self.get_default_name("label", self.labels)
+
         if label:
-            self.labels.append(label)
+            self.labels[name] = label
             return
 
-        self.labels.append(Label(x=kwargs.get("x"),
-                                 y=kwargs.get("y"),
-                                 text=kwargs.get("text", ''),
-                                 **kwargs))
+        if not all((x, y)):
+            return
+
+        self.labels[name] = Label(x=x,
+                                  y=y,
+                                  text=text,
+                                  **kwargs)
 
 
-    def add_sprite(self, sprite: Optional[Sprite]=None, **kwargs) -> None:
+    def add_sprite(self,
+                   sprite: Optional[Sprite]=None,
+                   name: Optional[str]=None,
+                   *,
+                   texture_path: Optional[str]=None,
+                   spr_type: str="BOX",
+                   **kwargs) -> None:
         """
         Adds a sprite to the scene.
         """
 
+        if not name:
+            name = self.get_default_name("sprite", self.sprites)
+
         if not sprite:
-            sprite = Sprite(kwargs.get("texture_path"))
+            if not texture_path:
+                return
 
-        kwargs.update(sprite=sprite)
-        self.sprites.append(kwargs)
+            sprite = Sprite(texture_path)
+
+        kwargs.update(sprite=sprite,
+                      spr_type=spr_type)
+        self.sprites[name] = kwargs
 
 
-    def add_animation(self, animation: "Animation", is_front: bool=False) -> None:
+    def add_animation(self,
+                      animation: "Animation",
+                      name: Optional[str]=None,
+                      *,
+                      is_front: bool=False) -> None:
         """
         Adds an animation to the scene.
         """
@@ -174,7 +251,10 @@ class Scene:
         else:
             anim_list = self.rear_animations
 
-        anim_list.append(animation)
+        if not name:
+            name = self.get_default_name("animation", anim_list)
+
+        anim_list[name] = animation
 
 
     def change_selection(self, reverse: bool=False) -> None:

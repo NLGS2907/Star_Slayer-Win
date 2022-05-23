@@ -17,7 +17,7 @@ class Animation(ABC):
                  y1: float,
                  x2: float,
                  y2: float,
-                **kwargs) -> None:
+                 **kwargs) -> None:
         """
         Initializes an instance of type 'Animation'.
         """
@@ -42,19 +42,47 @@ class Animation(ABC):
         return self.x1, self.y1, self.x2, self.y2
 
 
+    @property
+    def center_x(self) -> float:
+        """
+        Return the center of the X axis.
+        """
+
+        return (self.x1 + self.x2) / 2
+
+
+    @property
+    def center_y(self) -> float:
+        """
+        Return the center of the Y axis.
+        """
+
+        return (self.y1 + self.y2) / 2
+
+
+    @property
+    def center(self) -> Tuple[float, float]:
+        """
+        Returns the center of the area.
+        """
+
+        return self.center_x, self.center_y
+
+
     @abstractmethod
     def animate(self) -> None:
         """
         Proceeds with the animation.
         """
 
-        ...
+        raise NotImplementedError
 
 
-    @abstractmethod
     def post_hook(self) -> None:
         """
         For anything that needs atention after an animation frame.
+        It is not necessary to implement this method, but it is
+        recommended.
         """
 
-        ...
+        return None

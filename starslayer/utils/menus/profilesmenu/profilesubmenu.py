@@ -4,9 +4,8 @@ Profiles Sub Menu Module.
 
 from ....auxiliar import Singleton
 from ....consts import SUB_MENU_LEFT
-from ...hitbox import FloatTuple4
 from ...menu import Menu, MenuDict
-
+from ...shapes import FloatTuple4
 
 __all__ = ["ProfileSubMenu"]
 

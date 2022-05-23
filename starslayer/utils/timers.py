@@ -46,11 +46,9 @@ class Timer:
         """
 
         if not self.is_zero_or_less():
-
             self.deduct(float(how_much))
 
         elif reset:
-
             self.reset()
 
 
@@ -117,6 +115,22 @@ class SpringTimer:
 
         return (f"Current: {self.current} - Floor: {self.floor} - " +
                 f"Ceiling: {self.ceil} - Is it adding: {self.adding}")
+
+
+    def is_at_floor(self) -> bool:
+        """
+        Checks if the timer is at its lowest possible value.
+        """
+
+        return self.current == self.floor
+
+
+    def is_at_ceiling(self) -> bool:
+        """
+        Checks if the timer is at its greatest possible value.
+        """
+
+        return self.current == self.ceil
 
 
     def count(self, how_much: float=1.0) -> None:

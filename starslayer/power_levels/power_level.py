@@ -24,7 +24,7 @@ class PowerLevel(ABC):
         Shoots the bullets it needs.
         """
 
-        ...
+        raise NotImplementedError
 
 
     @abstractmethod
@@ -33,7 +33,7 @@ class PowerLevel(ABC):
         Returns the next power level to this one.
         """
 
-        ...
+        raise NotImplementedError
 
 
     @property
@@ -43,7 +43,7 @@ class PowerLevel(ABC):
         Defines the cooldown for shooting bullets.
         """
 
-        ...
+        raise NotImplementedError
 
 
     @property
@@ -54,7 +54,7 @@ class PowerLevel(ABC):
         it has received damage.
         """
 
-        ...
+        raise NotImplementedError
 
 
     @property
@@ -64,4 +64,4 @@ class PowerLevel(ABC):
         Defines the name of the power level.
         """
 
-        ...
+        raise NotImplementedError

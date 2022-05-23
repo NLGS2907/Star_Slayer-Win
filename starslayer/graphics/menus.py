@@ -2,6 +2,7 @@
 Menus Graphics Module.
 """
 
+from textwrap import wrap
 from typing import TYPE_CHECKING
 
 from ..auxiliar import get_color
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from ..utils import Menu
 
 
-def draw_menu_buttons(game: "Game", menu: "Menu") -> None:
+def draw_menu_buttons(game: "Game", menu: "Menu", *, line_limit: int=21) -> None:
     """
     Draws all the buttons of a given menu.
     """
@@ -30,11 +31,16 @@ def draw_menu_buttons(game: "Game", menu: "Menu") -> None:
         if not button.msg:
             continue
 
+        button_message = button.msg[:]
         x_coord, y_coord = button.center
         btn_anchor = menu.button_anchor
+        button_size = int((button.y2 - button.y1) // (2 if button_message in SPECIAL_CHARS else 4))
 
-        if button.msg in SPECIAL_CHARS or button.msg in [PROFILES_CHANGER, PROFILES_DELETER]:
+        if len(button_message) > line_limit:
+            button_message = '\n'.join(wrap(button_message, line_limit))
+            button_size = int(button_size * 0.8)
 
+        if button_message in list(SPECIAL_CHARS) + [PROFILES_CHANGER, PROFILES_DELETER]:
             btn_anchor = 'c'
 
         else:
@@ -65,9 +71,9 @@ def draw_menu_buttons(game: "Game", menu: "Menu") -> None:
 
                     x_coord = button.x2 - width_extra
 
-        draw_text(' '.join(button.msg.split('_')),
+        draw_text(' '.join(button_message.split('_')),
                   x_coord, y_coord,
-                  size=int((button.y2 - button.y1) // (2 if button.msg in SPECIAL_CHARS else 4)),
+                  size=button_size,
                   fill=get_color(game, "TEXT_COLOR_1"),
                   anchor=btn_anchor,
                   justify='c')

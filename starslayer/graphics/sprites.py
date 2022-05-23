@@ -4,7 +4,7 @@ Sprites Graphics Module.
 
 from typing import TYPE_CHECKING, Optional
 
-from ..gamelib import draw_rectangle
+from ..gamelib import draw_arc, draw_rectangle
 
 if TYPE_CHECKING:
 
@@ -13,28 +13,17 @@ if TYPE_CHECKING:
 
 
 # pylint: disable=invalid-name
-def draw_sprite(sprite: Optional["Sprite"],
-                x1: float,
-                y1: float,
-                x2: float,
-                y2: float,
-                to_next: bool=True,
-                circular: bool=True) -> None:
+def draw_sprite_pixels(sprite: "Sprite",
+                       x1: float,
+                       y1: float,
+                       x2: float,
+                       y2: float,
+                       *,
+                       to_next: bool=True,
+                       circular: bool=True) -> None:
     """
-    Draws a sprite in the given coordinates.
+    Draws a definite sprite on the screen.
     """
-
-    if not sprite:
-
-        middle_x = (x2 - x1) // 2
-        middle_y = (y2 - y1) // 2
-
-        draw_rectangle(x1, y1, x1 + middle_x, y1 + middle_y, outline='', fill="#ff00ff")
-        draw_rectangle(x1 + middle_x, y1, x2, y1 + middle_y, outline='', fill="#000000")
-        draw_rectangle(x1, y1 + middle_y, x1 + middle_x, y2, outline='', fill="#000000")
-        draw_rectangle(x1 + middle_x, y1 + middle_y, x2, y2, outline='', fill="#ff00ff")
-
-        return
 
     width = sprite.width
     height = sprite.height
@@ -61,3 +50,89 @@ def draw_sprite(sprite: Optional["Sprite"],
         return
 
     sprite.previous_frame(circular)
+
+
+# pylint: disable=invalid-name
+def draw_sprite(sprite: Optional["Sprite"],
+                x1: float,
+                y1: float,
+                x2: float,
+                y2: float,
+                *,
+                to_next: bool=True,
+                circular: bool=True,
+                sprite_type: str="BOX") -> None:
+    """
+    Draws a sprite in the given coordinates.
+    """
+
+    if not sprite:
+
+        middle_x = (x2 - x1) / 2
+        middle_y = (y2 - y1) / 2
+        sprite_type = sprite_type.upper()
+
+        if sprite_type == "BOX":
+            draw_rectangle(x1,
+                           y1,
+                           x1 + middle_x,
+                           y1 + middle_y,
+                           outline='',
+                           fill="#ff00ff")
+            draw_rectangle(x1 + middle_x,
+                           y1,
+                           x2,
+                           y1 + middle_y,
+                           outline='',
+                           fill="#000000")
+            draw_rectangle(x1,
+                           y1 + middle_y,
+                           x1 + middle_x,
+                           y2, outline='',
+                           fill="#000000")
+            draw_rectangle(x1 + middle_x,
+                           y1 + middle_y,
+                           x2,
+                           y2,
+                           outline='',
+                           fill="#ff00ff")
+
+
+        elif sprite_type == "CIRCLE":
+            draw_arc(x1,
+                     y1,
+                     x2,
+                     y2,
+                     outline='',
+                     fill="#ff00ff",
+                     start=90.0,
+                     extent=90.0)
+            draw_arc(x1,
+                     y1,
+                     x2,
+                     y2,
+                     outline='',
+                     fill="#000000",
+                     start=0.0,
+                     extent=90.0)
+            draw_arc(x1,
+                     y1,
+                     x2,
+                     y2,
+                     outline='',
+                     fill="#000000",
+                     start=180.0,
+                     extent=90.0)
+            draw_arc(x1,
+                     y1,
+                     x2,
+                     y2,
+                     outline='',
+                     fill="#ff00ff",
+                     start=270.0,
+                     extent=90.0)
+        return
+
+    draw_sprite_pixels(sprite, x1, y1, x2, y2,
+                       to_next=to_next,
+                       circular=circular)

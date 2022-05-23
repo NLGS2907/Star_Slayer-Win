@@ -9,7 +9,7 @@ from random import choice, randrange
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 from ..consts import (EXITING_DELAY, GUI_SPACE, HEIGHT, HOOKS_GROUPS_PATH,
-                      KEYS_PATH, PROFILES_PATH, WIDTH)
+                      KEYS_PATH, PLAYER_HEALTH_BAR_ANIM, PROFILES_PATH, WIDTH)
 from ..enemies import EnemyCommonA, EnemyCommonB
 from ..files import (ProfilesDict, StrDict, list_actions, list_profiles,
                      list_repeated_keys, load_json)
@@ -19,19 +19,22 @@ from ..power_levels import SimplePower
 from ..scene import (CharacterScene, ControlScene, InGameScene, MainScene,
                      OptionScene, ProfileScene, Scene, SceneDict)
 from ..selector import ColorSelector
-from ..utils import Chronometer, Menu, Timer
+from ..utils import Chronometer, HitBox, HitCircle, Menu, Timer
 
 if TYPE_CHECKING:
 
     from ..bullets import Bullet
+    from ..characters import PlayableCharacter
     from ..enemies import Enemy
     from ..entity import Entity
     from ..power_levels import PowerLevel
+    from ..utils import BoundingShape
 
 CornersTuple = tuple[int | float, int | float, int | float, int | float]
 TimerDict = Dict[str, Timer]
 ChronDict = Dict[str, Chronometer]
 EventsDict = Dict[str, bool]
+BulletsList = List["Bullet"]
 
 
 class Game:
@@ -49,8 +52,9 @@ class Game:
         self.score: int = 0
 
         # Player Parameters
-        self.player: Optional["Entity"] = None
+        self.player: Optional["PlayableCharacter"] = None
         self.power_level: "PowerLevel" = SimplePower()
+        self.player_bullets: BulletsList = []
 
         # Color Profiles
         self.color_profiles: ProfilesDict = load_json(PROFILES_PATH)
@@ -62,23 +66,21 @@ class Game:
         self.sub_menu: Optional[Menu] = None
 
         # Timers
-        self.timers: TimerDict = {"invulnerability": Timer(self.power_level.invulnerability),
-                                  "shooting_cooldown": Timer(self.power_level.cooldown),
-                                  "debug_cooldown": Timer(20)}
+        self.timers: TimerDict = {"debug_cooldown": Timer(20)}
         self.special_timers: TimerDict = {"exiting_cooldown": Timer(EXITING_DELAY)}
         self.chronometers: ChronDict = {"level_time": Chronometer()}
 
-        # Enemies, Misc
+        # Enemies
         self.enemies: List["Enemy"] = []
-        self.bullets: List["Bullet"] = []
+        self.enemies_bullets: BulletsList = []
 
         # Control Attributes
-        self.is_on_prompt: bool = False
-        self.show_debug_info: bool = False
-        self.show_about: bool = False
-        self.is_on_prompt: bool = False
-        self.exiting: bool = False
-        self.exit: bool = False
+        self.control_attributes: Dict[str, bool] = {}
+        self.control_attributes.update(is_on_prompt=False,
+                                       show_debug_info=False,
+                                       show_about=False,
+                                       exiting=False,
+                                       exit=False)
 
         # Selector
         self.color_selector = self.generate_color_selector()
@@ -299,25 +301,6 @@ class Game:
 
 
     @property
-    def invulnerability(self) -> Timer:
-        """
-        Returns the invulnerability the player has,
-        after it has received damage.
-        """
-
-        return self.timers.get("invulnerability")
-
-
-    @property
-    def shooting_cooldown(self) -> Timer:
-        """
-        Returns the cooldown to shoot again.
-        """
-
-        return self.timers.get("shooting_cooldown")
-
-
-    @property
     def debug_cooldown(self) -> Timer:
         """
         Returns the cooldown for showing debug messages.
@@ -345,6 +328,96 @@ class Game:
 
 
     @property
+    def is_on_prompt(self) -> bool:
+        """
+        Returns the control boolean `is_on_prompt`.
+        """
+
+        return self.control_attributes.get("is_on_prompt")
+
+
+    @is_on_prompt.setter
+    def is_on_prompt(self, new_value: bool) -> None:
+        """
+        Changes the value for the control boolean `is_on_prompt`.
+        """
+
+        self.control_attributes["is_on_prompt"] = new_value
+
+
+    @property
+    def show_debug_info(self) -> bool:
+        """
+        Returns the control boolean `show_debug_info`.
+        """
+
+        return self.control_attributes.get("show_debug_info")
+
+
+    @show_debug_info.setter
+    def show_debug_info(self, new_value: bool) -> None:
+        """
+        Changes the value for the control boolean `show_debug_info`.
+        """
+
+        self.control_attributes["show_debug_info"] = new_value
+
+
+    @property
+    def show_about(self) -> bool:
+        """
+        Returns the control boolean `show_about`.
+        """
+
+        return self.control_attributes.get("show_about")
+
+
+    @show_about.setter
+    def show_about(self, new_value: bool) -> None:
+        """
+        Changes the value for the control boolean `show_about`.
+        """
+
+        self.control_attributes["show_about"] = new_value
+
+
+    @property
+    def exiting(self) -> bool:
+        """
+        Returns the control boolean `exiting`.
+        """
+
+        return self.control_attributes.get("exiting")
+
+
+    @exiting.setter
+    def exiting(self, new_value: bool) -> None:
+        """
+        Changes the value for the control boolean `exiting`.
+        """
+
+        self.control_attributes["exiting"] = new_value
+
+
+    @property
+    def exit(self) -> bool:
+        """
+        Returns the control boolean `exit`.
+        """
+
+        return self.control_attributes.get("exit")
+
+
+    @exit.setter
+    def exit(self, new_value: bool) -> None:
+        """
+        Changes the value for the control boolean `exit`.
+        """
+
+        self.control_attributes["exit"] = new_value
+
+
+    @property
     def selected_theme(self) -> str:
         """
         Returns the current color theme (name only).
@@ -365,6 +438,15 @@ class Game:
 
             self._color_theme = real_name
             self.color_profile = self.color_profiles[real_name]
+
+
+    @property
+    def all_bullets(self) -> BulletsList:
+        """
+        Returns all the bullets of the game.
+        """
+
+        return self.player_bullets + self.enemies_bullets
 
 
     def check_scene(self, name_id: str) -> bool:
@@ -434,7 +516,8 @@ class Game:
         if next_level:
             self.power_level = next_level
 
-        self.shooting_cooldown.initial_time = self.power_level.cooldown
+        self.player.change_cooldown(self.power_level.cooldown)
+        self.player.change_invulnerability(self.power_level.invulnerability)
 
 
     def shoot_bullets(self) -> None:
@@ -442,35 +525,88 @@ class Game:
         Shoots bullets from player.
         """
 
-        self.power_level.shoot_bullets(self.player, self.bullets)
+        self.power_level.shoot_bullets(self.player, self.player_bullets)
 
 
-    def exec_bul_trajectory(self) -> None:
+    def check_shape_pos_and_entity_health(self,
+                                          entity: "Entity",
+                                          container: List["Entity"]) -> None:
         """
-        Moves each bullet according to their trajectory.
+        Checks if an entity should disappear from the screen.
         """
 
-        for bullet in self.bullets:
+        if any((entity.is_over(-(HEIGHT * 0.15)),
+                entity.is_below(HEIGHT * 1.15),
+                entity.has_no_health())):
+            try:
+                container.remove(entity)
+            except ValueError:
+                pass
 
-            if self.player.collides_with(bullet):
 
-                if bullet.hardness > self.player.hardness:
-                    self.player.hp -= bullet.hardness
+    def _check_collision_type(self,
+                              threat: "BoundingShape",
+                              defender: "BoundingShape") -> bool:
+        """
+        Checks which type of collision to test with another entity.
+        """
 
-                bullet.hp = 0
+        if isinstance(threat, HitBox):
+            return defender.collides_with_box(threat)
+        if isinstance(threat, HitCircle):
+            return defender.collides_with_circle(threat)
 
-            for enem in self.enemies:
 
-                if bullet.collides_with(enem):
-                    enem.hp -= bullet.hardness
-                    bullet.hp = 0
+    def check_damage_to_player(self, threat: "Entity") -> None:
+        """
+        Checks a collision of a threat with the player.
+        """
+
+        if all((self._check_collision_type(threat, self.player),
+                self.player.invulnerability.is_zero_or_less())):
+            self.player.take_damage(threat.hardness)
+            self.player.invulnerability.reset()
+
+            for health_bar_anim in self.current_scene.\
+                                   find_animation_match(fr"^{PLAYER_HEALTH_BAR_ANIM}_[0-9]+$"):
+                health_bar_anim.change_crop(self.player.health_percentage())
+
+
+    def check_damage_to_shield(self, threat: "Entity", threat_container: List["Entity"]) -> None:
+        """
+        Checks a collision of a threat with the player's shield.
+        """
+
+        shield = self.player.shield
+        if not shield:
+            return
+
+        if self._check_collision_type(threat, shield):
+            shield.take_damage(threat.hardness)
+            threat.take_damage(shield.hardness)
+
+        self.check_shape_pos_and_entity_health(threat, threat_container)
+
+
+    def exec_player_bul_trajectory(self) -> None:
+        """
+        Moves each player bullet according to their trajectory.
+        Player bullets do not actually hurt the player.
+        """
+
+        for player_bullet in self.player_bullets:
+            player_bullet.trajectory()
+
+            for threat in self.enemies + self.enemies_bullets:
+                if self._check_collision_type(threat, player_bullet):
+                    threat.take_damage(player_bullet.hardness)
+
+                    if not player_bullet.is_ethereal:
+                        player_bullet.take_damage(threat.hardness)
+
                     break
 
-            if bullet.y2 < -100 or bullet.has_no_health():
-
-                self.bullets.remove(bullet)
-
-            bullet.trajectory()
+            self.check_shape_pos_and_entity_health(player_bullet, self.player_bullets)
 
 
     def exec_enem_trajectory(self) -> None:
@@ -479,19 +615,24 @@ class Game:
         """
 
         for enem in self.enemies:
-
-            if enem.collides_with(self.player):
-
-                if self.invulnerability.is_zero_or_less():
-
-                    self.player.hp -= enem.hardness
-                    self.invulnerability.reset()
-
-            if enem.has_no_health() or enem.y1 > (HEIGHT * 1.15):
-
-                self.enemies.remove(enem)
-
             enem.trajectory()
+            self.check_damage_to_shield(enem, self.enemies)
+            self.check_damage_to_player(enem)
+            self.check_shape_pos_and_entity_health(enem, self.enemies)
+            enem.shoot(self.enemies_bullets)
+
+
+    def exec_enem_bul_trajectory(self) -> None:
+        """
+        Moves each player bullet according to their trajectory.
+        These ones are the ones that do ouchie-ouchie.
+        """
+
+        for enem_bullet in self.enemies_bullets:
+            enem_bullet.trajectory()
+            self.check_damage_to_shield(enem_bullet, self.enemies_bullets)
+            self.check_damage_to_player(enem_bullet)
+            self.check_shape_pos_and_entity_health(enem_bullet, self.enemies_bullets)
 
 
     def spawn_enemies(self,
@@ -531,7 +672,7 @@ class Game:
 
             if any([new_enemy.x1 == new_enemy.x2,
                     new_enemy.y1 == new_enemy.y2] +
-                    [new_enemy.collides_with(enemy)
+                    [new_enemy.collides_with_box(enemy)
                         for enemy in self.enemies]):
                 continue
 
@@ -565,8 +706,9 @@ class Game:
         Clears all enemies and bullets in their lists once returned to the main menu.
         """
 
-        self.enemies = []
-        self.bullets = []
+        self.enemies.clear()
+        self.player_bullets.clear()
+        self.enemies_bullets.clear()
 
 
     def advance_game(self, keys_dict: EventsDict) -> None:
@@ -579,11 +721,12 @@ class Game:
 
         if self.is_in_game:
 
-            self.exec_bul_trajectory()
+            self.generate_enemies()
             self.exec_enem_trajectory()
+            self.exec_enem_bul_trajectory()
+            self.exec_player_bul_trajectory()
 
             self.refresh_timers()
-            self.generate_enemies()
 
         else:
 
@@ -598,6 +741,9 @@ class Game:
         Refreshes all the in-game timers of the game, so that it updates theirs values.
         """
 
+        for pl_timer in self.player.get_timers():
+            pl_timer.count(1)
+
         for timer in self.timers.values():
             timer.count(1)
 
@@ -611,8 +757,10 @@ class Game:
         """
 
         for timer in self.timers.values():
-
             timer.reset()
+
+        for pl_timer in self.player.get_timers():
+            pl_timer.reset()
 
 
     def refresh_return_timer(self, keys_dict: EventsDict) -> None:

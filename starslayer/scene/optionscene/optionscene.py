@@ -27,5 +27,5 @@ class OptionScene(Scene):
                        HEIGHT // 4,
                        OPTIONS_TITLE,
                        size=(WIDTH // 90),
-                       color_name="TEXT_COLOR_1",
+                       fill_name="TEXT_COLOR_1",
                        justify='c'))

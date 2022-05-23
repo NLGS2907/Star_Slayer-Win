@@ -16,7 +16,21 @@
         "DEBUG_LINES_1": "#ff0000",
         "DEBUG_LINES_2": "#ff00ff",
         "ABOUT_COLOR_1": "#041f4d",
-        "ABOUT_OUTLINE_1": "#00286b"
+        "ABOUT_OUTLINE_1": "#00286b",
+        "FULL_HEALTH_1": "#17d149",
+        "FULL_HEALTH_2": "#06cc0e",
+        "STILL_HEALTHY_1": "#d3f224",
+        "STILL_HEALTHY_2": "#bedb1a",
+        "OK_MAYBE_IT_STARTS_TO_HURT_1": "#f2e11f",
+        "OK_MAYBE_IT_STARTS_TO_HURT_2": "#e3d212",
+        "AYO_ITS_ACTUALLY_PAINFUL_1": "#e3bd12",
+        "AYO_ITS_ACTUALLY_PAINFUL_2": "#d1ac06",
+        "LIKE_IM_GONNA_DIE_AND_STUFF_1": "#d6941a",
+        "LIKE_IM_GONNA_DIE_AND_STUFF_2": "#c4840e",
+        "NO_SERIOUSLY_IM_GONNA_DIE_1": "#e8621a",
+        "NO_SERIOUSLY_IM_GONNA_DIE_2": "#c95414",
+        "HELP_GOD_DAMMIT_1": "#c91b08",
+        "HELP_GOD_DAMMIT_2": "#a11405"
     },
     "AZURE": {
         "BG_COLOR": "#00102b",
@@ -35,6 +49,20 @@
         "DEBUG_LINES_1": "#ff0000",
         "DEBUG_LINES_2": "#ff00ff",
         "ABOUT_COLOR_1": "#041f4d",
-        "ABOUT_OUTLINE_1": "#00286b"
+        "ABOUT_OUTLINE_1": "#00286b",
+        "FULL_HEALTH_1": "#17d149",
+        "FULL_HEALTH_2": "#06cc0e",
+        "STILL_HEALTHY_1": "#d3f224",
+        "STILL_HEALTHY_2": "#bedb1a",
+        "OK_MAYBE_IT_STARTS_TO_HURT_1": "#f2e11f",
+        "OK_MAYBE_IT_STARTS_TO_HURT_2": "#e3d212",
+        "AYO_ITS_ACTUALLY_PAINFUL_1": "#e3bd12",
+        "AYO_ITS_ACTUALLY_PAINFUL_2": "#d1ac06",
+        "LIKE_IM_GONNA_DIE_AND_STUFF_1": "#d6941a",
+        "LIKE_IM_GONNA_DIE_AND_STUFF_2": "#c4840e",
+        "NO_SERIOUSLY_IM_GONNA_DIE_1": "#e8621a",
+        "NO_SERIOUSLY_IM_GONNA_DIE_2": "#c95414",
+        "HELP_GOD_DAMMIT_1": "#c91b08",
+        "HELP_GOD_DAMMIT_2": "#a11405"
     }
 }

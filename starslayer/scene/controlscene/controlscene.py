@@ -30,5 +30,5 @@ class ControlScene(Scene):
                              (HEIGHT // 15),
                              CONTROLS_TITLE,
                              size=(HEIGHT // 235),
-                             color_name="TEXT_COLOR_1",
+                             fill_name="TEXT_COLOR_1",
                              justify='c'))

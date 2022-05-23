@@ -4,7 +4,7 @@ Sinusoidal Wave Animation Module.
 
 from math import pi as MATH_PI
 from math import sin
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from ...gamelib import draw_oval
 from ...utils import SpringTimer
@@ -29,9 +29,19 @@ class SinusoidalWave(Animation):
                  dot_density: int=1,
                  wave_speed: float=-1.0,
                  translation_speed: float=30.0,
+                 crop_after: Optional[float]=None,
                 **kwargs) -> None:
         """
-        Initializes an instance of type 'SinusoidalWav'.
+        Initializes an instance of type 'SinusoidalWave'.
+
+        'vertical' refers if the wave is standing up or traveling sideways.
+        'bulge_frequency' means how many hills you should see on each cycle.
+        'initial_phase' is the little extra space the wave can start with.
+        'dot_radius' refers to the individual size of each dot of the wave.
+        'dot_density' is how many dots are in the wave.
+        'wave_speed' is how fast do the dots travel through the wave.
+        'translation_speed' is how fast the wave itself moves.
+        'crop_after' is the percentage after which the wave stops showing itself.
         """
 
         super().__init__(x1, y1, x2, y2, **kwargs)
@@ -48,6 +58,7 @@ class SinusoidalWave(Animation):
         self.translation_timer: SpringTimer = SpringTimer(floor=-100,
                                                           ceiling=10,
                                                           where_to_start=0)
+        self.crop_after: float = self._validate_crop_value(crop_after)
 
         self.generate_wave()
 
@@ -82,6 +93,18 @@ class SinusoidalWave(Animation):
         return int(density)
 
 
+    def _validate_crop_value(self, crop_value: Optional[float]) -> float:
+        """
+        Checks if the crop value is correct.
+        """
+
+        return (100
+                if (not crop_value or
+                    crop_value < 0 or
+                    crop_value > 100)
+                else crop_value)
+
+
     def _correct_float(self, float_num: float) -> float:
         """
         Rounds a float to 3 (three) decimal digits.
@@ -109,12 +132,82 @@ class SinusoidalWave(Animation):
 
 
     @property
+    def origin_ampl(self) -> float:
+        """
+        Returns the origin of the AMPLITUDE axis.
+        """
+
+        return self.x1 if self.is_vertical else self.y1
+
+
+    @property
+    def origin_long(self) -> float:
+        """
+        Returns the origin of the LONGITUDE axis.
+        """
+
+        return self.y1 if self.is_vertical else self.x1
+
+
+    @property
+    def end_ampl(self) -> float:
+        """
+        Returns the ending of the AMPLITUDE axis.
+        """
+
+        return self.x2 if self.is_vertical else self.y2
+
+
+    @property
+    def end_long(self) -> float:
+        """
+        Returns the ending of the LONGITUDE axis.
+        """
+
+        return self.y2 if self.is_vertical else self.x2
+
+
+    @property
     def translation_coefficient(self) -> float:
         """
         Returns how much to add to simulate a translation.
         """
 
         return self.translation_timer.current
+
+
+    def change_crop(self, new_crop_value: float) -> None:
+        """
+        Changes the crop value to a new one.
+        """
+
+        self.crop_after = self._validate_crop_value(new_crop_value)
+
+
+    # pylint: disable=invalid-name
+    def longitude_coords(self, x1: float, y1: float, x2: float, y2: float) -> Tuple[float, float]:
+        """
+        Returns the pair of coords that are in the LONGITUDE axis.
+        """
+
+        return (y1, y2) if self.is_vertical else (x1, x2)
+
+
+    def percentage_pos(self, long_pos: float) -> float:
+        """
+        Returns the percentage of completition of the wave the dot is in,
+        given its position in the LONGITUDE axis.
+        """
+
+        return (long_pos / self.longitude) * 100
+
+
+    def get_coord_by_percentage(self, percent: float) -> float:
+        """
+        Returns 'percent%' of the longitude total.
+        """
+
+        return (percent * self.longitude) / 100
 
 
     def calculate_coords(self, dot_long: int) -> Tuple[float, float]:
@@ -166,6 +259,12 @@ class SinusoidalWave(Animation):
         """
 
         for x1, y1, x2, y2 in self.dot_coords: # pylint: disable=invalid-name
+
+            _, long_2 = self.longitude_coords(x1, y1, x2, y2)
+
+            if long_2 > (self.get_coord_by_percentage(self.crop_after) + self.origin_long):
+                continue
+
             draw_oval(x1=x1,
                       y1=y1,
                       x2=x2,

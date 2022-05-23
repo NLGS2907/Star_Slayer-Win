@@ -7,27 +7,33 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from ..entity import Entity
+from ..utils import HitCircle
+from .bullet_sprites_types import BulletSprites
 
 BulletKwargs = dict[str, Optional[int | str | bool]]
 
 
-class Bullet(Entity, ABC):
+class Bullet(Entity, HitCircle, ABC):
     """
     Class for defining a bullet that is shot
     from a ship, enemy or not.
     """
 
-    def __init__(self, **kwargs: BulletKwargs) -> None:
+    def __init__(self,
+                 *,
+                 health: int=1,
+                 acceleration: int=1,
+                 ethereal: bool=False,
+                 sprite_type: BulletSprites=BulletSprites.PLAIN,
+                 **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'Bullet'.
         """
 
-        # Defining default types
-        if kwargs.get("health", None) is None:
-            kwargs["health"] = 10
-
-        super().__init__(**kwargs)
-        self.accel: int = kwargs.get("acceleration", 1)
+        super().__init__(health=health, **kwargs)
+        self.accel: int = acceleration
+        self.is_ethereal: bool = ethereal
+        self.sprite_type: BulletSprites = sprite_type
 
 
     @abstractmethod
@@ -36,4 +42,4 @@ class Bullet(Entity, ABC):
         Defines the trajectory of the bullet.
         """
 
-        ...
+        raise NotImplementedError

@@ -9,7 +9,7 @@ from ..checks import left_click, on_press
 from ..consts import HEIGHT, WIDTH
 from ..files import StrDict
 from .button import Button, ButtonHandler, ButtonsList
-from .hitbox import FloatTuple4
+from .shapes import FloatTuple4
 
 if TYPE_CHECKING:
 

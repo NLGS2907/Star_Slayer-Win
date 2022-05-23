@@ -9,8 +9,8 @@ from ....characters import (BilbyTankaCharacter, StarSlayerCharacter,
                             ViperDodgerCharacter)
 from ....checks import left_click, on_press
 from ....consts import HEIGHT, WIDTH
-from ...hitbox import FloatTuple4
 from ...menu import ButtonKwargs, Menu, MenuDict
+from ...shapes import FloatTuple4
 
 if TYPE_CHECKING:
     from ....scene import Scene
@@ -58,7 +58,8 @@ def choose_star_slayer(game: "Game",
     Chooses the Star Slayer character.
     """
 
-    game.player = StarSlayerCharacter()
+    game.player = StarSlayerCharacter(shooting_cooldown=game.power_level.cooldown,
+                                      invulnerability=game.power_level.invulnerability)
     game.start_game()
 
 
@@ -77,7 +78,8 @@ def choose_bilby_tanka(game: "Game",
     Chooses the Bilby Tanka character.
     """
 
-    game.player = BilbyTankaCharacter()
+    game.player = BilbyTankaCharacter(shooting_cooldown=game.power_level.cooldown,
+                                      invulnerability=game.power_level.invulnerability)
     game.start_game()
 
 
@@ -96,5 +98,7 @@ def choose_viper_dodger(game: "Game",
     Chooses the Viper Dodger character.
     """
 
-    game.player = ViperDodgerCharacter()
+    game.player = ViperDodgerCharacter(shooting_cooldown=game.power_level.cooldown,
+                                       invulnerability=game.power_level.invulnerability,
+                                       has_shield=True)
     game.start_game()

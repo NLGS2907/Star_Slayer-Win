@@ -29,7 +29,7 @@ class CharacterScene(Scene):
                              HEIGHT / 7,
                              CHARACTERS_TITLE,
                              size=(WIDTH // 100),
-                             color_name="TEXT_COLOR_1",
+                             fill_name="TEXT_COLOR_1",
                              justify='c'))
 
         self.add_sprite(Sprite(STAR_SLAYER_REL_PATH),

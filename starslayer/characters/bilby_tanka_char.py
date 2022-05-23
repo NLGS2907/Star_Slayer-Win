@@ -19,18 +19,40 @@ class BilbyTankaCharacter(PlayableCharacter):
     Its special power resides in a very powerful bomb.
     """
 
-    def __init__(self) -> None:
+    # pylint: disable=invalid-name
+    def __init__(self,
+                 *,
+                 shooting_cooldown: int=30,
+                 invulnerability: int=55,
+                 has_shield: bool=False,
+                 **kwargs) -> None:
         """
         Initializes an instance of type 'BilbyTankaCharacter'.
         """
 
-        super().__init__(x1=(WIDTH / 2) - 30,
-                         y1=(HEIGHT / 1.17) - 30,
-                         x2=(WIDTH / 2) + 30,
-                         y2=(HEIGHT / 1.17) + 30,
+        width_aux = WIDTH / 25
+        height_aux = HEIGHT / (70 / 3)
+        x1 = (WIDTH / 2) - width_aux
+        y1 = (HEIGHT / 1.17) - height_aux
+        x2 = (WIDTH / 2) + width_aux
+        y2 = (HEIGHT / 1.17) + height_aux
+
+        super().__init__(x1=x1,
+                         y1=y1,
+                         x2=x2,
+                         y2=y2,
                          how_hard=5,
                          speed=2,
-                         texture_path=BILBY_TANKA_REL_PATH)
+                         texture_path=BILBY_TANKA_REL_PATH,
+                         shooting_cooldown=shooting_cooldown,
+                         invulnerability=invulnerability,
+                         has_shield=has_shield,
+                         shield_x=x2 + width_aux,
+                         shield_y=y1 - height_aux,
+                         shield_rad=width_aux,
+                         shield_orbit_center_x=(x1 + x2) / 2,
+                         shield_orbit_center_y=(y1 + y2) / 2,
+                         **kwargs)
 
 
     def shoot_simple_bullets(self, bullets: List["Bullet"]) -> None:

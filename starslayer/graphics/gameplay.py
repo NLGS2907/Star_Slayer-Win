@@ -2,16 +2,16 @@
 Gmaeplay Graphics Module.
 """
 
+from random import choice
 from typing import TYPE_CHECKING
 
 from ..auxiliar import get_color
-from ..bullets import BulletSprites
+from ..bullets import BulletElectric, BulletSprites
 from ..consts import DEBUG_LINES, DEBUG_TEXT, HEIGHT, WIDTH
 from ..gamelib import draw_line, draw_oval, draw_rectangle, draw_text
 from .gui import draw_bar_percentage
 
 if TYPE_CHECKING:
-
     from ..state import Game
 
 
@@ -24,13 +24,92 @@ def draw_bullets(game: "Game") -> None:
 
         x1, y1, x2, y2 = bullet.all_coords # pylint: disable=invalid-name
 
-        if bullet.sprite_type == BulletSprites.PLAIN:
-            draw_oval(x1=x1,
-                      y1=y1,
-                      x2=x2,
-                      y2=y2,
-                      outline=get_color(game, "GUI_OUTLINE_1"),
-                      fill=get_color(game, "TEXT_COLOR_1"))
+        match bullet.sprite_type:
+
+            case BulletSprites.PLAIN:
+                draw_oval(x1=x1,
+                          y1=y1,
+                          x2=x2,
+                          y2=y2,
+                          outline=get_color(game, "GUI OUTLINE 1"),
+                          fill=get_color(game, "BULLET PLAIN 1"))
+
+            case BulletSprites.SPECIAL:
+                draw_oval(x1=x1,
+                          y1=y1,
+                          x2=x2,
+                          y2=y2,
+                          outline=get_color(game, "GUI OUTLINE 1"),
+                          fill=get_color(game, "BULLET SPECIAL 1"))
+
+            case BulletSprites.SHINY:
+                draw_oval(x1=x1,
+                          y1=y1,
+                          x2=x2,
+                          y2=y2,
+                          outline=get_color(game, "GUI OUTLINE 1"),
+                          fill=get_color(game, "BULLET SHINY 1"))
+
+            case BulletSprites.INVISIBLE:
+                pass # Do nothing
+
+            case BulletSprites.ELECTRIC:
+                electric_colors = (get_color(game, "BULLET ELECTRIC 1"),
+                                   get_color(game, "BULLET ELECTRIC 2"))
+                cx, cy = bullet.center # pylint: disable=invalid-name
+                field_x1 = cx - bullet.field_radius
+                field_y1 = cy - bullet.field_radius
+                field_x2 = cx + bullet.field_radius
+                field_y2 = cy + bullet.field_radius
+                dash_size = WIDTH // 10
+
+                draw_oval(x1=x1,
+                          y1=y1,
+                          x2=x2,
+                          y2=y2,
+                          outline=get_color(game, "GUI OUTLINE 1"),
+                          fill=choice(electric_colors))
+
+                if isinstance(bullet, BulletElectric):
+                    draw_oval(x1=field_x1,
+                              y1=field_y1,
+                              x2=field_x2,
+                              y2=field_y2,
+                              outline=choice(electric_colors),
+                              fill=get_color(game, "GUI OUTLINE 1"),
+                              dash=choice(((dash_size, dash_size),
+                                            (dash_size // 2, dash_size ),
+                                            (dash_size, dash_size, dash_size // 3, dash_size))))
+
+                    draw_electric_bullets_arcs(game, bullet)
+
+
+def draw_electric_bullets_arcs(game: "Game", bullet: BulletElectric) -> None:
+    """
+    Draws the arcs of the electric bullets.
+    """
+
+    if not bullet.arcs_pivots:
+        return
+
+    cx, cy = bullet.center # pylint: disable=invalid-name
+    electric_colors = (get_color(game, "BULLET ELECTRIC 1"),
+                       get_color(game, "BULLET ELECTRIC 2"))
+    size_aux = HEIGHT / 700
+
+    for piv in bullet.arcs_pivots: # We don't want to cross the last one
+        range_to_use = len(piv) - 1
+
+        for piv_i in range(range_to_use):
+            piv_x1, piv_y1 = piv[piv_i]
+            piv_x2, piv_y2 = piv[piv_i + 1]
+
+            draw_line(cx + piv_x1,
+                      cy + piv_y1,
+                      cx + piv_x2,
+                      cy + piv_y2,
+                      fill=choice(electric_colors),
+                      width=size_aux)
 
 
 def draw_debug_lines(game: "Game") -> None:
@@ -141,8 +220,8 @@ def draw_debug_lines(game: "Game") -> None:
     aux2 = (WIDTH // 30)
     aux3 = int(aux2 * 1.67)
 
-    if player.shield:
-        sh_x1, sh_y1, sh_x2, sh_y2 = player.shield.all_coords
+    if player.satellite:
+        sh_x1, sh_y1, sh_x2, sh_y2 = player.satellite.all_coords
         draw_circle_case(game,
                          sh_x1,
                          sh_y1,
@@ -228,7 +307,7 @@ def draw_lifebars(game: "Game") -> None:
     Draws the lifebar of all relevant entities on the screen.
     """
 
-    all_entities = game.all_bullets + game.enemies + [game.player.shield]
+    all_entities = game.all_bullets + game.enemies + [game.player.satellite]
 
     for entity in all_entities:
 
@@ -246,7 +325,8 @@ def draw_lifebars(game: "Game") -> None:
                             entity_y1 - aux - bar_aux_y,
                             center_x + bar_aux_x,
                             entity_y1 - aux,
-                            entity.health_percentage())
+                            entity.health_percentage(),
+                            health_colors=True)
 
 
 def draw_debug_info(game: "Game") -> None:
@@ -264,20 +344,26 @@ def draw_debug_info(game: "Game") -> None:
                     player_y2=f"{player.y2:.2f}",
 
                     hitbox_center=player.center,
-                    shooting_cooldown=("Ready!" if game.player.shooting_cooldown.is_zero_or_less()
+                    shooting_cooldown=("Ready!" if game.player.shooting_cooldown.time_is_up()
                                                 else game.player.shooting_cooldown.current_time),
-                    inv_cooldown=("Ready!" if game.player.invulnerability.is_zero_or_less()
+                    inv_cooldown=("Ready!" if game.player.invulnerability.time_is_up()
                                            else game.player.invulnerability.current_time),
 
-                    level_time=f"{game.level_time.current_time:.2f}",
-                    power_level=game.power_level.name,
+                    real_time=str(game.real_time.current_time),
+                    game_level=game.game_level,
+                    power_level=game.player.power_level.name,
+                    times_upgraded=game.times_upgraded,
 
-                    health=game.player.hp,
+                    health=f"{game.player.hp} / {game.player.max_hp}",
                     hardness=game.player.hardness,
                     speed=game.player.speed,
+                    ethereal=game.player.is_ethereal,
+                    ability_gauge=(f"{round(game.player.ability_gauge, 3)} / " +
+                                   f"{game.player.ability_threshold}"),
 
                     enemies=len(game.enemies),
-                    bullets=len(game.all_bullets))
+                    bullets=len(game.all_bullets),
+                    drops=len(game.drops))
 
     draw_text(debug_text,
               debug_cons,

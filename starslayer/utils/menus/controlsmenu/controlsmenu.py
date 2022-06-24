@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING
 
 from ....auxiliar import Singleton
 from ....checks import left_click, on_press
-from ....consts import HEIGHT, KEYS_PATH, WIDTH
-from ....files import dump_json, list_actions, list_repeated_keys, load_json
+from ....consts import ACTIONS_PATH, HEIGHT, WIDTH
+from ....files import (dump_json, exists_key, get_action_from_key,
+                       list_actions, list_action_keys, load_json)
 from ....gamelib import EventType
 from ....gamelib import say as lib_say
 from ....gamelib import wait as lib_wait
@@ -31,7 +32,7 @@ def create_buttons(menu: "ControlsMenu") -> None:
 
     menu.clear_buttons()
 
-    for action in list_actions(load_json(KEYS_PATH)):
+    for action in list_actions(load_json(ACTIONS_PATH)):
 
         @menu.button(message=action) # pylint: disable=cell-var-from-loop
         @left_click()
@@ -65,8 +66,9 @@ class ControlsMenu(Menu, metaclass=Singleton):
         Initializes an instance of 'ControlsMenu'.
         """
 
-        kwargs.update(max_rows=8)
-        super().__init__(area_corners, **kwargs)
+        super().__init__(area_corners,
+                         max_rows=8,
+                         **kwargs)
 
 
     def refresh_sub_menu(self, game: "Game") -> None:
@@ -75,7 +77,7 @@ class ControlsMenu(Menu, metaclass=Singleton):
         """
 
         submenu = ControlSubMenu()
-        repeated_keys = list_repeated_keys(game.action_to_show, load_json(KEYS_PATH))
+        repeated_keys = list_action_keys(game.action_to_show, load_json(ACTIONS_PATH))
 
         submenu.clear_buttons()
 
@@ -94,23 +96,22 @@ class ControlsMenu(Menu, metaclass=Singleton):
                 Removes the key passed as an argument from the keys dictionary.
                 """
 
-                keys_dict = load_json(KEYS_PATH)
+                actions_dict = load_json(ACTIONS_PATH)
                 del_key = btn.msg.removeprefix("Delete ")
+                action_of_key = get_action_from_key(del_key, actions_dict)
 
-                if len(list_repeated_keys(keys_dict[del_key], keys_dict)) == 1:
+                if len(list_action_keys(action_of_key, actions_dict)) == 1:
 
                     lib_say("You cannot delete this key, as it is the only one remaining.")
                     return
 
-                if del_key in keys_dict:
+                if exists_key(del_key, actions_dict):
 
-                    value = keys_dict.pop(del_key)
+                    actions_dict[action_of_key]["keys"].remove(del_key)
+                    game.keys_pressed.pop(del_key, None)
+                    game.keys_released.pop(del_key, None)
 
-                    if not list_repeated_keys(value, keys_dict):
-
-                        keys_dict[''] = value
-
-                    dump_json(keys_dict, KEYS_PATH)
+                    dump_json(actions_dict, ACTIONS_PATH)
                     self.refresh_sub_menu(game)
 
 
@@ -140,16 +141,15 @@ class ControlsMenu(Menu, metaclass=Singleton):
         sel_action = game.action_to_show
 
         event = lib_wait(EventType.KeyPress)
-        keys_dict = load_json(KEYS_PATH)
+        actions_dict = load_json(ACTIONS_PATH)
         success = False
 
-        if event.key not in keys_dict:
+        if not exists_key(event.key, actions_dict):
             success = True
 
         if success:
-
-            keys_dict[event.key] = sel_action
-            dump_json(keys_dict, KEYS_PATH)
+            actions_dict[sel_action]["keys"].append(event.key)
+            dump_json(actions_dict, ACTIONS_PATH)
             self.refresh_sub_menu(game)
 
         game.is_on_prompt = False

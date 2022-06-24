@@ -1,0 +1,121 @@
+{
+    "UP": {
+        "keys": [
+            "w",
+            "Up"
+        ],
+        "description": [
+            "Goes up in the menus, or moves the player up",
+            "in-game."
+        ]
+    },
+    "DOWN": {
+        "keys": [
+            "s",
+            "Down"
+        ],
+        "description": [
+            "Goes down in the menus, or moves the player down",
+            "in-game."
+        ]
+    },
+    "LEFT": {
+        "keys": [
+            "a",
+            "Left"
+        ],
+        "description": [
+            "Goes left in the menus, or moves the player left",
+            "in-game."
+        ]
+    },
+    "RIGHT": {
+        "keys": [
+            "d",
+            "Right"
+        ],
+        "description": [
+            "Goes right in the menus, or moves the player right",
+            "in-game."
+        ]
+    },
+    "ROTATE_CLOCK": {
+        "keys": [
+            "e"
+        ],
+        "description": [
+            "Rotates the player's shield clockwise,",
+            "if it is available.",
+            "\nTo be used in-game."
+        ]
+    },
+    "ROTATE_ANTICLOCK": {
+        "keys": [
+            "q"
+        ],
+        "description": [
+            "Rotates the player's shield counter-clockwise,",
+            "if it is available.",
+            "\nTo be used in-game."
+        ]
+    },
+    "SHOOT": {
+        "keys": [
+            "space"
+        ],
+        "description": [
+            "Shoots the player's bullets."
+        ]
+    },
+    "RETURN": {
+        "keys": [
+            "BackSpace"
+        ],
+        "description": [
+            "Returns to the previous menu, if available."
+        ]
+    },
+    "DEBUG": {
+        "keys": [
+            "F3"
+        ],
+        "description": [
+            "Shows additional information in-game.",
+            "\n(For debug purposes)"
+        ]
+    },
+    "EXIT": {
+        "keys": [
+            "Escape"
+        ],
+        "description": [
+            "Tries to emergency-exit the game.",
+            "\n[HOLD TO USE]"
+        ]
+    },
+    "UPGRADE": {
+        "keys": [
+            "u"
+        ],
+        "description": [
+            "If able, upgrades the player's speed and hardness."
+        ]
+    },
+    "EVOLVE": {
+        "keys": [
+            "i"
+        ],
+        "description": [
+            "If able, evolves the player's power level to the next."
+        ]
+    },
+    "SPECIAL": {
+        "keys": [
+            "f"
+        ],
+        "description": [
+            "if able, erforms the special action the type",
+            "of player has."
+        ]
+    }
+}

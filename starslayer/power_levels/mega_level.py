@@ -8,7 +8,6 @@ from .hyper_level import HyperPower
 from .power_level import PowerLevel
 
 if TYPE_CHECKING:
-
     from ..bullets import Bullet
     from ..characters import PlayableCharacter
 
@@ -42,7 +41,7 @@ class MegaPower(PowerLevel):
         Defines the cooldown for shooting bullets.
         """
 
-        return 20
+        return 44
 
 
     @property

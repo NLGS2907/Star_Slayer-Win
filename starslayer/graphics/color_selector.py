@@ -10,7 +10,6 @@ from ..gamelib import draw_line, draw_oval, draw_rectangle, draw_text
 from .gui import draw_button_hitbox
 
 if TYPE_CHECKING:
-
     from ..state import Game
 
 

@@ -12,3 +12,6 @@ class BulletSprites(Enum):
 
     PLAIN = 0
     SPECIAL = 1
+    SHINY = 2
+    INVISIBLE = 3
+    ELECTRIC = 4

@@ -19,13 +19,33 @@ setup(
         "starslayer" : ["json/keys/*.json",
                         "json/profiles/*.json",
                         "json/scores/*.json",
+
                         "textures/icon/*.gif",
                         "textures/player/star_slayer/*.customppm",
+                        "textures/player/star_slayer_damaged/*.customppm",
                         "textures/player/bilby_tanka/*.customppm",
-                        "textures/player/viper_dodger/*.customppm"]
+                        "textures/player/bilby_tanka_damaged/*.customppm",
+                        "textures/player/viper_dodger/*.customppm",
+                        "textures/player/viper_dodger_damaged/*.customppm",
+
+                        "textures/player/shield/*.customppm",
+                        "textures/player/cannon/*.customppm",
+
+                        "textures/drops/med_kit/*.customppm",
+                        "textures/drops/radial_bomb/*.customppm",
+                        "textures/drops/spiral_bomb/*.customppm",
+
+                        "textures/enemies/common_a/*.customppm",
+                        "textures/enemies/common_b/*.customppm",
+                        "textures/enemies/swift/*.customppm",
+
+                        "sfx/time/*.wav",
+                        "sfx/cheats/*.wav",
+                        "sfx/settings/*.wav",
+                        "sfx/gameplay/*.wav"]
     },
 
-    version="0.1.1-alpha",
+    version="0.2.0-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

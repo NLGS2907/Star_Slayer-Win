@@ -24,16 +24,19 @@ class Bullet(Entity, HitCircle, ABC):
                  health: int=1,
                  acceleration: int=1,
                  ethereal: bool=False,
-                 sprite_type: BulletSprites=BulletSprites.PLAIN,
+                 sprite_type: Optional[BulletSprites]=None,
                  **kwargs: BulletKwargs) -> None:
         """
         Initializes an instance of type 'Bullet'.
         """
 
-        super().__init__(health=health, **kwargs)
+        super().__init__(health=health,
+                         ethereal=ethereal,
+                         **kwargs)
         self.accel: int = acceleration
-        self.is_ethereal: bool = ethereal
-        self.sprite_type: BulletSprites = sprite_type
+        self.sprite_type: BulletSprites = (BulletSprites.PLAIN
+                                           if sprite_type is None
+                                           else sprite_type)
 
 
     @abstractmethod

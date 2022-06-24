@@ -3,13 +3,12 @@ Generic Module for storing the HitCircle class.
 """
 
 from math import sqrt
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from ...auxiliar import is_out_bounds
-from .bounding_shape import FloatTuple2, FloatTuple4, BoundingShape
+from ...auxiliar import is_out_bounds_aux
+from .bounding_shape import BoundingShape, FloatTuple2, FloatTuple4
 
 if TYPE_CHECKING:
-
     from .hitbox import HitBox
 
 
@@ -27,6 +26,7 @@ class HitCircle(BoundingShape):
                  cx: float,
                  cy: float,
                  radius: float,
+                 texture_path: Optional[str]=None,
                  can_spawn_outside: bool=False,
                  **kwargs) -> None:
         """
@@ -36,12 +36,12 @@ class HitCircle(BoundingShape):
         x1, y1, x2, y2 = self._to_box_coords(cx, cy, radius)
 
         if (not can_spawn_outside
-            and is_out_bounds(x1, y1, x2, y2)):
-
+            and is_out_bounds_aux(x1, y1, x2, y2)):
             raise ValueError(f"Coordinates {x1, y1}, {x2, y2} are not " +
                              "valid, as they are outside of the boundaries of the screen")
 
-        super().__init__(**kwargs)
+        super().__init__(texture_path=texture_path,
+                         **kwargs)
 
         self.cx: float = cx
         self.cy: float = cy
@@ -163,7 +163,7 @@ class HitCircle(BoundingShape):
         return distance <= (self.radius + other_circle.radius)
 
 
-    def transfer(self, dx: int, dy: int) -> None:
+    def transfer(self, dx: float, dy: float) -> None:
         """
         Changes circle coordinates.
         """
@@ -172,7 +172,16 @@ class HitCircle(BoundingShape):
         self.cy += dy
 
 
-    def move(self, dx: int, dy: int, freely: bool=False) -> bool:
+    def transfer_to(self, x: float, y: float) -> None:
+        """
+        Changes circle coordinates to a given ones.
+        """
+
+        self.cx = x
+        self.cy = y
+
+
+    def move(self, dx: float, dy: float, freely: bool=False) -> bool:
         """
         Moves the circle around inside the boundaries of the screen.
 
@@ -182,11 +191,33 @@ class HitCircle(BoundingShape):
 
         x1, y1, x2, y2 = self.all_coords
 
-        if not freely and is_out_bounds(x1 + dx,
-                                        y1 + dy,
-                                        x2 + dx,
-                                        y2 + dy):
+        if not freely and is_out_bounds_aux(x1 + dx,
+                                            y1 + dy,
+                                            x2 + dx,
+                                            y2 + dy):
             return False
 
         self.transfer(dx, dy)
+        return True
+
+
+    def move_rad(self, drad: float, dtheta: float, freely: bool=False) -> None:
+        """
+        Moves the hitcircle around inside the boundaries of the screen,
+        in a radial movement.
+
+        Returns 'False' if the atempted move is invalid, or 'True' if it is
+        valid. Either way, invalid moves are ignored.
+        """
+
+        x1, y1, x2, y2 = self.all_coords
+        dx, dy = self.dpolar_to_dcart(drad, dtheta)
+
+        if not freely and is_out_bounds_aux(x1 + dx,
+                                            y1 + dy,
+                                            x2 + dx,
+                                            y2 + dy):
+            return False
+
+        self.transfer_rad(drad, dtheta)
         return True

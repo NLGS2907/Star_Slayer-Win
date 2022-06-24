@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional
 from .shapes import HitBox
 
 if TYPE_CHECKING:
-
     from ..scene import Scene
     from ..state import Game
 

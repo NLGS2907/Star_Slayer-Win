@@ -27,16 +27,19 @@ class MainMenu(Menu, metaclass=Singleton):
     def __init__(self,
                  area_corners: FloatTuple4=(
                     int(WIDTH / 3.75),
-                    int(HEIGHT / 2),
+                    int(HEIGHT / 1.75),
                     int(WIDTH / 1.363636),
-                    int(HEIGHT / 1.076923)
+                    int(HEIGHT / 1.1)
                  ),
                  **kwargs: MenuDict) -> None:
         """
         Initializes an instance of 'MainMenu'.
         """
 
-        super().__init__(area_corners, **kwargs)
+        super().__init__(area_corners,
+                         max_rows=3,
+                         special_btn_on_right=False,
+                         **kwargs)
 
 
 mainmenu = MainMenu() # instantiated temporarily
@@ -63,17 +66,6 @@ def go_to_options(game: "Game", _scene: "Scene", _btn: "Button", **_kwargs: Butt
     game.change_scene("scene-options")
 
 
-@mainmenu.button(message="About")
-@left_click()
-@on_press()
-def about_game(game: "Game", _scene: "Scene", _btn: "Button", **_kwargs: ButtonKwargs) -> None:
-    """
-    Shows information about the game.
-    """
-
-    game.show_about = True
-
-
 @mainmenu.button(message="Exit")
 @left_click()
 @on_press()
@@ -83,3 +75,25 @@ def exit_game(game: "Game", _scene: "Scene", _btn: "Button", **_kwargs: ButtonKw
     """
 
     game.exit = True
+
+
+@mainmenu.button(message="About")
+@left_click()
+@on_press()
+def about_game(game: "Game", _scene: "Scene", _btn: "Button", **_kwargs: ButtonKwargs) -> None:
+    """
+    Shows information about the game.
+    """
+
+    game.change_scene("scene-about")
+
+
+@mainmenu.button(message="Highscores")
+@left_click()
+@on_press()
+def show_scores(game: "Game", _scene: "Scene", _btn: "Button", **_kwargs: ButtonKwargs) -> None:
+    """
+    Shows the scoreboard of the game.
+    """
+
+    game.change_scene("scene-scoreboard")

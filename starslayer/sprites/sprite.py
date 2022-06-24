@@ -42,6 +42,7 @@ class Sprite:
         self._height: int = 0
         self._frames: FramesList = []
         self.current_frame_index: int = 0
+        self.path: str = realpath
 
         spr_name = basename(realpath)
         frames = count_files(realpath, CUSTOMEXT)
@@ -109,6 +110,14 @@ class Sprite:
 
         if not self._frames:
             raise ValueError("There must be at least 1 frame.")
+
+
+    def __str__(self) -> str:
+        """
+        Represents the sprite.
+        """
+
+        return f"Sprite at '{self.path}'"
 
 
     @property

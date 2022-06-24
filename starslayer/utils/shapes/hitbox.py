@@ -2,13 +2,12 @@
 Generic Module for storing base HitBox class.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from ...auxiliar import is_out_bounds
+from ...auxiliar import is_out_bounds_aux
 from .bounding_shape import BoundingShape, FloatTuple2, FloatTuple4
 
 if TYPE_CHECKING:
-
     from .hitcircle import HitCircle
 
 
@@ -27,6 +26,7 @@ class HitBox(BoundingShape):
                  y1: float,
                  x2: float,
                  y2: float,
+                 texture_path: Optional[str]=None,
                  can_spawn_outside: bool=False,
                  **kwargs) -> None:
         """
@@ -43,12 +43,12 @@ class HitBox(BoundingShape):
             y1, y2 = y2, y1
 
         if (not can_spawn_outside
-            and is_out_bounds(x1, y1, x2, y2)):
-
-            raise ValueError(f"Coordinates {self.upper_left}, {self.bottom_right} are not " +
+            and is_out_bounds_aux(x1, y1, x2, y2)):
+            raise ValueError(f"Coordinates {x1, y1}, {x2, y2} are not " +
                              "valid, as they are outside of the boundaries of the screen")
 
-        super().__init__(**kwargs)
+        super().__init__(texture_path=texture_path,
+                         **kwargs)
 
         self.x1: float = x1
         self.y1: float = y1
@@ -176,33 +176,10 @@ class HitBox(BoundingShape):
         Tests if the hitbox is colliding with another given one.
         """
 
-        # Test Upper Side
-        if other_box.y1 < self.y1 < other_box.y2:
-
-            # Test Upper-Left Corner
-            if other_box.x1 < self.x1 < other_box.x2:
-
-                return True
-
-            # Test Upper-Right Corner
-            if other_box.x1 < self.x2 < other_box.x2:
-
-                return True
-
-        # Test Bottom Side
-        if other_box.y1 < self.y2 < other_box.y2:
-
-            # Test Bottom-Left Corner
-            if other_box.x1 < self.x1 < other_box.x2:
-
-                return True
-
-            # Test Bottom-Right Corner
-            if other_box.x1 < self.x2 < other_box.x2:
-
-                return True
-
-        return False
+        return all((self.x2 >= other_box.x1,
+                    self.x1 <= other_box.x2,
+                    self.y2 >= other_box.y1,
+                    self.y1 <= other_box.y2))
 
 
     def collides_with_circle(self, other_circle: "HitCircle") -> bool:
@@ -213,7 +190,7 @@ class HitBox(BoundingShape):
         return other_circle.collides_with_box(self)
 
 
-    def transfer(self, dx: int, dy: int) -> None:
+    def transfer(self, dx: float, dy: float) -> None:
         """
         Changes hitbox coordinates from '(x1, y1), (x2, y2)' to
         '(x1 + dx, y1 + dy), (x2 + dx, y2 + dy)'.
@@ -225,7 +202,22 @@ class HitBox(BoundingShape):
         self.y2 += dy
 
 
-    def move(self, dx: int, dy: int, freely: bool=False) -> bool:
+    def transfer_to(self, x: float, y: float) -> None:
+        """
+        Changes hitbox coordinates from '(x1, y1), (x2, y2)' to
+        '(x - width / 2, y - height / 2), (x + width / 2, y + height / 2)'.
+        """
+
+        w_aux = self.width / 2
+        h_aux = self.height / 2
+
+        self.x1 = x - w_aux
+        self.y1 = y - h_aux
+        self.x2 = x + w_aux
+        self.y2 = y + h_aux
+
+
+    def move(self, dx: float, dy: float, freely: bool=False) -> bool:
         """
         Moves the hitbox around inside the boundaries of the screen.
 
@@ -233,11 +225,32 @@ class HitBox(BoundingShape):
         valid. Either way, invalid moves are ignored.
         """
 
-        if not freely and is_out_bounds(self.x1 + dx,
-                                        self.y1 + dy,
-                                        self.x2 + dx,
-                                        self.y2 + dy):
+        if not freely and is_out_bounds_aux(self.x1 + dx,
+                                            self.y1 + dy,
+                                            self.x2 + dx,
+                                            self.y2 + dy):
             return False
 
         self.transfer(dx, dy)
+        return True
+
+
+    def move_rad(self, drad: float, dtheta: float, freely: bool=False) -> None:
+        """
+        Moves the hitbox around inside the boundaries of the screen,
+        in a radial movement.
+
+        Returns 'False' if the atempted move is invalid, or 'True' if it is
+        valid. Either way, invalid moves are ignored.
+        """
+
+        dx, dy = self.dpolar_to_dcart(drad, dtheta)
+
+        if not freely and is_out_bounds_aux(self.x1 + dx,
+                                            self.y1 + dy,
+                                            self.x2 + dx,
+                                            self.y2 + dy):
+            return False
+
+        self.transfer_rad(drad, dtheta)
         return True

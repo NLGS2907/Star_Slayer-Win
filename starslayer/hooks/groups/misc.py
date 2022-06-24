@@ -8,7 +8,6 @@ from ...checks import can_exit, can_show_debug, is_in_game
 from ..hooks_group import HooksGroup
 
 if TYPE_CHECKING:
-
     from ...state import Game
 
 
@@ -16,17 +15,6 @@ class Miscellaneous(HooksGroup):
     """
     Misc Group.
     """
-
-    @HooksGroup.action(on_action="RETURN")
-    def close_about_msg(self) -> None:
-        """
-        Exits the about message, if possible.
-        """
-
-        if self.game.show_about:
-
-            self.game.show_about = False
-
 
     @HooksGroup.action(on_action="DEBUG")
     @is_in_game()

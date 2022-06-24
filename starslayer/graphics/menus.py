@@ -11,7 +11,6 @@ from ..gamelib import draw_text
 from .gui import draw_button_hitbox
 
 if TYPE_CHECKING:
-
     from ..state import Game
     from ..utils import Menu
 

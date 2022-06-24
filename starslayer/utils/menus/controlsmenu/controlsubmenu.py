@@ -3,7 +3,7 @@ Controls Sub Menu Module.
 """
 
 from ....auxiliar import Singleton
-from ....consts import SUB_MENU_RIGHT
+from ....consts import HEIGHT, WIDTH
 from ...menu import Menu, MenuDict
 from ...shapes import FloatTuple4
 
@@ -16,12 +16,19 @@ class ControlSubMenu(Menu, metaclass=Singleton):
     """
 
     def __init__(self,
-                 area_corners: FloatTuple4=SUB_MENU_RIGHT,
+                 area_corners: FloatTuple4=(
+                     (WIDTH * 0.29),
+                     int(HEIGHT * 0.8),
+                     (WIDTH * 0.96),
+                     int(HEIGHT * 0.97)
+                 ),
                  **kwargs: MenuDict) -> None:
         """
         Initializes an instance of 'ControlSubMenu'.
         """
 
-        kwargs.update(how_many_columns=2,
-                      space_between=20)
-        super().__init__(area_corners, **kwargs)
+        super().__init__(area_corners,
+                         how_many_columns=2,
+                         space_between=10,
+                         max_rows=2,
+                         **kwargs)

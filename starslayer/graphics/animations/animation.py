@@ -3,7 +3,7 @@ Animation abstract class Module.
 """
 
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 # pylint: disable=invalid-name
@@ -13,23 +13,26 @@ class Animation(ABC):
     """
 
     def __init__(self,
-                 x1: float,
-                 y1: float,
-                 x2: float,
-                 y2: float,
+                 x1: Optional[float]=None,
+                 y1: Optional[float]=None,
+                 x2: Optional[float]=None,
+                 y2: Optional[float]=None,
+                 *,
+                 is_text: bool=False,
                  **kwargs) -> None:
         """
         Initializes an instance of type 'Animation'.
         """
 
-        if not all((x1, y1, x2, y2)):
+        if any(coord is None for coord in (x1, y1, x2, y2)):
             raise ValueError("All corner coordinates must be present.")
 
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
+        self.x1: float = x1
+        self.y1: float = y1
+        self.x2: float = x2
+        self.y2: float = y2
 
+        self.is_text: bool = is_text
         self.properties = kwargs
 
 
@@ -70,7 +73,7 @@ class Animation(ABC):
 
 
     @abstractmethod
-    def animate(self) -> None:
+    def animate(self, **kwargs) -> None:
         """
         Proceeds with the animation.
         """
@@ -78,7 +81,7 @@ class Animation(ABC):
         raise NotImplementedError
 
 
-    def post_hook(self) -> None:
+    def post_hook(self, **_kwargs) -> None:
         """
         For anything that needs atention after an animation frame.
         It is not necessary to implement this method, but it is

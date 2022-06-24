@@ -10,7 +10,6 @@ from ..consts import HEIGHT, WIDTH
 from ..gamelib import draw_rectangle, draw_text
 
 if TYPE_CHECKING:
-
     from ..state import Game
 
 

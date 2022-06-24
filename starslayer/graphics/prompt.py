@@ -11,82 +11,8 @@ from .color_selector import (draw_color_table, draw_hue_bar,
                              draw_selector_buttons, draw_selector_details)
 
 if TYPE_CHECKING:
-
     from ..selector import ColorSelector
     from ..state import Game
-
-
-def draw_about(game: "Game") -> None:
-    """
-    Shows the information about the people involved in this game.
-    """
-
-    myself = "Franco 'NLGS' Lighterman"
-    aux_cons = (WIDTH // 10)
-
-    draw_rectangle(0,
-                   0,
-                   WIDTH,
-                   HEIGHT,
-                   width=(HEIGHT // 87),
-                   outline=get_color(game, "ABOUT_OUTLINE_1"),
-                   fill=get_color(game, "ABOUT_COLOR_1"))
-
-    draw_text("SO, ABOUT\nTHIS GAME...",
-              (WIDTH // 2),
-              (HEIGHT // 6),
-              size=(HEIGHT // 12),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              justify='c')
-
-    # Pixel-Art
-    draw_text("Pixel-Art:",
-              aux_cons,
-              HEIGHT * 0.4,
-              size=(HEIGHT // 30),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text(myself,
-              WIDTH - aux_cons,
-              HEIGHT * 0.4,
-              size=(HEIGHT // 30),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='e')
-
-    # Coding
-    draw_text("Coding:",
-              aux_cons,
-              HEIGHT * 0.6,
-              size=(HEIGHT // 30),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text(myself,
-             WIDTH - aux_cons,
-             HEIGHT * 0.6,
-             size=(HEIGHT // 30),
-             fill=get_color(game, "TEXT_COLOR_1"),
-             anchor='e')
-
-    # Gamelib
-    draw_text("Gamelib Library:",
-              aux_cons,
-              HEIGHT * 0.8,
-              size=(HEIGHT // 30),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='w')
-    draw_text("Diego Essaya",
-              WIDTH - aux_cons,
-              HEIGHT * 0.8,
-              size=(HEIGHT // 30),
-              fill=get_color(game, "TEXT_COLOR_1"),
-              anchor='e')
-
-    draw_text("Press 'RETURN' to return",
-             (WIDTH // 2),
-             HEIGHT - 20,
-             size=(HEIGHT // 50),
-             fill=get_color(game, "TEXT_COLOR_1"),
-             justify='c')
 
 
 def draw_key_changing_prompt(game: "Game") -> None:

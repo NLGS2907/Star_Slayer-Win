@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Callable
 from ...hooks import ActionHandler
 
 if TYPE_CHECKING:
-
     from ...state import Game
 
 ActionCheck = Callable[["Game"], bool]
@@ -59,8 +58,10 @@ def has_shield(yes_it_does: bool=True) -> ActionHandler:
         Checks if the player has a shield.
         """
 
-        shield = game.player.shield
+        if game.player is None:
+            return False
 
+        shield = game.player.satellite
         return bool(shield) if yes_it_does else not bool(shield)
 
     return check(does_it_have_shield)
@@ -77,7 +78,7 @@ def can_show_debug() -> ActionHandler:
         debug messages is ready.
         """
 
-        return game.debug_cooldown.is_zero_or_less()
+        return game.debug_cooldown.time_is_up()
 
     return check(show_debug)
 
@@ -93,7 +94,8 @@ def can_shoot() -> ActionHandler:
         is ready.
         """
 
-        return game.player.shooting_cooldown.is_zero_or_less()
+        return (game.player is not None and
+                game.player.shooting_cooldown.time_is_up())
 
     return check(can_shoot_bullets)
 
@@ -109,7 +111,7 @@ def can_exit() -> ActionHandler:
         the game is ready.
         """
 
-        return game.exiting_cooldown.is_zero_or_less()
+        return game.exiting_cooldown.time_is_up()
 
     return check(can_exit_game)
 
@@ -140,6 +142,6 @@ def scene_is_cool() -> ActionHandler:
         timer is zero or less.
         """
 
-        return game.current_scene.press_cooldown.is_zero_or_less()
+        return game.current_scene.press_cooldown.time_is_up()
 
     return check(current_scene_cooldown)

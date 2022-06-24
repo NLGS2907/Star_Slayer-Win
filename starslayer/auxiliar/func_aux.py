@@ -3,26 +3,28 @@ Auxiliar Functions Module. The situations where these might
 come in handy are kind of miscellaneous.
 """
 
+from math import sqrt
+from random import choice
 from re import match
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from ..consts import GUI_SPACE, HEIGHT, WIDTH
+from ..consts import HEIGHT, PLAYABLE_WIDTH
 from ..files import StrDict
 
 if TYPE_CHECKING:
-
     from ..state import Game
+    from ..utils import BoundingShape
 
 
 #pylint: disable=invalid-name
-def is_out_bounds(x1: int, y1: int, x2: int, y2: int) -> bool:
+def is_out_bounds_aux(x1: int, y1: int, x2: int, y2: int) -> bool:
     """
     Checks if something is out of the bounds of the playable screen.
 
     Return 'True' if so. Else returns 'False'.
     """
 
-    width, height = WIDTH - GUI_SPACE, HEIGHT
+    width, height = PLAYABLE_WIDTH, HEIGHT
 
     return any((x1 < 0, y1 < 0, x2 > width, y2 > height))
 
@@ -87,4 +89,52 @@ def get_color(game: "Game", name: str, health_percentage: Optional[float]=None) 
     if not true_name or true_name == '/':
         return ''
 
-    return game.color_profile.get(true_name)
+    color = game.color_profile.get(true_name)
+
+    if color == "SHINY":
+        return get_random_color()
+
+    return color
+
+
+
+def get_random_color() -> str:
+    """
+    Gets a random color of the '#rrggbb' format.
+    """
+
+    chars =  "1234567890abcdef"
+    color = ['#']
+
+    for _ in range(6):
+        color.append(choice(chars))
+
+
+    return ''.join(color)
+
+
+def get_closest_coordinates(origin: "BoundingShape",
+                            shapes_container: List["BoundingShape"]
+                           ) -> "BoundingShape":
+    """
+    Given an origin shape, find the closest shape to that one
+    in `shapes_container`.
+    """
+
+    if not shapes_container:
+        raise ValueError("The checks container must have at least 1 element.")
+
+    o_x, o_y = origin.center
+    distance = None
+    new_distance = None
+    chosen = shapes_container[0]
+
+    for shape in shapes_container:
+        sh_x, sh_y = shape.center
+        new_distance = sqrt((sh_x - o_x) ** 2 + (sh_y - o_y) ** 2)
+
+        if distance is None or new_distance < distance:
+            distance = new_distance
+            chosen = shape
+
+    return chosen

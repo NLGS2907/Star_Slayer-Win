@@ -13,7 +13,6 @@ from ..gamelib import say as lib_say
 from ..utils import Button, ButtonsList, FloatTuple4
 
 if TYPE_CHECKING:
-
     from ..utils import ButtonKwargs
 
 
@@ -152,9 +151,9 @@ class ColorSelector():
         aux_x = (WIDTH // 150)
         aux_y = (HEIGHT // 140)
 
-        return (self.x1 + (25 * aux_x),
+        return (self.x1 + (47 * aux_x),
                 self.y2 - (11 * aux_y),
-                self.x1 + (34 * aux_x),
+                self.x1 + (56 * aux_x),
                 self.y2 - (2 * aux_y))
 
 
@@ -193,7 +192,9 @@ class ColorSelector():
             raise ValueError(f"area has {len(area)} values. It must be 4 integers or floats.")
 
 
-    def _validate_areas_boundaries(self, larger_area: FloatTuple4, smaller_area: FloatTuple4) -> bool:
+    def _validate_areas_boundaries(self,
+                                   larger_area: FloatTuple4,
+                                   smaller_area: FloatTuple4) -> bool:
         """
         The smaller area must always be inside the boundaries of the larger one.
 
@@ -230,15 +231,6 @@ class ColorSelector():
                 return False
 
         return True
-
-
-    def dec_to_hex(self, red: int, green: int, blue: int) -> str:
-        """
-        Converts the format '(rr, gg, bb)' to a string of type
-        '#rrggbb'.
-        """
-
-        return f"#{red:02x}{green:02x}{blue:02x}"
 
 
     def generate_colors(self, rows: int=0, cols: int=0) -> ColorsDict:
@@ -350,7 +342,7 @@ class ColorSelector():
 
         input_button = Button(x1=self.x1 + aux,
                               y1=upper,
-                              x2=self.x1 + (11* aux),
+                              x2=self.x1 + (11 * aux),
                               y2=bottom,
                               message="Input")
         buttons.append(input_button)
@@ -370,27 +362,47 @@ class ColorSelector():
             hex_n = None
 
             if not selected_color:
-
                 return
 
             if self._validate_hex(selected_color):
-
                 hex_n = selected_color
 
             elif self._validate_hex(f"#{selected_color}"):
-
                 hex_n = f"#{selected_color}"
 
             if hex_n:
-
                 profile[attribute] = hex_n
                 self.exit_selector()
 
             else:
-
                 lib_say(f"'{selected_color}' is an invalid HEX color")
 
         actions[input_button.msg] = input_color
+        # -------------------------------------------------- #
+
+        shiny_button = Button(x1=self.x1 + (12 * aux),
+                              y1=upper,
+                              x2=self.x1 + (22 * aux),
+                              y2=bottom,
+                              message="Shiny")
+        buttons.append(shiny_button)
+
+        # -------------------------------------------------- #
+
+        def shiny_color(profile: StrDict, attribute: str, **kwargs: "ButtonKwargs") -> None:
+            """
+            Applies the random, shiny color.
+            """
+
+            mouse_btn = kwargs.get("mouse_button")
+            if not mouse_btn == 1: # Left Click
+                return
+
+            profile[attribute] = "SHINY"
+            self.exit_selector()
+
+        actions[shiny_button.msg] = shiny_color
+
         # -------------------------------------------------- #
 
         return buttons, actions

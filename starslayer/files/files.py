@@ -9,14 +9,15 @@ from os import listdir
 from os.path import isfile
 from os.path import join as path_join
 from os.path import splitext
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from ..consts import DEFAULT_THEME
 
-StrDict = dict[str, str]
-ProfilesDict = dict[str, StrDict]
+StrDict = Dict[str, str]
+ActionsDict = Dict[str, Dict[str, Tuple[str, ...]]]
+ProfilesDict = Dict[str, StrDict]
 
-GameDict = StrDict | ProfilesDict
+GameDict = StrDict | ProfilesDict | ActionsDict
 
 
 def load_json(file_name: str) -> GameDict:
@@ -43,29 +44,60 @@ def dump_json(dump_dict: GameDict, file_name: str) -> None:
         dump(dump_dict, file, indent=4)
 
 
-def list_actions(keys_dict: StrDict) -> List[str]:
+def get_action_from_key(key: str, actions_dict: ActionsDict) -> Optional[str]:
+    """
+    Given a key and a dictionary of actions, it searches through
+    the action dictionary to see which action it belongs to.
+    """
+
+    for action, action_dict in actions_dict.items():
+        if key not in action_dict["keys"]:
+            continue
+
+        return action
+
+    return None
+
+
+def exists_key(key: str, actions_dict: ActionsDict) -> bool:
+    """
+    Given a key and a dictionary of actions, it checks if such a
+    key exists in the dictionary.
+    """
+
+    for action_dict in actions_dict.values():
+        if key in action_dict["keys"]:
+            return True
+
+    return False
+
+
+def list_actions(actions_dict: ActionsDict) -> List[str]:
     """
     Returns a list of all the actions in the keys file, without repetitions.
     """
 
-    actions_list = []
-
-    for action in keys_dict.values():
-
-        if not action in actions_list:
-
-            actions_list.append(action)
-
-    return actions_list
+    return list(actions_dict.keys())
 
 
-def list_repeated_keys(value: str, keys_dict: StrDict) -> List[str]:
+def list_action_keys(action: str, actions_dict: ActionsDict) -> List[str]:
     """
-    Given a value to search for and a dictionary (by default the one that 'map_keys' returns),
-    it returns a list of all the keys that have such value.
+    Given an action value to search for and a dictionary,
+    it returns a list of all the keys that have such action value.
     """
 
-    return [key for (key, val) in keys_dict.items() if val == value]
+    return actions_dict[action]["keys"]
+
+
+def action_description(action: str, actions_dict: ActionsDict) -> str:
+    """
+    Given an action value to search for and a dictionary,
+    it returns the given description for that action.
+    """
+
+    desc = '\n'.join(actions_dict[action]["description"])
+
+    return (desc if desc == '' else f'"{desc}"')
 
 
 def list_profiles(profiles_dict: ProfilesDict) -> List[str]:

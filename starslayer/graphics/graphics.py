@@ -9,11 +9,9 @@ from typing import TYPE_CHECKING, Optional
 from .background import draw_background, draw_default_background
 from .gameplay import draw_bullets, draw_debug_info
 from .gui import draw_exiting_bar, draw_gui
-from .prompt import draw_about
 from .sprites import draw_sprite
 
 if TYPE_CHECKING:
-
     from ..graphics import SceneDrawer
     from ..state import Game
 
@@ -36,8 +34,14 @@ def draw_screen(game: "Game",
 
     if game.is_in_game:
 
-        for enem in game.enemies:
+        for drop in game.drops:
+            draw_sprite(drop.sprite,
+                        drop.x1,
+                        drop.y1,
+                        drop.x2,
+                        drop.y2)
 
+        for enem in game.enemies:
             draw_sprite(enem.sprite,
                         enem.x1,
                         enem.y1,
@@ -50,9 +54,9 @@ def draw_screen(game: "Game",
                     game.player.x2,
                     game.player.y2)
 
-        if game.player.shield:
-            sh_x1, sh_y1, sh_x2, sh_y2 = game.player.shield.all_coords
-            draw_sprite(game.player.shield.sprite,
+        if game.player.satellite:
+            sh_x1, sh_y1, sh_x2, sh_y2 = game.player.satellite.all_coords
+            draw_sprite(game.player.satellite.sprite,
                         sh_x1,
                         sh_y1,
                         sh_x2,
@@ -64,12 +68,7 @@ def draw_screen(game: "Game",
 
         draw_gui(game)
 
-    if game.show_about:
-
-        draw_about(game)
-
     scene_drawer.draw_scene()
 
     if game.exiting:
-
         draw_exiting_bar(game)

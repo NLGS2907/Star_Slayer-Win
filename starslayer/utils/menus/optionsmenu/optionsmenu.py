@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING
 
 from ....auxiliar import Singleton
 from ....checks import left_click, on_press
-from ....consts import HEIGHT, WIDTH
+from ....consts import HEIGHT, SFX_AUDIO_ON, WIDTH
+from ....gamelib import say as lib_say
 from ...menu import ButtonKwargs, Menu, MenuDict
 from ...shapes import FloatTuple4
 
@@ -36,8 +37,9 @@ class OptionsMenu(Menu, metaclass=Singleton):
         Initializes an instance of 'OptionsMenu'.
         """
 
-        kwargs.update(max_rows=4)
-        super().__init__(area_corners, **kwargs)
+        super().__init__(area_corners,
+                         max_rows=4,
+                         **kwargs)
 
 
 optionsmenu = OptionsMenu() # instantiated temporarily
@@ -68,3 +70,34 @@ def edit_profiles(game: "Game",
     """
 
     game.change_scene("scene-profiles")
+
+
+@optionsmenu.button(message="Audio On")
+@left_click()
+@on_press()
+def turn_audio(game: "Game",
+               _scene: "Scene",
+               btn: "Button",
+               **_kwargs: ButtonKwargs) -> None:
+    """
+    Alternates between turning the audio on and off.
+    """
+
+    game.has_audio = not game.has_audio
+    btn.msg = f"Audio {'On' if game.has_audio else 'Off'}"
+    game.play_sound(SFX_AUDIO_ON)
+
+
+@optionsmenu.button(message="Clear Scores")
+@left_click()
+@on_press()
+def clear_all_scores(game: "Game",
+                     _scene: "Scene",
+                     _btn: "Button",
+                     **_kwargs: ButtonKwargs) -> None:
+    """
+    Empties the highscores.
+    """
+
+    game.clear_scoreboard()
+    lib_say("All scores have been cleared!")

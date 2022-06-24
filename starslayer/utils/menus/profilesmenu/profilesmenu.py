@@ -91,9 +91,10 @@ class ProfilesMenu(Menu, metaclass=Singleton):
         Initializes an instance of 'ProfilesMenu'.
         """
 
-        kwargs.update(max_rows=10,
-                      special_btn_on_right=False)
-        super().__init__(area_corners, **kwargs)
+        super().__init__(area_corners,
+                         max_rows=10,
+                         special_btn_on_right=False,
+                         **kwargs)
 
 
     def refresh_sub_menu(self, game: "Game") -> None:
@@ -105,6 +106,7 @@ class ProfilesMenu(Menu, metaclass=Singleton):
         attributes = list_attributes(game.color_profile)
 
         submenu.clear_buttons()
+        submenu.current_page = 1
 
         @submenu.button(message="Change Profile Name")
         @left_click()

@@ -1,0 +1,3 @@
+"""
+Loot Drops Textures Package.
+"""

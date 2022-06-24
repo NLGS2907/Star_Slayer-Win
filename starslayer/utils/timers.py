@@ -3,7 +3,7 @@ Timers Module. Contains simple timers to
 handle event timing.
 """
 
-from typing import List
+from typing import List, Optional
 
 
 class Timer:
@@ -12,13 +12,22 @@ class Timer:
     from a certain number to 0.
     """
 
-    def __init__(self, init_time: float, message: str='') -> None:
+    def __init__(self,
+                 base_time: float,
+                 *,
+                 dest_time: float=0.0,
+                 init_time: Optional[float]=None,
+                 message: str='') -> None:
         """
         Initializes an instance of type 'Timer'.
         """
 
-        self.initial_time: float = init_time
-        self.current_time: float = init_time
+        if base_time < 0:
+            raise ValueError("Base Time must be of value above zero.")
+
+        self.base_time: float = base_time
+        self.goal_time: float = dest_time
+        self.current_time: float = init_time or base_time
         self.msg: str = message
 
 
@@ -27,7 +36,8 @@ class Timer:
         Returns a string with class information so it can be printed later.
         """
 
-        return (f"Initial Time: {self.initial_time} - Current Time: {self.current_time}" +
+        return (f"Initial Time: {self.base_time} - Goal Time: {self.goal_time} " +
+                f"- Current Time: {self.current_time}" +
                 f"{f' - Message: {self.msg}' if self.msg != '' else ''}")
 
 
@@ -45,7 +55,7 @@ class Timer:
         if 'reset' is set to 'True', it automatically restarts the timer.
         """
 
-        if not self.is_zero_or_less():
+        if not self.time_is_up():
             self.deduct(float(how_much))
 
         elif reset:
@@ -57,17 +67,25 @@ class Timer:
         Resets the timer to its original value ('self.initial_value').
         """
 
-        self.current_time = self.initial_time
+        self.current_time = self.base_time
         self.msg = ''
 
 
-    def is_zero_or_less(self) -> bool:
+    def drop(self) -> None:
         """
-        Returns 'True' if the current time of the Timer reaches zero (0) or further,
-        and 'False' otherwise.
+        Drops the timer to its goal time.
         """
 
-        return self.current_time <= 0.0
+        self.current_time = self.goal_time
+
+
+    def time_is_up(self) -> bool:
+        """
+        Returns 'True' if the current time of the Timer reaches the goal time or further,
+        or 'False' otherwise.
+        """
+
+        return self.current_time <= self.goal_time
 
 
     def change_message(self, new_message: str) -> None:
@@ -104,7 +122,7 @@ class SpringTimer:
 
         self.floor: float = floor
         self.ceil: float = ceiling
-        self.current: float = where_to_start
+        self.current_time: float = where_to_start
         self.adding: bool = is_it_adding
 
 
@@ -113,7 +131,7 @@ class SpringTimer:
         Returns a string with class information so it can be printed later.
         """
 
-        return (f"Current: {self.current} - Floor: {self.floor} - " +
+        return (f"Current: {self.current_time} - Floor: {self.floor} - " +
                 f"Ceiling: {self.ceil} - Is it adding: {self.adding}")
 
 
@@ -122,7 +140,7 @@ class SpringTimer:
         Checks if the timer is at its lowest possible value.
         """
 
-        return self.current == self.floor
+        return self.current_time == self.floor
 
 
     def is_at_ceiling(self) -> bool:
@@ -130,7 +148,7 @@ class SpringTimer:
         Checks if the timer is at its greatest possible value.
         """
 
-        return self.current == self.ceil
+        return self.current_time == self.ceil
 
 
     def count(self, how_much: float=1.0) -> None:
@@ -140,16 +158,16 @@ class SpringTimer:
 
         if self.adding:
 
-            if self.current < self.ceil:
+            if self.current_time < self.ceil:
 
-                self.current += how_much
+                self.current_time += how_much
         else:
 
-            if self.current > self.floor:
+            if self.current_time > self.floor:
 
-                self.current -= how_much
+                self.current_time -= how_much
 
-        if any((self.current <= self.floor, self.current >= self.ceil)):
+        if any((self.current_time <= self.floor, self.current_time >= self.ceil)):
 
             self.adding = not self.adding
 

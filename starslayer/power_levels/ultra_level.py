@@ -8,7 +8,6 @@ from .mega_level import MegaPower
 from .power_level import PowerLevel
 
 if TYPE_CHECKING:
-
     from ..bullets import Bullet
     from ..characters import PlayableCharacter
 
@@ -28,7 +27,7 @@ class UltraPower(PowerLevel):
         player.shoot_ultra_bullets(bullets)
 
 
-    def next_level(self) -> Optional["PowerLevel"]:
+    def next_level(self) -> Optional[PowerLevel]:
         """
         Returns the next power level to this one.
         """
@@ -42,7 +41,7 @@ class UltraPower(PowerLevel):
         Defines the cooldown for shooting bullets.
         """
 
-        return 25
+        return 46
 
 
     @property

@@ -2,8 +2,10 @@
 Main Scene Module.
 """
 
+from typing import Optional
+
 from ...consts import GAME_TITLE, HEIGHT, WIDTH
-from ...graphics.animations import SinusoidalWave
+from ...graphics.animations import Circumference, SinusoidalWave
 from ...utils import Label
 from ...utils.menus import MainMenu
 from ..scene import Scene
@@ -14,12 +16,20 @@ class MainScene(Scene):
     Main Scene. Contains primarly the main menu.
     """
 
-    def __init__(self, name_id: str="scene-main", **kwargs) -> None:
+    def __init__(self,
+                 *,
+                 name_id: str="scene-main",
+                 parent: Optional["Scene"]=None,
+                 press_cooldown: int=20,
+                 **kwargs) -> None:
         """
         Initializes an instance of 'MainScene'.
         """
 
-        super().__init__(name_id, **kwargs)
+        super().__init__(name_id,
+                         parent=parent,
+                         press_cooldown=press_cooldown,
+                         **kwargs)
         self.add_menu(MainMenu())
 
         self.add_label(Label(WIDTH // 2,
@@ -57,3 +67,21 @@ class MainScene(Scene):
                                           fill_name='',
                                           outline_name="MENU COLOR 2",
                                           width=4))
+        self.add_animation(Circumference(cx=WIDTH,
+                                         cy=HEIGHT,
+                                         dot_density=150,
+                                         dot_speed=-1.0,
+                                         initial_radius=100.0,
+                                         max_radius=200.0,
+                                         variance_speed=5.3))
+        self.add_animation(Circumference(cx=WIDTH,
+                                         cy=HEIGHT,
+                                         dot_density=1,
+                                         dot_speed=-0.01,
+                                         dot_radius=20.0,
+                                         initial_radius=100.0,
+                                         max_radius=200.0,
+                                         variance_speed=5.3,
+                                         fill_name='',
+                                         outline_name="MENU COLOR 2",
+                                         width=4))

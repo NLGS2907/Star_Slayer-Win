@@ -2,8 +2,11 @@
 In-Game Scene.
 """
 
-from ...consts import GUI_SPACE, HEIGHT, WIDTH, PLAYER_HEALTH_BAR_ANIM
+from typing import Optional
+
+from ...consts import HEIGHT, PLAYABLE_WIDTH, PLAYER_HEALTH_BAR_ANIM, WIDTH
 from ...graphics.animations import SinusoidalWave
+from ...utils.menus import InGameMenu
 from ..scene import Scene
 
 
@@ -13,22 +16,36 @@ class InGameScene(Scene):
     part of the game.
     """
 
-    def __init__(self, name_id: str="scene-in-game", **kwargs) -> None:
+    def __init__(self,
+                 *,
+                 name_id: str="scene-in-game",
+                 parent: Optional["Scene"]=None,
+                 press_cooldown: int=20,
+                 **kwargs) -> None:
         """
         Initializes an instance of 'InGameScene'.
         """
 
-        super().__init__(name_id, **kwargs)
+        super().__init__(name_id,
+                         parent=parent,
+                         press_cooldown=press_cooldown,
+                         **kwargs)
+        ingamemenu = InGameMenu()
+        self.add_menu(ingamemenu)
 
         aux_cons = (HEIGHT / 70)
         aux_cons_2 = (HEIGHT / 175)
-        bar_start = WIDTH - GUI_SPACE + aux_cons
+        bar_start = PLAYABLE_WIDTH + aux_cons
         bar_end = WIDTH - aux_cons
+        bar_anim_x1 = bar_start + aux_cons_2
+        bar_anim_y1 = (HEIGHT * 0.902) + aux_cons_2
+        bar_anim_x2 = bar_end
+        bar_anim_y2 = (HEIGHT * 0.995) - aux_cons - aux_cons_2
 
-        self.add_animation(SinusoidalWave(x1=bar_start + aux_cons_2,
-                                          y1=(HEIGHT * 0.9) + aux_cons_2,
-                                          x2=bar_end,
-                                          y2=(HEIGHT - aux_cons - aux_cons_2),
+        self.add_animation(SinusoidalWave(x1=bar_anim_x1,
+                                          y1=bar_anim_y1,
+                                          x2=bar_anim_x2,
+                                          y2=bar_anim_y2,
                                           vertical=False,
                                           dot_density=45.0,
                                           dot_radius=2.5,
@@ -38,10 +55,10 @@ class InGameScene(Scene):
                                           outline_name=''),
                            name=f"{PLAYER_HEALTH_BAR_ANIM}_1",
                            is_front=True)
-        self.add_animation(SinusoidalWave(x1=bar_start + aux_cons_2,
-                                          y1=(HEIGHT * 0.9) + aux_cons_2,
-                                          x2=bar_end,
-                                          y2=(HEIGHT - aux_cons - aux_cons_2),
+        self.add_animation(SinusoidalWave(x1=bar_anim_x1,
+                                          y1=bar_anim_y1,
+                                          x2=bar_anim_x2,
+                                          y2=bar_anim_y2,
                                           vertical=False,
                                           initial_phase=20.0,
                                           dot_density=45.0,
@@ -52,10 +69,10 @@ class InGameScene(Scene):
                                           outline_name=''),
                            name=f"{PLAYER_HEALTH_BAR_ANIM}_2",
                            is_front=True)
-        self.add_animation(SinusoidalWave(x1=bar_start + aux_cons_2,
-                                          y1=(HEIGHT * 0.9) + aux_cons_2,
-                                          x2=bar_end,
-                                          y2=(HEIGHT - aux_cons - aux_cons_2),
+        self.add_animation(SinusoidalWave(x1=bar_anim_x1,
+                                          y1=bar_anim_y1,
+                                          x2=bar_anim_x2,
+                                          y2=bar_anim_y2,
                                           vertical=False,
                                           dot_density=40.0,
                                           dot_radius=2.5,

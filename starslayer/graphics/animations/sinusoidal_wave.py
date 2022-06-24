@@ -44,7 +44,7 @@ class SinusoidalWave(Animation):
         'crop_after' is the percentage after which the wave stops showing itself.
         """
 
-        super().__init__(x1, y1, x2, y2, **kwargs)
+        super().__init__(x1, y1, x2, y2, is_text=False, **kwargs)
 
         self.is_vertical: bool = vertical
         self.is_horizontal: bool = not self.is_vertical
@@ -103,14 +103,6 @@ class SinusoidalWave(Animation):
                     crop_value < 0 or
                     crop_value > 100)
                 else crop_value)
-
-
-    def _correct_float(self, float_num: float) -> float:
-        """
-        Rounds a float to 3 (three) decimal digits.
-        """
-
-        return float(f"{float_num:.3f}")
 
 
     @property
@@ -173,7 +165,7 @@ class SinusoidalWave(Animation):
         Returns how much to add to simulate a translation.
         """
 
-        return self.translation_timer.current
+        return self.translation_timer.current_time
 
 
     def change_crop(self, new_crop_value: float) -> None:
@@ -253,7 +245,7 @@ class SinusoidalWave(Animation):
             self.dot_coords.append(self.get_hitbox(dot_x, dot_y))
 
 
-    def animate(self) -> None:
+    def animate(self, **_kwargs) -> None:
         """
         Proceeds with the animation.
         """
@@ -272,7 +264,7 @@ class SinusoidalWave(Animation):
                       **self.properties)
 
 
-    def post_hook(self) -> None:
+    def post_hook(self, **_kwargs) -> None:
         """
         Moves each dot into its next coords.
         """

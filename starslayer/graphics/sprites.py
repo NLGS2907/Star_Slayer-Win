@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Optional
 from ..gamelib import draw_arc, draw_rectangle
 
 if TYPE_CHECKING:
-
     from ..sprites import Sprite
     from ..state import Game
 

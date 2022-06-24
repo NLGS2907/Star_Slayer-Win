@@ -8,7 +8,6 @@ from .power_level import PowerLevel
 from .super_level import SuperPower
 
 if TYPE_CHECKING:
-
     from ..bullets import Bullet
     from ..characters import PlayableCharacter
 
@@ -28,7 +27,7 @@ class SimplePower(PowerLevel):
         player.shoot_simple_bullets(bullets)
 
 
-    def next_level(self) -> Optional["PowerLevel"]:
+    def next_level(self) -> Optional[PowerLevel]:
         """
         Returns the next power level to this one.
         """
@@ -42,7 +41,7 @@ class SimplePower(PowerLevel):
         Defines the cooldown for shooting bullets.
         """
 
-        return 30
+        return 50
 
 
     @property

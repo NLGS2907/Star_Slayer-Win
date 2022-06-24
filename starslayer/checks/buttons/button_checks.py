@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Callable, Tuple
 from ...gamelib import EventType
 
 if TYPE_CHECKING:
-
     from ...state.game_state import Game
     from ...utils import Button, ButtonHandler, ButtonKwargs
 
@@ -112,7 +111,7 @@ def left_click(it_is: bool=True) -> "ButtonHandler":
         """
 
         click = kwargs.get("mouse_button")
-        click_check = click == 1
+        click_check = (click == 1)
 
         return click_check if it_is else not click_check
 

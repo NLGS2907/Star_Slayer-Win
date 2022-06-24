@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, List, Optional
 from .power_level import PowerLevel
 
 if TYPE_CHECKING:
-
     from ..bullets import Bullet
     from ..characters import PlayableCharacter
 
@@ -27,7 +26,7 @@ class HyperPower(PowerLevel):
         player.shoot_hyper_bullets(bullets)
 
 
-    def next_level(self) -> Optional["PowerLevel"]:
+    def next_level(self) -> Optional[PowerLevel]:
         """
         Returns the next power level to this one.
         """
@@ -41,7 +40,7 @@ class HyperPower(PowerLevel):
         Defines the cooldown for shooting bullets.
         """
 
-        return 15
+        return 42
 
 
     @property

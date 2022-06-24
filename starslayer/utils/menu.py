@@ -12,7 +12,6 @@ from .button import Button, ButtonHandler, ButtonsList
 from .shapes import FloatTuple4
 
 if TYPE_CHECKING:
-
     from ..scene import Scene
     from ..state import Game
 
@@ -30,7 +29,23 @@ class Menu:
     their handlers.
     """
 
-    def __init__(self, area_corners: FloatTuple4, **kwargs: MenuDict) -> None:
+    def __init__(self,
+                 area_corners: FloatTuple4,
+                 /,
+                 *,
+                 max_rows: int=4,
+                 how_many_columns: int=1,
+                 space_between: int=10,
+                 space_between_x: Optional[int]=None,
+                 space_between_y: Optional[int]=None,
+                 force_button_resize: bool=False,
+                 special_btn_on_right: bool=True,
+                 show_return: bool=False,
+                 button_anchor: str='c',
+                 offset_x: int=0,
+                 offset_y: int=0,
+                 hidden: bool=False,
+                 **kwargs: MenuDict) -> None:
         """
         Initializes an instance of type 'Menu'.
 
@@ -54,9 +69,6 @@ class Menu:
         'space_between_y' is the vertical value for dead space between buttons.
         If not provided, it defaults to 'space between'.
 
-        'parent_menu' is another instance of type 'Menu' that has this instance
-        as its child.
-
         'force_button_resize' means if the menu must use all the space in the area
         it is specified, which can resize the buttons.
 
@@ -77,24 +89,21 @@ class Menu:
         """
 
         # Define default values
-        max_rows: int = kwargs.get("max_rows", 4)
-        self.how_many_columns: int = kwargs.get("how_many_columns", 1)
-        self.space_between: int = kwargs.get("space_between", 10)
-        self.space_between_x: int = kwargs.get("space_between_x", self.space_between)
-        self.space_between_y: int = kwargs.get("space_between_y", self.space_between)
-        force_button_resize: bool = kwargs.get("force_button_resize", False)
-        special_btn_on_right: bool = kwargs.get("special_btn_on_right", True)
+        self.how_many_columns: int = how_many_columns
+        self.space_between: int = space_between
+        self.space_between_x: int = space_between_x or self.space_between
+        self.space_between_y: int = space_between_y or self.space_between
 
         # some control booleans
-        self._show_return: bool = kwargs.get("show_return", False)
+        self._show_return: bool = show_return
 
         # Graphics-related
-        self.button_anchor: str = kwargs.get("button_anchor", 'c')
+        self.button_anchor: str = button_anchor
 
-        self.offset_x: int = kwargs.get("offset_x", 0)
-        self.offset_y: int = kwargs.get("offset_y", 0)
+        self.offset_x: int = offset_x
+        self.offset_y: int = offset_y
 
-        self.hidden: bool = kwargs.get("hidden", False)
+        self.hidden: bool = hidden
 
         if max_rows < 1:
 
@@ -200,7 +209,7 @@ class Menu:
         # Generating the buttons
         self.generate_coords()
         self.update_buttons()
-
+        self.properties: MenuDict = kwargs
 
     @property
     def area(self) -> FloatTuple4:

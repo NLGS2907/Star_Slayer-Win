@@ -10,7 +10,6 @@ from ..sprites import Sprite
 from ..utils import ButtonKwargs, Label, Menu, Timer
 
 if TYPE_CHECKING:
-
     from ..graphics.animations import Animation
     from ..state import Game
 
@@ -27,7 +26,12 @@ class Scene:
     A scene that contains elements.
     """
 
-    def __init__(self, name_id: str, **kwargs) -> None:
+    def __init__(self,
+                 name_id: str,
+                 *,
+                 parent: Optional["Scene"]=None,
+                 press_cooldown: int=20,
+                 **kwargs) -> None:
         """
         Initializes an instance of 'Scene'.
         """
@@ -40,10 +44,12 @@ class Scene:
         self._rear_animations: AnimationsDict = {}
         self._front_animations: AnimationsDict = {}
 
-        self.parent: Optional["Scene"] = kwargs.get("parent", None)
+        self.parent: Optional["Scene"] = parent
 
         # Timers
-        self.press_cooldown = Timer(20)
+        self.press_cooldown = Timer(press_cooldown)
+
+        self.properties = kwargs
 
 
     def __eq__(self, other: "Scene") -> bool:

@@ -8,7 +8,6 @@ from ...checks import can_shoot, has_shield, is_in_game
 from ..hooks_group import HooksGroup
 
 if TYPE_CHECKING:
-
     from ...state import Game
 
 
@@ -77,7 +76,7 @@ class Movements(HooksGroup):
         Rotates the player shield anti-clockwise.
         """
 
-        self.game.player.shield.rotate(-0.06)
+        self.game.player.satellite.rotate(0.06)
 
 
     @HooksGroup.action(on_action="ROTATE_CLOCK")
@@ -88,7 +87,18 @@ class Movements(HooksGroup):
         Rotates the player shield clockwise.
         """
 
-        self.game.player.shield.rotate(0.06)
+        self.game.player.satellite.rotate(-0.06)
+
+
+    @HooksGroup.action(on_action="SPECIAL")
+    @is_in_game()
+    def execute_special(self) -> None:
+        """
+        Tries to execute the special ability of the player.
+        """
+
+        if self.game.player.can_use_ability():
+            self.game.player.ability_effect(self.game)
 
 
 def setup_hook(game: "Game") -> None:

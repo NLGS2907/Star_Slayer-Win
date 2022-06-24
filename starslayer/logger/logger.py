@@ -11,7 +11,6 @@ from ..auxiliar import Singleton
 from ..consts import LOG_PATH
 
 if TYPE_CHECKING:
-
     from logging import Logger
 
 

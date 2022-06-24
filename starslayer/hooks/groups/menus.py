@@ -8,7 +8,6 @@ from ...checks import is_in_game, scene_has_parent, scene_is_cool
 from ..hooks_group import HooksGroup
 
 if TYPE_CHECKING:
-
     from ...state import Game
 
 
@@ -26,7 +25,6 @@ class Menus(HooksGroup):
         """
 
         self.game.current_scene.selected_menu.change_page(False)
-        self.game.current_scene.press_cooldown.reset()
 
 
     @HooksGroup.action(on_action="DOWN")
@@ -38,7 +36,6 @@ class Menus(HooksGroup):
         """
 
         self.game.current_scene.selected_menu.change_page(True)
-        self.game.current_scene.press_cooldown.reset()
 
 
     @HooksGroup.action(on_action="LEFT")
@@ -50,7 +47,6 @@ class Menus(HooksGroup):
         """
 
         self.game.current_scene.change_selection(reverse=True)
-        self.game.current_scene.press_cooldown.reset()
 
     @HooksGroup.action(on_action="RIGHT")
     @is_in_game(False)
@@ -61,7 +57,6 @@ class Menus(HooksGroup):
         """
 
         self.game.current_scene.change_selection(reverse=False)
-        self.game.current_scene.press_cooldown.reset()
 
 
     @HooksGroup.action(on_action="RETURN")
@@ -75,7 +70,15 @@ class Menus(HooksGroup):
 
         self.game.current_scene.press_cooldown.reset() # First we reset the current menu
         self.game.current_scene = self.game.current_scene.parent
-        self.game.current_scene.press_cooldown.reset() # Then the parent
+        # Then the parent reset is on the post hook
+
+
+    def post_hook(self) -> None:
+        """
+        Resets the current scene pressing cooldown.
+        """
+
+        self.game.current_scene.press_cooldown.reset()
 
 
 def setup_hook(game: "Game") -> None:

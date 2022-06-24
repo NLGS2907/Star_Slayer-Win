@@ -3,12 +3,13 @@ Characters Module. For storing playable characters
 (mainly the player).
 """
 
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 
-from ..sprites import Sprite
+if TYPE_CHECKING:
+    from ..state import Game
 
 ShipVariable = Optional[float | int | str]
-ShipDict = Dict[str, ShipVariable]
+EntityDict = Dict[str, ShipVariable]
 
 
 class Entity:
@@ -23,29 +24,27 @@ class Entity:
                  health: int=100,
                  how_hard: int=0,
                  speed: int=1,
-                 texture_path: Optional[str]=None,
-                  **kwargs: ShipDict) -> None:
+                 ethereal: bool=False,
+                  **kwargs: EntityDict) -> None:
         """
-        Initializes an instance of type 'Ship'.
+        Initializes an instance of type 'Entity'.
 
         Kwargs:
 
         `max_hp` is the maximum health points to be had.
         `how_hard` is the defence stat.
         `speed` is the speed of the entity movement.
-        `texture_path` is the sprites path, and must be a path
-                      relative to the 'textures' package.
+        `ethereal` is if it should receive damage on impact.
         """
 
         # This here works only if Entity is before a bounding shape in the MRO
         super().__init__(**kwargs)
 
         self.max_hp: int = health
-        self.hp: int = self.max_hp #pylint: disable=invalid-name
+        self._hp: int = self.max_hp #pylint: disable=invalid-name
         self.hardness: int = how_hard
         self.speed: int = speed
-        self.sprite_path: Optional[str] = texture_path
-        self.sprite: Optional[Sprite] = (Sprite(self.sprite_path) if self.sprite_path else None)
+        self.is_ethereal: bool = ethereal
 
 
     def __str__(self) -> str:
@@ -54,7 +53,7 @@ class Entity:
         """
 
         return (f"health: {self.hp} - " +
-                f"hardness: {self.hardness} - speed: {self.speed} - sprite: {self.sprite_path}")
+                f"hardness: {self.hardness} - speed: {self.speed}")
 
 
     def __repr__(self) -> str:
@@ -62,15 +61,71 @@ class Entity:
         Returns a string with class information so it can be parsed 'as is' later.
         """
 
-        return self.__str__()
+        return str(self)
 
 
-    def has_no_health(self) -> bool:
+    @property
+    def points_worth(self) -> int:
+        """
+        How many points should this enemy be worth at dying.
+        This property should be overriden to be useful.
+        """
+
+        return 0
+
+
+    @property
+    # pylint: disable=invalid-name
+    def hp(self) -> int:
+        """
+        Returns the current health points.
+        """
+
+        return self._hp
+
+
+    # pylint: disable=invalid-name
+    @hp.setter
+    def hp(self, new_hp: int) -> None:
+        """
+        Sets the new health points.
+        """
+
+        if new_hp < 0:
+            self._hp = 0
+            return
+
+        if new_hp > self.max_hp:
+            self._hp = self.max_hp
+            return
+
+        self._hp = new_hp
+
+
+    def die(self) -> None:
+        """
+        Drops the health points to zero.
+        """
+
+        self.hp = 0
+
+
+    def is_dead(self) -> bool:
         """
         Returns 'True' if if the ship has 0 health points or less, and 'False' otherwise.
         """
 
         return self.hp <= 0
+
+
+    def death_effect(self, _game: "Game") -> None:
+        """
+        Executes an given effect on the game, when the entity dies.
+
+        This may be inherited to be useful.
+        """
+
+        return None
 
 
     def health_percentage(self) -> float:
@@ -81,20 +136,16 @@ class Entity:
         return (self.hp / self.max_hp) * 100
 
 
-    def take_damage(self, how_much: int) -> None:
+    def take_damage(self, how_much: int) -> int:
         """
         Process damage taken.
+        Returns the remaining health
         """
 
-        self.hp -= how_much
+        if not self.is_ethereal:
+            self.hp -= how_much
 
         if self.hp < 0:
             self.die()
 
-
-    def die(self) -> None:
-        """
-        Drops the health points to zero.
-        """
-
-        self.hp = 0
+        return self.hp

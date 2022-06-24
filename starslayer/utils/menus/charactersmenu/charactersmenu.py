@@ -28,10 +28,10 @@ class CharactersMenu(Menu, metaclass=Singleton):
 
     def __init__(self,
                  area_corners: FloatTuple4=(
-                    int((WIDTH / 9) - (WIDTH * 0.08)),
-                    int(HEIGHT * 0.87),
-                    int((WIDTH / 9) * 8 + (WIDTH * 0.08)),
-                    int(HEIGHT * 0.97)
+                    (WIDTH / 9) - (WIDTH * 0.08),
+                    HEIGHT * 0.1,
+                    (WIDTH / 9) * 8 + (WIDTH * 0.08),
+                    HEIGHT * 0.97
                  ),
                  **kwargs: MenuDict) -> None:
         """
@@ -58,8 +58,7 @@ def choose_star_slayer(game: "Game",
     Chooses the Star Slayer character.
     """
 
-    game.player = StarSlayerCharacter(shooting_cooldown=game.power_level.cooldown,
-                                      invulnerability=game.power_level.invulnerability)
+    game.player = StarSlayerCharacter()
     game.start_game()
 
 
@@ -78,8 +77,7 @@ def choose_bilby_tanka(game: "Game",
     Chooses the Bilby Tanka character.
     """
 
-    game.player = BilbyTankaCharacter(shooting_cooldown=game.power_level.cooldown,
-                                      invulnerability=game.power_level.invulnerability)
+    game.player = BilbyTankaCharacter()
     game.start_game()
 
 
@@ -98,7 +96,5 @@ def choose_viper_dodger(game: "Game",
     Chooses the Viper Dodger character.
     """
 
-    game.player = ViperDodgerCharacter(shooting_cooldown=game.power_level.cooldown,
-                                       invulnerability=game.power_level.invulnerability,
-                                       has_shield=True)
+    game.player = ViperDodgerCharacter(threats_pool=game.enemies)
     game.start_game()

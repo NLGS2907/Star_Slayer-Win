@@ -74,7 +74,6 @@ class BilbyTankaCharacter(PlayableCharacter):
         how_many = 12
         augment  = (2 * PI) / how_many
         center_x, center_y = self.center
-        self.bul_rad_aux = WIDTH // 150
 
         for i in range(how_many):
             game.player_bullets.append(BulletOrbiting(cx=center_x,

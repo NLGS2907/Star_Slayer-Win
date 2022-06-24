@@ -16,7 +16,7 @@ setup(
 
     package_data={
 
-        "starslayer" : ["json/keys/*.json",
+        "starslayer" : ["json/actions/*.json",
                         "json/profiles/*.json",
                         "json/scores/*.json",
 

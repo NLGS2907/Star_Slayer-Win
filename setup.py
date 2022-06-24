@@ -45,7 +45,7 @@ setup(
                         "sfx/gameplay/*.wav"]
     },
 
-    version="0.2.0-alpha",
+    version="0.2.1-alpha",
 
     url="https://github.com/NLGS2907/star-slayer",
 

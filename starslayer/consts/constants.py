@@ -18,7 +18,7 @@ def abs_path(filename: str, subpackage: Optional[str]=None) -> str:
     return str(fpath(subpackage_path, filename))
 
 
-GAME_VERSION = "0.2.0-alpha"
+GAME_VERSION = "0.2.1-alpha"
 """
 The current version of the game.
 """
